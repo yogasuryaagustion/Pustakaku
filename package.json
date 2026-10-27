@@ -1,3 +1,4 @@
+
 {
   "name": "2e7ed29a9662d3d1ef84934ef0e4a7b75c9d3e43ce4181c715b08c924760a9ca",
   "version": "0.1.0",
@@ -9,10 +10,8 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@next/swc-win32-x64-msvc": "^16.4.2",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.118.0",
-    "lightningcss-win32-x64-msvc": "^1.33.0",
     "next": "16.4.2",
     "react": "19.3.0",
     "react-dom": "19.3.0"
