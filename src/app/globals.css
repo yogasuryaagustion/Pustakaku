@@ -1,0 +1,566 @@
+@import "tailwindcss";
+
+/* Variant "layar pendek": dipakai halaman Login/Register untuk memadatkan
+   jarak vertikal pada laptop tinggi-pas (mis. 1366×768) supaya seluruh form
+   muat satu layar — di layar tinggi (1920×1080) kompresi ini tidak aktif. */
+@custom-variant pendek (@media (max-height: 820px));
+
+:root {
+  --background: #f6f7f9;
+  --foreground: #1a2233;
+  --card: #ffffff;
+  --muted: #64748b;
+  --border: #e2e8f0;
+
+  /* === TEMA (diatur admin di /admin/pengaturan, disimpan di localStorage) ===
+     Nilai di bawah adalah DEFAULT; script init di layout menimpanya dengan
+     tema tersimpan sebelum paint. Harus sinkron dengan TEMA_DEFAULT di
+     src/lib/theme.ts. Lihat .grad-* di bawah untuk cara pakainya. */
+  --brand: #0f766e;
+  --brand-soft: #ccfbf1;
+  --brand-hover: #0d5f58;
+  --brand-light: #2dd4bf;
+  --teks-mid: #14b8a6;
+  --teks-end: #06b6d4;
+  --latar-1: #f0fdfa;
+  --latar-2: #ffffff;
+  --latar-3: #ecfeff;
+  --cta-1: #0f766e;
+  --cta-2: #14b8a6;
+  --cta-3: #38bdf8;
+  --g1: linear-gradient(to bottom right, #5eead4, #14b8a6, #059669);
+  --g2: linear-gradient(to bottom right, #67e8f9, #2dd4bf, #0d9488);
+  --g3: linear-gradient(to bottom right, #7dd3fc, #22d3ee, #0d9488);
+  --g4: linear-gradient(to bottom right, #2dd4bf, #06b6d4, #0284c7);
+  --g5: linear-gradient(to bottom right, #6ee7b7, #14b8a6, #0891b2);
+  --g6: linear-gradient(to bottom right, #67e8f9, #38bdf8, #0284c7);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  /* Tipografi sistematis: heading sedikit lebih rapat, teks isi lega. */
+  letter-spacing: -0.011em;
+  text-rendering: optimizeLegibility;
+}
+
+/* === Bayangan berlapis (depth system) ====================================
+   Dipakai via kelas Tailwind arbitrary (shadow-[var(--sh-2)]) atau langsung
+   di CSS. Empat tingkat = hierarki kedalaman yang konsisten. */
+:root {
+  --sh-1: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.04);
+  --sh-2: 0 4px 6px -1px rgb(15 23 42 / 0.06), 0 2px 4px -2px rgb(15 23 42 / 0.05);
+  --sh-3: 0 12px 24px -8px rgb(15 23 42 / 0.1), 0 4px 8px -6px rgb(15 23 42 / 0.06);
+  --sh-4: 0 32px 64px -16px rgb(15 23 42 / 0.18), 0 12px 24px -12px rgb(15 23 42 / 0.1);
+}
+
+/* Pilihan teks & fokus keyboard yang rapi di seluruh aplikasi. */
+::selection {
+  background: color-mix(in srgb, var(--brand) 24%, transparent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Scrollbar ramping (Firefox + WebKit) — detail kecil yang terasa premium. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+  background-clip: content-box;
+}
+
+/* === Utilitas gradien bertema =============================================
+   Semua berbasis CSS variable di atas, jadi ikut berubah saat admin
+   mengganti warna dasar/gradien di /admin/pengaturan. Dipakai lewat kelas
+   biasa (bukan class Tailwind) supaya nilainya selalu dari variable. */
+.grad-teks {
+  background-image: linear-gradient(to right, var(--brand), var(--teks-mid), var(--teks-end));
+}
+/* Gradien section landing: vertikal dan MEMUDAR ke --background di kedua
+   ujung, sehingga antar-section tidak ada garis potong/"sambungan" yang
+   terlihat saat scroll. Konten section di tengah (justify-center), jadi
+   zona fade di tepi tidak menimpa teks. */
+.grad-hero {
+  background-image: linear-gradient(
+    180deg,
+    var(--latar-1) 0%,
+    var(--latar-2) 45%,
+    var(--latar-3) 72%,
+    var(--background) 100%
+  );
+}
+.grad-koleksi {
+  background-image: linear-gradient(
+    180deg,
+    var(--background) 0%,
+    var(--latar-1) 22%,
+    var(--latar-2) 55%,
+    var(--background) 100%
+  );
+}
+.grad-testimoni {
+  background-image: linear-gradient(
+    180deg,
+    var(--background) 0%,
+    var(--latar-3) 22%,
+    var(--latar-1) 55%,
+    var(--background) 100%
+  );
+}
+.grad-cta {
+  background-image: linear-gradient(120deg, var(--cta-1) 0%, var(--cta-2) 45%, var(--cta-3) 100%);
+}
+/* Footer landing: turunan grad-cta yang digelapkan agar teks putih kontras
+   dan tampil senada panel halaman masuk — tetap mengikuti warna tema admin. */
+.grad-footer {
+  background-image: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--cta-1) 78%, #020617) 0%,
+    color-mix(in srgb, var(--cta-2) 62%, #020617) 55%,
+    color-mix(in srgb, var(--cta-1) 72%, #020617) 100%
+  );
+}
+.grad-brand {
+  background-image: linear-gradient(to right, var(--brand), var(--brand-light));
+}
+.grad-soft {
+  background-image: linear-gradient(to bottom right, var(--brand-soft), color-mix(in srgb, var(--brand-soft) 40%, white));
+}
+
+/* Scroll halus untuk tautan anchor (navbar landing).
+   scroll-padding-top: 0 — section landing semuanya setinggi viewport dengan
+   konten di tengah (justify-center), jadi mendarat TEPAT di ujung viewport
+   membuat konten jatuh persis di pusat layar. Navbar sticky 4rem hanya
+   menimpa zona padding atas (py-20 = 5rem), tidak menimpa konten. Hormati
+   prefers-reduced-motion. */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Semua kelas komponen berada di @layer components agar utility Tailwind
+   (w-44, pl-9, dsb.) tetap bisa menimpanya. */
+@layer components {
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 0.875rem;
+    box-shadow: var(--sh-1);
+  }
+
+  /* Kartu interaktif: terangkat halus saat disorot (tetap tanpa motion
+     bila pengguna meminta reduced-motion). */
+  .card-raised {
+    transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  }
+  .card-raised:hover {
+    box-shadow: var(--sh-3);
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--brand) 30%, var(--border));
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .card-raised,
+    .card-raised:hover {
+      transition: none;
+      transform: none;
+    }
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border-radius: 0.6rem;
+    padding: 0.55rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    /* Optik: tombol sedikit "turun" saat ditekan. */
+    transform: translateY(0);
+  }
+  .btn:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background: var(--brand);
+    color: #ffffff;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.08),
+      inset 0 1px 0 0 rgb(255 255 255 / 0.15);
+  }
+  .btn-primary:hover {
+    background: var(--brand-hover);
+    box-shadow: 0 4px 12px -2px color-mix(in srgb, var(--brand) 45%, transparent);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--foreground);
+    border-color: var(--border);
+  }
+  .btn-ghost:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+  }
+
+  .btn-danger {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+  .btn-danger:hover {
+    background: #fecaca;
+  }
+
+  /* Tombol besar — CTA utama di landing & auth. */
+  .btn-lg {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 0.7rem;
+    box-shadow: var(--sh-2);
+  }
+
+  .input {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 0.6rem;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.875rem;
+    background: #fff;
+    color: var(--foreground);
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .input::placeholder {
+    color: #94a3b8;
+  }
+  .input:hover:not(:focus) {
+    border-color: #cbd5e1;
+  }
+  .input:focus {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 18%, transparent);
+  }
+
+  .label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 0.3rem;
+    letter-spacing: 0.01em;
+  }
+
+  .table-base {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.875rem;
+  }
+  .table-base th {
+    text-align: left;
+    padding: 0.7rem 0.9rem;
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-bottom: 1px solid var(--border);
+    background: #f8fafc;
+    white-space: nowrap;
+  }
+  .table-base td {
+    padding: 0.8rem 0.9rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .table-base tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  .table-base tbody tr {
+    transition: background 0.12s ease;
+  }
+  .table-base tbody tr:hover {
+    background: #f8fafc;
+  }
+}
+
+/* === Pola latar dekoratif ===============================================
+   Kisi titik halus untuk hero/panel branding — kesan "sistem" yang rapi. */
+.pola-kisi {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    color-mix(in srgb, var(--brand) 22%, transparent) 1px,
+    transparent 0
+  );
+  background-size: 24px 24px;
+}
+
+/* Garis kisi besar (grid lines) untuk panel auth/CTA. */
+.pola-grid {
+  background-image: linear-gradient(
+      to right,
+      rgb(255 255 255 / 0.07) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.07) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* === Animasi masuk (entrance) ===========================================
+   Dipakai untuk judul/section landing; sekali jalan, hormati reduced-motion. */
+@keyframes naik {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.anim-naik {
+  animation: naik 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.anim-naik-1 {
+  animation-delay: 0.08s;
+}
+.anim-naik-2 {
+  animation-delay: 0.16s;
+}
+.anim-naik-3 {
+  animation-delay: 0.24s;
+}
+
+/* Ubin ikon mengapung (hero): gerak naik-turun halus tanpa loop keras. */
+@keyframes apung {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-10px);
+  }
+}
+.apung {
+  animation: apung 3.5s ease-in-out infinite alternate;
+}
+.apung-1 {
+  animation-delay: 0.7s;
+}
+.apung-2 {
+  animation-delay: 1.4s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .apung {
+    animation: none;
+  }
+}
+
+/* Bottelneck highlight bergerak di garis gradien (logo strip). */
+@keyframes sorot {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+.grad-jalan {
+  background-size: 200% 200%;
+  animation: sorot 6s ease-in-out infinite;
+}
+
+@keyframes denyut {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.85);
+  }
+}
+.anim-denyut {
+  animation: denyut 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-naik,
+  .grad-jalan,
+  .anim-denyut {
+    animation: none;
+  }
+}
+
+/* === Reveal on-scroll (komponen Reveal di ui.tsx) ==========================
+   Elemen mulai samar + sedikit turun; IntersectionObserver menambahkan
+   .tampil saat masuk viewport (sekali jalan). Hormati reduced-motion. */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0s);
+}
+.reveal.tampil {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* === Koleksi populer (marquee horizontal) ===============================
+   Deret kartu buku bergerak terus ke kiri. Daftar diduplikasi sehingga
+   translateX(-50%) = tepat satu salinan dan putarannya mulus tanpa jeda.
+   Tiap kartu membawa margin kanan sendiri (bukan gap track) agar lebar
+   salinan persis setengah track. Hover menjeda agar kartu mudah dibaca;
+   prefers-reduced-motion menjadikan deret statis. */
+.marquee-koleksi {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-geser 32s linear infinite;
+}
+.marquee-koleksi:hover .marquee-track {
+  animation-play-state: paused;
+}
+@keyframes marquee-geser {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}
+
+/* === Modal masuk (ui.tsx: Modal/ConfirmDialog) ===========================
+   Kartu naik + memuai kecil; tirai menyala pelan. */
+@keyframes modal-masuk {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.modal-masuk {
+  animation: modal-masuk 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes tirai-masuk {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.tirai-masuk {
+  animation: tirai-masuk 0.18s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal-masuk,
+  .tirai-masuk {
+    animation: none;
+  }
+}
+
+/* === Transisi antar-halaman (AppShell) ==================================
+   Konten panel menyala halus saat rute berganti — key di <main> membuat
+   animasi berjalan ulang tiap navigasi. */
+@keyframes halaman-masuk {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.anim-halaman {
+  animation: halaman-masuk 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .anim-halaman {
+    animation: none;
+  }
+}
+
+/* Toast notifikasi (src/components/toast.tsx) */
+@keyframes toast-masuk {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.toast-masuk {
+  animation: toast-masuk 0.18s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast-masuk {
+    animation: none;
+  }
+}
