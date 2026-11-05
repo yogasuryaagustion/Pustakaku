@@ -561,5 +561,3 @@ export interface BarisOpname {
 export function keOpname(r: BarisOpname): BarisOpname {
   return { ...r };
 }
-
-export {}
