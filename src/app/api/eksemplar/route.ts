@@ -562,6 +562,4 @@ export function keOpname(r: BarisOpname): BarisOpname {
   return { ...r };
 }
 
-export {};  // Sembunyikan export ganda sehingga file tidak jadi ekspor fungsi
-
 export {}
