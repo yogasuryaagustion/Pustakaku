@@ -1,0 +1,1314 @@
+﻿
+src\app\globals.css:15:  /* === TEMA (diatur admin di /admin/pengaturan, disimpan di localStorage) 
+===
+src\app\globals.css:126:   Semua berbasis CSS variable di atas, jadi ikut berubah saat admin
+src\app\globals.css:127:   mengganti warna dasar/gradien di /admin/pengaturan. Dipakai lewat kelas
+src\app\globals.css:173:   dan tampil senada panel halaman masuk — tetap mengikuti warna tema 
+admin. */
+src\app\layout.tsx:20:    "Sistem informasi perpustakaan: katalog buku, sirkulasi peminjaman, data 
+anggota, dan laporan.",
+src\app\page.tsx:7:import { SEED_BUKU, SEED_ANGGOTA, SEED_PEMINJAMAN } from "@/lib/seed";
+src\app\page.tsx:11:// Konten "real": diambil langsung dari data seed (buku, anggota, peminjaman).
+src\app\page.tsx:28:// dasar yang dipilih admin di /admin/pengaturan.
+src\app\page.tsx:107:    judul: "Panel Anggota Pribadi",
+src\app\page.tsx:113:    teks: "Kelola buku, anggota, sirkulasi, akun admin, dan reset sandi — 
+terpisah rapi dari portal anggota.",
+src\app\page.tsx:126:    peran: "Anggota · Pelajar",
+src\app\page.tsx:127:    isi: "Portal anggota memudahkan saya memantau pinjaman tanpa harus datang 
+ke perpustakaan. Jatuh tempo selalu jelas.",
+src\app\page.tsx:131:    peran: "Anggota · Umum",
+src\app\page.tsx:137:    isi: "Panel admin membuat sirkulasi buku tercatat rapi. Laporan bulanan 
+tinggal unduh, hemat waktu sekali.",
+src\app\page.tsx:141:    peran: "Anggota · Mahasiswa",
+src\app\page.tsx:151:    peran: "Anggota · Umum",
+src\app\page.tsx:161:    peran: "Anggota · Karyawan",
+src\app\page.tsx:162:    isi: "Panel anggota sederhana tapi lengkap: riwayat, jatuh tempo, dan 
+denda jelas dalam satu layar.",
+src\app\page.tsx:176:    q: "Bagaimana cara mendaftar sebagai anggota?",
+src\app\page.tsx:177:    a: "Klik tombol Daftar, isi nama, email, dan sandi. Kartu anggota digital 
+dibuat otomatis dan Anda langsung bisa meminjam buku.",
+src\app\page.tsx:266:  const anggotaAktif = SEED_ANGGOTA.filter((a) => a.aktif).length;
+src\app\page.tsx:571:                { v: anggotaAktif, l: "Anggota Aktif" },
+src\app\page.tsx:1071:                      judul: "Terdaftar sebagai anggota",
+src\app\page.tsx:1073:                        "Pengguna harus memiliki akun anggota yang aktif 
+untuk mengajukan peminjaman.",
+src\app\page.tsx:1084:                        "Buku harus dikembalikan sesuai tanggal jatuh tempo 
+yang tercantum pada akun anggota.",
+src\app\page.tsx:1232:              Temukan jawaban cepat seputar durasi pinjam, hak akses anggota,
+src\app\(publik)\layout.tsx:11:// pengunjung maupun anggota yang sedang masuk melihat halaman yang 
+sama.
+src\app\(publik)\layout.tsx:19:  // Halaman tujuan mengikuti peran: petugas → dashboard, anggota → 
+panel,
+src\app\(publik)\kebijakan-privasi\page.tsx:12:    "Bagaimana sistem perpustakaan mengumpulkan, 
+menyimpan, dan melindungi data anggota.",
+src\app\(publik)\kebijakan-privasi\page.tsx:26:          <b className="text-slate-800">Data kartu 
+anggota:</b> nomor anggota,
+src\app\(publik)\kebijakan-privasi\page.tsx:27:          jenis keanggotaan, nomor telepon, alamat, 
+dan foto profil bila Anda
+src\app\(publik)\kebijakan-privasi\page.tsx:52:        mengelola keanggotaan, memproses peminjaman 
+dan pengembalian, menghitung
+src\app\(publik)\kebijakan-privasi\page.tsx:63:        izin: anggota hanya dapat melihat datanya 
+sendiri, sedangkan pustakawan
+src\app\(publik)\kebijakan-privasi\page.tsx:76:        anggota lain.
+src\app\(publik)\kebijakan-privasi\page.tsx:100:        panel anggota.
+src\app\(publik)\kontak\page.tsx:10:    "Cara menghubungi perpustakaan: alamat, telepon, email, 
+dan bantuan anggota.",
+src\app\(publik)\kontak\page.tsx:49:        keanggotaan? Pilih kanal di bawah ini — pertanyaan 
+Anda akan dijawab
+src\app\(publik)\kontak\page.tsx:82:              Sudah menjadi anggota?
+src\app\(publik)\syarat-ketentuan\page.tsx:5:// Angka durasi/denda sengaja TIDAK ditulis di sini: 
+nilainya diatur admin dan
+src\app\(publik)\syarat-ketentuan\page.tsx:12:    "Ketentuan keanggotaan, peminjaman, 
+pengembalian, dan penggunaan sistem perpustakaan.",
+src\app\(publik)\syarat-ketentuan\page.tsx:27:    judul: "2. Keanggotaan",
+src\app\(publik)\syarat-ketentuan\page.tsx:35:          Kartu anggota digital dibuat otomatis 
+setelah pendaftaran dan
+src\app\(publik)\syarat-ketentuan\page.tsx:39:          Perpustakaan berhak menonaktifkan 
+keanggotaan yang melanggar ketentuan
+src\app\(publik)\syarat-ketentuan\page.tsx:55:          Peminjaman hanya dapat diajukan oleh 
+anggota aktif dengan akun yang
+src\app\(publik)\syarat-ketentuan\page.tsx:74:          Perpanjangan dapat diminta dari panel 
+anggota sebelum jatuh tempo,
+src\app\(publik)\syarat-ketentuan\page.tsx:101:        berujung penonaktifan keanggotaan sesuai 
+kebijakan perpustakaan.
+src\app\(publik)\syarat-ketentuan\page.tsx:134:        Ketentuan penggunaan layanan perpustakaan, 
+mulai dari keanggotaan
+src\app\admin\akses\page.tsx:30:// src/components/AppShell.tsx) sehingga sama dengan halaman admin 
+lainnya.
+src\app\admin\akses\page.tsx:41:  anggota: "M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2 M9 11a4 4 0 
+100-8 4 4 0 000 8z",
+src\app\admin\akses\page.tsx:121:            Administrasi Sistem
+src\app\admin\akun\page.tsx:21:  anggotaId: "",
+src\app\admin\akun\page.tsx:99:  const { anggota } = useLibrary();
+src\app\admin\akun\page.tsx:129:  const anggotaTanpaAkun = useMemo(
+src\app\admin\akun\page.tsx:131:      anggota.filter(
+src\app\admin\akun\page.tsx:132:        (a) => !pengguna.some((u) => u.anggotaId === a.id)
+src\app\admin\akun\page.tsx:134:    [anggota, pengguna]
+src\app\admin\akun\page.tsx:137:  const jumlahSuperAdmin = pengguna.filter(
+src\app\admin\akun\page.tsx:138:    (u) => u.peran === "superadmin"
+src\app\admin\akun\page.tsx:141:  const jumlahAdmin = pengguna.filter(
+src\app\admin\akun\page.tsx:142:    (u) => u.peran === "admin"
+src\app\admin\akun\page.tsx:145:  const jumlahAnggota = pengguna.filter(
+src\app\admin\akun\page.tsx:157:      anggotaId:
+src\app\admin\akun\page.tsx:158:        form.peran === "user" && form.anggotaId
+src\app\admin\akun\page.tsx:159:          ? form.anggotaId
+src\app\admin\akun\page.tsx:193:  // Ubah peran akun yang sudah ada (hanya Super Admin yang sampai 
+ke sini).
+src\app\admin\akun\page.tsx:273:              Akun Super Admin
+src\app\admin\akun\page.tsx:276:              {jumlahSuperAdmin} Super Admin
+src\app\admin\akun\page.tsx:290:              Akun Admin
+src\app\admin\akun\page.tsx:293:              {jumlahAdmin} Admin
+src\app\admin\akun\page.tsx:296:              Operasional: katalog, sirkulasi, anggota, laporan
+src\app\admin\akun\page.tsx:307:              Akun Anggota
+src\app\admin\akun\page.tsx:310:              {jumlahAnggota} Anggota
+src\app\admin\akun\page.tsx:313:              Akun dengan hak akses anggota
+src\app\admin\akun\page.tsx:328:              Informasi akun, hak akses, dan kartu anggota yang 
+terhubung.
+src\app\admin\akun\page.tsx:360:            <option value="superadmin">Super Admin</option>
+src\app\admin\akun\page.tsx:361:            <option value="admin">Admin</option>
+src\app\admin\akun\page.tsx:362:            <option value="user">Anggota</option>
+src\app\admin\akun\page.tsx:388:                    Kartu Anggota
+src\app\admin\akun\page.tsx:401:                  const kartu = u.anggotaId
+src\app\admin\akun\page.tsx:402:                    ? anggota.find((a) => a.id === u.anggotaId)
+src\app\admin\akun\page.tsx:458:                        <Badge tone={u.peran === "superadmin" ? 
+"teal" : u.peran === "admin" ? "sky" : "slate"}>
+src\app\admin\akun\page.tsx:459:                          {u.peran === "superadmin" ? "Super 
+Admin" : u.peran === "admin" ? "Admin" : "Anggota"}
+src\app\admin\akun\page.tsx:469:                            {kartu.nomorAnggota}
+src\app\admin\akun\page.tsx:532:            Akun admin: pengelolaan dilakukan melalui halaman ini.
+src\app\admin\akun\page.tsx:599:                  anggotaId: "",
+src\app\admin\akun\page.tsx:603:              <option value="user">Anggota</option>
+src\app\admin\akun\page.tsx:604:              <option value="admin">Admin</option>
+src\app\admin\akun\page.tsx:605:              <option value="superadmin">Super Admin</option>
+src\app\admin\akun\page.tsx:612:                Pautkan ke Kartu Anggota (opsional)
+src\app\admin\akun\page.tsx:617:                value={form.anggotaId}
+src\app\admin\akun\page.tsx:619:                  setForm({ ...form, anggotaId: e.target.value })
+src\app\admin\akun\page.tsx:623:                {anggotaTanpaAkun.map((a) => (
+src\app\admin\akun\page.tsx:625:                    {a.nomorAnggota} — {a.nama}
+src\app\admin\akun\page.tsx:631:                Anggota yang mendaftar secara publik sudah 
+otomatis terpaut.
+src\app\admin\akun\page.tsx:699:                ? peranTarget.peran === "superadmin"
+src\app\admin\akun\page.tsx:700:                  ? "Super Admin"
+src\app\admin\akun\page.tsx:701:                  : peranTarget.peran === "admin"
+src\app\admin\akun\page.tsx:702:                    ? "Admin"
+src\app\admin\akun\page.tsx:703:                    : "Anggota"
+src\app\admin\akun\page.tsx:715:              <option value="superadmin">
+src\app\admin\akun\page.tsx:716:                Super Admin — operasional + kelola akun, akses, & 
+pengaturan
+src\app\admin\akun\page.tsx:718:              <option value="admin">
+src\app\admin\akun\page.tsx:719:                Admin — operasional: dashboard, katalog, 
+sirkulasi, anggota, laporan
+src\app\admin\akun\page.tsx:721:              <option value="user">Anggota — panel pribadi & 
+peminjaman</option>
+src\app\admin\akun\page.tsx:728:            hanya dimiliki Super Admin.
+src\app\admin\akun\page.tsx:731:          {peranTarget?.id === sedangMasuk?.id && peranBaru !== 
+"superadmin" && (
+src\app\admin\akun\page.tsx:768:        message={`Akun "${hapusTarget?.nama}" 
+(${hapusTarget?.email}) akan dihapus permanen. Kartu anggota (bila ada) tidak ikut terhapus. 
+Lanjutkan?`}
+src\app\admin\migrasi\page.tsx:15://      data) — nama key lama tidak diketahui aplikasi, jadi 
+admin memastikan
+src\app\admin\migrasi\page.tsx:24://     Auth) — akun lama hanya dibuat bila admin mengisi sandi 
+sementara.
+src\app\admin\migrasi\page.tsx:26://   * Aktor jejak diambil dari sesi admin di server.
+src\app\admin\migrasi\page.tsx:28:// Halaman ini hanya di-mount setelah AppShell memastikan sesi 
+admin (gerbang
+src\app\admin\migrasi\page.tsx:30:// aman — sama seperti /admin/pengaturan dan /admin/akses.
+src\app\admin\migrasi\page.tsx:34:  | "anggota"
+src\app\admin\migrasi\page.tsx:42:  anggota: "Anggota",
+src\app\admin\migrasi\page.tsx:54:  "anggota",
+src\app\admin\migrasi\page.tsx:79:  anggota: Kelompok;
+src\app\admin\migrasi\page.tsx:100:    if (ada("nomorAnggota", "nomor_anggota")) return "anggota";
+src\app\admin\migrasi\page.tsx:113:    if (/anggota|member/.test(k)) return "anggota";
+src\app\admin\migrasi\page.tsx:173:function siapkanAnggota(v: unknown): Record<string, unknown>[] {
+src\app\admin\migrasi\page.tsx:288:        anggota: siapkanAnggota(ambil("anggota")).length,
+src\app\admin\migrasi\page.tsx:311:      anggota: siapkanAnggota(ambil("anggota")),
+src\app\admin\migrasi\page.tsx:340:      (payload.anggota as unknown[]).length +
+src\app\admin\migrasi\page.tsx:387:          sub="Data lama (buku, anggota, peminjaman, akun) 
+tersimpan di localStorage browser tempat aplikasi lama dijalankan. Buka halaman ini dari browser 
+tersebut, lalu tekan Muat Ulang."
+src\app\admin\migrasi\page.tsx:392:            ikut dimigrasikan — dikelola terpisah di 
+/admin/pengaturan.
+src\app\admin\migrasi\page.tsx:414:        <StatCard label="Anggota" value={jumlahBaris.anggota} 
+sub="kartu" tone="sky" />
+src\app\admin\migrasi\page.tsx:588:                    ["Anggota", hasil.anggota],
+src\app\admin\migrasi\page.tsx:636:            hasil.anggota.catatan.length > 0 ||
+src\app\admin\migrasi\page.tsx:646:                  ...hasil.anggota.catatan,
+src\app\admin\migrasi\page.tsx:663:        message={`${jumlahBaris.buku} buku, 
+${jumlahBaris.anggota} anggota, ${jumlahBaris.peminjaman} peminjaman, dan ${jumlahBaris.pengguna} 
+akun akan diproses. Impor idempoten — baris yang sudah ada dilewati, tidak diduplikasi. Data lama 
+di browser tidak dihapus.`}
+src\app\admin\migrasi\page.tsx:681:          Halaman khusus Super Admin (gerbang peran)
+src\app\admin\pengaturan\page.tsx:138:        {/* Judul konten — header utama berasal dari layout 
+admin */}
+src\app\admin\pengaturan\page.tsx:188:                label="Maksimal Judul per Anggota"
+src\app\admin\pengaturan\page.tsx:235:                    <strong>{sistem.maksPinjaman} buku per 
+anggota</strong>{" "}
+src\app\anggota\page.tsx:9:type AnggotaData = {
+src\app\anggota\page.tsx:20:  nomorAnggota?: string;
+src\app\anggota\page.tsx:30:type JenisAnggota = "Pelajar" | "Mahasiswa" | "Umum" | "Staf";
+src\app\anggota\page.tsx:54:function tanggalAnggota(a: AnggotaData) {
+src\app\anggota\page.tsx:81:function nomorKartu(a: AnggotaData) {
+src\app\anggota\page.tsx:82:  return a.nomorAnggota || a.kode || a.id;
+src\app\anggota\page.tsx:85:function kategoriAnggota(a: AnggotaData) {
+src\app\anggota\page.tsx:89:function unduhCSV(anggota: AnggotaData[]) {
+src\app\anggota\page.tsx:91:    "ID Anggota",
+src\app\anggota\page.tsx:104:  const baris = anggota.map((a) =>
+src\app\anggota\page.tsx:111:      kategoriAnggota(a),
+src\app\anggota\page.tsx:113:      tanggalAnggota(a),
+src\app\anggota\page.tsx:131:  link.download = "data-anggota-pustakaku.csv";
+src\app\anggota\page.tsx:137:export default function AnggotaPage() {
+src\app\anggota\page.tsx:139:    anggota,
+src\app\anggota\page.tsx:142:    ubahAnggota,
+src\app\anggota\page.tsx:143:    hapusAnggota,
+src\app\anggota\page.tsx:151:  const [anggotaEdit, setAnggotaEdit] =
+src\app\anggota\page.tsx:152:    useState<AnggotaData | null>(null);
+src\app\anggota\page.tsx:159:    jenis: "Umum" as JenisAnggota,
+src\app\anggota\page.tsx:166:  const daftarAnggota = anggota as AnggotaData[];
+src\app\anggota\page.tsx:175:          p.anggotaId,
+src\app\anggota\page.tsx:176:          (hasil.get(p.anggotaId) || 0) + 1
+src\app\anggota\page.tsx:183:  const totalAktif = daftarAnggota.filter((a) => a.aktif).length;
+src\app\anggota\page.tsx:184:  const totalNonaktif = daftarAnggota.length - totalAktif;
+src\app\anggota\page.tsx:186:  const anggotaMeminjam = daftarAnggota.filter(
+src\app\anggota\page.tsx:195:    new Set(daftarAnggota.map(kategoriAnggota))
+src\app\anggota\page.tsx:198:  const anggotaTampil = daftarAnggota.filter((a) => {
+src\app\anggota\page.tsx:221:      kategoriAnggota(a) === kategori;
+src\app\anggota\page.tsx:227:  function bukaEdit(a: AnggotaData) {
+src\app\anggota\page.tsx:228:    setAnggotaEdit(a);
+src\app\anggota\page.tsx:235:      jenis: (a.jenis || a.kategori || "Umum") as JenisAnggota,
+src\app\anggota\page.tsx:240:  // Menyimpan perubahan anggota.
+src\app\anggota\page.tsx:244:    if (!anggotaEdit || sedangMenyimpan) return;
+src\app\anggota\page.tsx:247:      window.alert("Nama anggota wajib diisi.");
+src\app\anggota\page.tsx:254:      const hasil = await ubahAnggota(anggotaEdit.id, {
+src\app\anggota\page.tsx:264:        window.alert(hasil.pesan || "Gagal memperbarui anggota.");
+src\app\anggota\page.tsx:268:      setAnggotaEdit(null);
+src\app\anggota\page.tsx:269:      window.alert(hasil.pesan || "Data anggota berhasil 
+diperbarui.");
+src\app\anggota\page.tsx:271:      console.error("Gagal memperbarui anggota:", error);
+src\app\anggota\page.tsx:272:      window.alert("Terjadi kesalahan saat memperbarui anggota.");
+src\app\anggota\page.tsx:278:  // Menghapus anggota setelah konfirmasi.
+src\app\anggota\page.tsx:279:  async function konfirmasiHapus(a: AnggotaData) {
+src\app\anggota\page.tsx:286:        `Anggota "${a.nama}" masih memiliki ${jumlahPinjaman} buku 
+yang sedang dipinjam.\n\nNonaktifkan anggota terlebih dahulu setelah transaksi diselesaikan.`
+src\app\anggota\page.tsx:292:      `Apakah kamu yakin ingin menghapus anggota "${a.nama}" dengan 
+nomor ${nomorKartu(a)}?\n\nTindakan ini tidak dapat dibatalkan.`
+src\app\anggota\page.tsx:300:      const hasil = await hapusAnggota(a.id);
+src\app\anggota\page.tsx:303:        window.alert(hasil.pesan || "Gagal menghapus anggota.");
+src\app\anggota\page.tsx:307:      window.alert(hasil.pesan || "Anggota berhasil dihapus.");
+src\app\anggota\page.tsx:309:      console.error("Gagal menghapus anggota:", error);
+src\app\anggota\page.tsx:310:      window.alert("Terjadi kesalahan saat menghapus anggota.");
+src\app\anggota\page.tsx:319:        Memuat data anggota...
+src\app\anggota\page.tsx:331:              Direktori &amp; Manajemen Anggota
+src\app\anggota\page.tsx:336:              {daftarAnggota.length} Terdaftar
+src\app\anggota\page.tsx:341:            Kelola hak akses peminjaman, kartu tanda anggota digital,
+src\app\anggota\page.tsx:383:            onClick={() => unduhCSV(anggotaTampil)}
+src\app\anggota\page.tsx:394:            href="/anggota/tambah"
+src\app\anggota\page.tsx:398:            Tambah Anggota Baru
+src\app\anggota\page.tsx:408:              Total Anggota Terdaftar
+src\app\anggota\page.tsx:419:              {daftarAnggota.length}
+src\app\anggota\page.tsx:424:            Seluruh anggota yang terdaftar
+src\app\anggota\page.tsx:431:              Status Anggota Aktif
+src\app\anggota\page.tsx:446:            {daftarAnggota.length
+src\app\anggota\page.tsx:447:              ? Math.round((totalAktif / daftarAnggota.length) * 100)
+src\app\anggota\page.tsx:449:            % dari seluruh anggota
+src\app\anggota\page.tsx:467:              {anggotaMeminjam}
+src\app\anggota\page.tsx:469:            <span className="text-sm text-slate-400">Anggota</span>
+src\app\anggota\page.tsx:482:              ["Semua", daftarAnggota.length],
+src\app\anggota\page.tsx:520:            aria-label="Filter kategori anggota"
+src\app\anggota\page.tsx:534:        anggotaTampil.length > 0 ? (
+src\app\anggota\page.tsx:536:            {anggotaTampil.map((a, index) => {
+src\app\anggota\page.tsx:553:                  {/* Identitas anggota */}
+src\app\anggota\page.tsx:624:                      {kategoriAnggota(a)}
+src\app\anggota\page.tsx:632:                            `Kartu Anggota\n\nNama: ${a.nama}\nID: 
+${nomorKartu(a)}\nKategori: ${kategoriAnggota(a)}\nStatus: ${a.aktif ? "Aktif" : "Nonaktif"}`
+src\app\anggota\page.tsx:636:                        title="Lihat informasi kartu anggota"
+src\app\anggota\page.tsx:677:                      Bergabung: {tanggalAnggota(a)}
+src\app\anggota\page.tsx:693:              Anggota tidak ditemukan
+src\app\anggota\page.tsx:718:                  <th className="px-5 py-4 font-semibold">Anggota</th>
+src\app\anggota\page.tsx:729:                {anggotaTampil.map((a) => (
+src\app\anggota\page.tsx:755:                      {kategoriAnggota(a)}
+src\app\anggota\page.tsx:759:                      {tanggalAnggota(a)}
+src\app\anggota\page.tsx:783:                          title="Edit anggota"
+src\app\anggota\page.tsx:796:                          title="Hapus anggota"
+src\app\anggota\page.tsx:809:                {anggotaTampil.length === 0 && (
+src\app\anggota\page.tsx:815:                      Tidak ada anggota yang sesuai dengan filter.
+src\app\anggota\page.tsx:825:      {/* Modal Edit Anggota */}
+src\app\anggota\page.tsx:826:      {anggotaEdit && (
+src\app\anggota\page.tsx:834:              setAnggotaEdit(null);
+src\app\anggota\page.tsx:842:                  Edit Data Anggota
+src\app\anggota\page.tsx:845:                  Perbarui informasi anggota PustakaKu.
+src\app\anggota\page.tsx:852:                onClick={() => setAnggotaEdit(null)}
+src\app\anggota\page.tsx:862:                Nomor Keanggotaan
+src\app\anggota\page.tsx:865:                {nomorKartu(anggotaEdit)}
+src\app\anggota\page.tsx:868:                Nomor keanggotaan tidak dapat diubah.
+src\app\anggota\page.tsx:953:                        jenis: e.target.value as JenisAnggota,
+src\app\anggota\page.tsx:967:                    Status Anggota
+src\app\anggota\page.tsx:989:                  onClick={() => setAnggotaEdit(null)}
+src\app\anggota\kartu\page.tsx:8:import { payloadQrAnggota, statusAnggota, UKURAN_KARTU } from 
+"@/lib/kartu";
+src\app\anggota\kartu\page.tsx:9:import type { Anggota } from "@/lib/types";
+src\app\anggota\kartu\page.tsx:23:async function unduhPdf(kartu: Anggota, namaPerpustakaan: 
+string, qr: string) {
+src\app\anggota\kartu\page.tsx:47:  pdf.text("KARTU KEANGGOTAAN", 9, 15);
+src\app\anggota\kartu\page.tsx:75:  pdf.text("NOMOR ANGGOTA", 30, 30);
+src\app\anggota\kartu\page.tsx:79:  pdf.text(kartu.nomorAnggota, 30, 35);
+src\app\anggota\kartu\page.tsx:90:  pdf.text(statusAnggota(kartu).toUpperCase(), 74, 34, { align: 
+"center" });
+src\app\anggota\kartu\page.tsx:94:  pdf.text("Tunjukkan kartu kepada petugas", 74, 39, { align: 
+"center", maxWidth: 24 });
+src\app\anggota\kartu\page.tsx:95:  pdf.text("QR berisi nomor anggota; bukan bukti check-in", 74, 
+44, { align: "center", maxWidth: 25 });
+src\app\anggota\kartu\page.tsx:97:  pdf.save(`kartu-${kartu.nomorAnggota.toLowerCase()}.pdf`);
+src\app\anggota\kartu\page.tsx:100:export default function KartuAnggotaPage() {
+src\app\anggota\kartu\page.tsx:102:  // Fitur kartu diatur admin lewat Kelola Akses (izin 
+kartu.lihat); sakelar
+src\app\anggota\kartu\page.tsx:105:  const [anggota, setAnggota] = useState<Anggota | null>(null);
+src\app\anggota\kartu\page.tsx:117:      apiFetch<{ anggota: Anggota | null 
+}>("/api/anggota/kartu"),
+src\app\anggota\kartu\page.tsx:122:        const milikSaya = kartuRes.anggota;
+src\app\anggota\kartu\page.tsx:124:          setAnggota(null);
+src\app\anggota\kartu\page.tsx:127:        setAnggota(milikSaya);
+src\app\anggota\kartu\page.tsx:129:          setGalat("Keanggotaan Anda nonaktif. Hubungi 
+pustakawan untuk bantuan.");
+src\app\anggota\kartu\page.tsx:134:            const gambarQr = await 
+QRCode.toDataURL(payloadQrAnggota(milikSaya.nomorAnggota), {
+src\app\anggota\kartu\page.tsx:148:          setGalat(error instanceof Error ? error.message : 
+"Kartu anggota gagal dimuat.");
+src\app\anggota\kartu\page.tsx:160:  }, [authSiap, sedangMasuk, sedangMasuk?.anggotaId, 
+sedangMasuk?.email]);
+src\app\anggota\kartu\page.tsx:162:  const status = useMemo(() => (anggota ? 
+statusAnggota(anggota) : "—"), [anggota]);
+src\app\anggota\kartu\page.tsx:165:    if (!anggota || !qr || !anggota.aktif) return;
+src\app\anggota\kartu\page.tsx:168:      await unduhPdf(anggota, namaPerpustakaan, qr);
+src\app\anggota\kartu\page.tsx:177:    return <div className="card p-8 text-center text-sm 
+text-[var(--muted)]">Memuat kartu anggota…</div>;
+src\app\anggota\kartu\page.tsx:180:    return <div className="card p-8 text-center text-sm 
+text-[var(--muted)]">Silakan masuk dengan akun anggota untuk melihat kartu.</div>;
+src\app\anggota\kartu\page.tsx:185:        <h2 className="font-bold">Fitur Kartu Anggota 
+Dinonaktifkan</h2>
+src\app\anggota\kartu\page.tsx:187:          Pengelola perpustakaan sedang menonaktifkan layanan 
+kartu anggota.
+src\app\anggota\kartu\page.tsx:193:  if (galat && !anggota) {
+src\app\anggota\kartu\page.tsx:196:  if (!anggota) {
+src\app\anggota\kartu\page.tsx:197:    return <div className="card p-8 text-center"><h2 
+className="font-bold">Kartu anggota belum tersedia</h2><p className="mt-2 text-sm 
+text-[var(--muted)]">Hubungi pustakawan untuk menautkan kartu anggota Anda.</p></div>;
+src\app\anggota\kartu\page.tsx:203:        <div><h2 className="text-xl font-bold">Kartu 
+Keanggotaan</h2><p className="mt-1 text-sm text-[var(--muted)]">Pratinjau kartu identitas anggota 
+berukuran standar ID-1.</p></div>
+src\app\anggota\kartu\page.tsx:206:          <button className="btn btn-primary" type="button" 
+onClick={unduh} disabled={!qr || pdfProses || !anggota.aktif}>{pdfProses ? "Membuat PDF…" : "Unduh 
+PDF"}</button>
+src\app\anggota\kartu\page.tsx:212:      <section className="mx-auto w-full max-w-[540px] 
+print:w-[85.6mm] print:max-w-none" aria-label="Pratinjau kartu anggota">
+src\app\anggota\kartu\page.tsx:213:        <article className={`membership-card ${anggota.aktif ? 
+"" : "membership-card-inactive"}`}>
+src\app\anggota\kartu\page.tsx:214:          {!anggota.aktif && <div 
+className="membership-inactive-banner" role="status">NONAKTIF — BUKAN KARTU VALID</div>}
+src\app\anggota\kartu\page.tsx:217:            <div className="min-w-0"><div 
+className="membership-library-name">{namaPerpustakaan}</div><div 
+className="membership-caption">KARTU KEANGGOTAAN</div></div>
+src\app\anggota\kartu\page.tsx:218:            <span className={`membership-status ${anggota.aktif 
+? "" : "membership-status-inactive"}`}>{status}</span>
+src\app\anggota\kartu\page.tsx:221:            <Avatar nama={anggota.nama} foto={anggota.foto} 
+className="membership-avatar" />
+src\app\anggota\kartu\page.tsx:223:              <div 
+className="membership-name">{anggota.nama}</div>
+src\app\anggota\kartu\page.tsx:224:              <div className="membership-label">NOMOR 
+ANGGOTA</div>
+src\app\anggota\kartu\page.tsx:225:              <div 
+className="membership-number">{anggota.nomorAnggota}</div>
+src\app\anggota\kartu\page.tsx:226:              <div className="membership-meta"><span>Jenis: 
+{anggota.jenis}</span><span>Bergabung: {tanggal(anggota.bergabungPada)}</span></div>
+src\app\anggota\kartu\page.tsx:231:                <img className="membership-qr" src={qr} alt="QR 
+identifikasi nomor anggota" />
+src\app\anggota\kartu\page.tsx:232:              ) : <div 
+className="membership-qr-placeholder">{anggota.aktif ? "Membuat QR…" : "QR dinonaktifkan"}</div>}
+src\app\anggota\kartu\page.tsx:233:              <span className="membership-qr-caption">Tunjukkan 
+kepada petugas</span>
+src\app\anggota\kartu\page.tsx:236:          <div className="membership-card-foot">QR berisi nomor 
+anggota saja. Check-in tetap divalidasi oleh server.</div>
+src\app\anggota\kartu\page.tsx:239:      <p className="text-center text-xs text-[var(--muted)] 
+print:hidden">Saat mencetak, pilih skala 100% / ukuran aktual dan nonaktifkan header serta footer 
+browser. QR hanya mengenali nomor anggota; kios saat ini meminta nomor secara manual, QR-scan 
+belum diintegrasikan.</p>
+src\app\anggota\tambah\page.tsx:10:type JenisAnggota = "Pelajar" | "Mahasiswa" | "Umum" | "Staf";
+src\app\anggota\tambah\page.tsx:12:export default function TambahAnggotaPage() {
+src\app\anggota\tambah\page.tsx:14:  const bolehKelola = useBoleh("anggota.kelola");
+src\app\anggota\tambah\page.tsx:15:  const { tambahAnggota } = useLibrary();
+src\app\anggota\tambah\page.tsx:21:  const [jenis, setJenis] = useState<JenisAnggota>("Umum");
+src\app\anggota\tambah\page.tsx:31:      setPesan("Nama anggota minimal 3 karakter.");
+src\app\anggota\tambah\page.tsx:46:      const hasil = await tambahAnggota({
+src\app\anggota\tambah\page.tsx:56:        setPesan(hasil.pesan || "Gagal menambahkan anggota.");
+src\app\anggota\tambah\page.tsx:60:      router.push("/anggota");
+src\app\anggota\tambah\page.tsx:66:          : "Terjadi kesalahan saat menyimpan anggota."
+src\app\anggota\tambah\page.tsx:81:            Kamu tidak memiliki izin untuk menambahkan anggota.
+src\app\anggota\tambah\page.tsx:84:            href="/anggota"
+src\app\anggota\tambah\page.tsx:87:            Kembali ke Direktori Anggota
+src\app\anggota\tambah\page.tsx:98:          href="/anggota"
+src\app\anggota\tambah\page.tsx:101:          ← Kembali ke Direktori Anggota
+src\app\anggota\tambah\page.tsx:105:          MANAJEMEN ANGGOTA
+src\app\anggota\tambah\page.tsx:108:          Tambah Anggota Baru
+src\app\anggota\tambah\page.tsx:111:          Masukkan informasi anggota untuk membuat kartu 
+keanggotaan.
+src\app\anggota\tambah\page.tsx:121:            Informasi Anggota
+src\app\anggota\tambah\page.tsx:177:              Jenis anggota *
+src\app\anggota\tambah\page.tsx:182:              onChange={(e) => setJenis(e.target.value as 
+JenisAnggota)}
+src\app\anggota\tambah\page.tsx:194:              Status anggota
+src\app\anggota\tambah\page.tsx:217:              placeholder="Masukkan alamat anggota"
+src\app\anggota\tambah\page.tsx:224:              Nomor anggota otomatis
+src\app\anggota\tambah\page.tsx:241:            href="/anggota"
+src\app\anggota\tambah\page.tsx:252:            {memproses ? "Menyimpan..." : "Simpan Anggota"}
+src\app\api\akun\route.ts:1:// Kelola akun login (Super Admin): daftar akun & daftar semua profil.
+src\app\api\akun\route.ts:2:// Gerbang: izin `akun.kelola` — bawaan hanya SUPER ADMIN yang punya,
+src\app\api\akun\route.ts:3:// tetap bisa dibuka lewat Kelola Akses bila sengaja diberikan ke 
+Admin.
+src\app\api\akun\route.ts:13:import { createSupabaseAdmin, createSupabaseAnon } from 
+"@/lib/supabase/server";
+src\app\api\akun\route.ts:24:      .select("id, nama, email, peran, anggota_id, dibuat_pada")
+src\app\api\akun\route.ts:39:    const peran = body?.peran === "superadmin" ? "superadmin" : 
+body?.peran === "admin" ? "admin" : "user";
+src\app\api\akun\route.ts:40:    const anggotaId = typeof body?.anggotaId === "string" && 
+body.anggotaId ? body.anggotaId : null;
+src\app\api\akun\route.ts:49:      const admin = createSupabaseAdmin();
+src\app\api\akun\route.ts:50:      const { data, error } = await admin.auth.admin.createUser({
+src\app\api\akun\route.ts:83:    // 2) Tetapkan peran & tautan kartu (oleh sesi admin — pemicu 
+mengizinkan).
+src\app\api\akun\route.ts:86:      .update({ peran, anggota_id: anggotaId })
+src\app\api\akun\route.ts:88:      .select("id, nama, email, peran, anggota_id, dibuat_pada")
+src\app\api\akun\route.ts:98:      anggotaId,
+src\app\api\akun\[id]\route.ts:1:// Reset kata sandi & hapus akun (Super Admin) — keduanya 
+membutuhkan kunci
+src\app\api\akun\[id]\route.ts:4:// Gerbang: izin `akun.kelola` (bawaan hanya Super Admin).
+src\app\api\akun\[id]\route.ts:14:import { createSupabaseAdmin } from "@/lib/supabase/server";
+src\app\api\akun\[id]\route.ts:23:function admin() {
+src\app\api\akun\[id]\route.ts:25:    return createSupabaseAdmin();
+src\app\api\akun\[id]\route.ts:39:      body?.peran === "superadmin"
+src\app\api\akun\[id]\route.ts:40:        ? "superadmin"
+src\app\api\akun\[id]\route.ts:41:        : body?.peran === "admin"
+src\app\api\akun\[id]\route.ts:42:          ? "admin"
+src\app\api\akun\[id]\route.ts:56:    // === A) Ubah peran (Super Admin / Admin / Anggota) 
+==================
+src\app\api\akun\[id]\route.ts:65:      // Kunci anti-lockout: sistem tidak boleh kehilangan Super 
+Admin terakhir
+src\app\api\akun\[id]\route.ts:67:      if (t.peran === "superadmin" && peranBaru !== 
+"superadmin") {
+src\app\api\akun\[id]\route.ts:73:          (x) => (x as { peran: string }).peran === "superadmin"
+src\app\api\akun\[id]\route.ts:76:          throw new GalatApi("Harus ada setidaknya satu akun 
+Super Admin aktif.", 409);
+src\app\api\akun\[id]\route.ts:89:      // Admin yang boleh mengubah peran. Bila nilai kembali 
+seperti semula,
+src\app\api\akun\[id]\route.ts:94:          "Peran ditolak database. Jalankan migrasi 
+202610300001_peran_superadmin.sql (aturan pemicu jaga_profil) lalu coba lagi.",
+src\app\api\akun\[id]\route.ts:114:    const a = admin();
+src\app\api\akun\[id]\route.ts:115:    const { error } = await a.auth.admin.updateUserById(id, { 
+password: sandiBaru });
+src\app\api\akun\[id]\route.ts:142:    // Kunci anti-lockout: sistem tak boleh kehilangan seluruh 
+Super Admin-nya.
+src\app\api\akun\[id]\route.ts:144:      target.peran === "superadmin" &&
+src\app\api\akun\[id]\route.ts:145:      daftar.filter((x) => x.peran === "superadmin").length <= 1
+src\app\api\akun\[id]\route.ts:147:      throw new GalatApi("Harus ada setidaknya satu akun Super 
+Admin aktif.");
+src\app\api\akun\[id]\route.ts:150:    const a = admin();
+src\app\api\akun\[id]\route.ts:151:    const { error } = await a.auth.admin.deleteUser(id);
+src\app\api\anggota\route.ts:1:// Data anggota: daftar (sesuai izin) & penambahan kartu baru.
+src\app\api\anggota\route.ts:12:import { dariAnggota, keAnggota, type BarisAnggota } from 
+"@/lib/supabase/peta";
+src\app\api\anggota\route.ts:13:import { sahkanAnggotaBody } from "@/lib/supabase/validasi";
+src\app\api\anggota\route.ts:17:    // RLS: admin melihat semua kartu; anggota biasa hanya kartu 
+miliknya
+src\app\api\anggota\route.ts:22:      .from("anggota")
+src\app\api\anggota\route.ts:26:      .order("nomor_anggota", { ascending: true });
+src\app\api\anggota\route.ts:28:    return json({ anggota: ((data ?? []) as 
+BarisAnggota[]).map(keAnggota) });
+src\app\api\anggota\route.ts:34:    const k = await konteksRoute({ wajibMasuk: true, wajibIzin: 
+"anggota.kelola" });
+src\app\api\anggota\route.ts:35:    const isi = sahkanAnggotaBody(await bacaBody(request), { 
+wajibSemua: true });
+src\app\api\anggota\route.ts:38:    let nomor = isi.nomorAnggota;
+src\app\api\anggota\route.ts:40:      const { data, error } = await 
+k.supabase.rpc("nomor_anggota_baru");
+src\app\api\anggota\route.ts:46:      .from("anggota")
+src\app\api\anggota\route.ts:47:      .insert({ ...dariAnggota(isi), nomor_anggota: nomor })
+src\app\api\anggota\route.ts:52:    const anggota = keAnggota(data as BarisAnggota);
+src\app\api\anggota\route.ts:54:      jenis: "anggota",
+src\app\api\anggota\route.ts:55:      aksi: "Anggota ditambahkan",
+src\app\api\anggota\route.ts:56:      objek: anggota.nama,
+src\app\api\anggota\route.ts:57:      detail: anggota.nomorAnggota,
+src\app\api\anggota\route.ts:58:      anggotaId: anggota.id,
+src\app\api\anggota\route.ts:60:    return json({ anggota }, 201);
+src\app\api\anggota\kartu\route.ts:1:// Kartu keanggotaan milik sesi yang sedang masuk — di 
+gerbang izin `kartu.lihat`
+src\app\api\anggota\kartu\route.ts:2:// sehingga admin dapat menutup/membuka fitur kartu lewat 
+Kelola Akses tanpa
+src\app\api\anggota\kartu\route.ts:9:import { keAnggota, type BarisAnggota } from 
+"@/lib/supabase/peta";
+src\app\api\anggota\kartu\route.ts:10:import type { Anggota } from "@/lib/types";
+src\app\api\anggota\kartu\route.ts:18:    let kartu: Anggota | null = null;
+src\app\api\anggota\kartu\route.ts:21:    if (pengguna.anggotaId) {
+src\app\api\anggota\kartu\route.ts:23:        .from("anggota")
+src\app\api\anggota\kartu\route.ts:25:        .eq("id", pengguna.anggotaId)
+src\app\api\anggota\kartu\route.ts:28:      if (data) kartu = keAnggota(data as BarisAnggota);
+src\app\api\anggota\kartu\route.ts:39:    return json({ anggota: kartu });
+src\app\api\anggota\[id]\route.ts:1:// Ubah / hapus satu kartu anggota.
+src\app\api\anggota\[id]\route.ts:12:import { dariAnggota, keAnggota, type BarisAnggota } from 
+"@/lib/supabase/peta";
+src\app\api\anggota\[id]\route.ts:13:import { sahkanAnggotaBody } from "@/lib/supabase/validasi";
+src\app\api\anggota\[id]\route.ts:26:    const punyaIzinKartu = k.izin("anggota.kelola");
+src\app\api\anggota\[id]\route.ts:27:    const kartuSendiri = k.pengguna?.anggotaId === id;
+src\app\api\anggota\[id]\route.ts:29:      throw new GalatApi("Anda tidak memiliki izin untuk 
+mengubah data anggota ini.", 403);
+src\app\api\anggota\[id]\route.ts:32:    const patch = sahkanAnggotaBody(await bacaBody(request));
+src\app\api\anggota\[id]\route.ts:34:      // Anggota biasa hanya boleh menyentuh data kontak & 
+fotonya sendiri.
+src\app\api\anggota\[id]\route.ts:42:      .from("anggota")
+src\app\api\anggota\[id]\route.ts:47:    if (!sebelum) throw new GalatApi("Anggota tidak 
+ditemukan.", 404);
+src\app\api\anggota\[id]\route.ts:50:      .from("anggota")
+src\app\api\anggota\[id]\route.ts:51:      .update(dariAnggota(patch))
+src\app\api\anggota\[id]\route.ts:57:    const anggota = keAnggota(data as BarisAnggota);
+src\app\api\anggota\[id]\route.ts:59:      jenis: "anggota",
+src\app\api\anggota\[id]\route.ts:60:      aksi: "Anggota diubah",
+src\app\api\anggota\[id]\route.ts:61:      objek: patch.nama ?? (sebelum as BarisAnggota).nama,
+src\app\api\anggota\[id]\route.ts:64:          ? `status → ${anggota.aktif ? "Aktif" : "Nonaktif"}`
+src\app\api\anggota\[id]\route.ts:66:      anggotaId: anggota.id,
+src\app\api\anggota\[id]\route.ts:68:    return json({ anggota });
+src\app\api\anggota\[id]\route.ts:75:    const k = await konteksRoute({ wajibMasuk: true, 
+wajibIzin: "anggota.kelola" });
+src\app\api\anggota\[id]\route.ts:78:      .from("anggota")
+src\app\api\anggota\[id]\route.ts:83:    if (!sebelum) throw new GalatApi("Anggota tidak 
+ditemukan.", 404);
+src\app\api\anggota\[id]\route.ts:85:    const { error } = await 
+k.supabase.from("anggota").delete().eq("id", id);
+src\app\api\anggota\[id]\route.ts:89:      jenis: "anggota",
+src\app\api\anggota\[id]\route.ts:90:      aksi: "Anggota dihapus",
+src\app\api\anggota\[id]\route.ts:91:      objek: (sebelum as BarisAnggota).nama,
+src\app\api\anggota\[id]\route.ts:92:      detail: (sebelum as BarisAnggota).nomor_anggota,
+src\app\api\auth\daftar\route.ts:1:// Pendaftaran publik: membuat akun Supabase Auth + kartu 
+anggota.
+src\app\api\auth\daftar\route.ts:40:    // Kebijakan akses: pendaftaran publik bisa ditutup lewat 
+/admin/akses.
+src\app\api\auth\daftar\route.ts:56:    if (body?.setuju !== true) throw new GalatApi("Persetujuan 
+syarat keanggotaan dan privasi wajib diberikan.");
+src\app\api\auth\daftar\route.ts:58:    const kartuMasuk = (body?.anggota && typeof body.anggota 
+=== "object"
+src\app\api\auth\daftar\route.ts:59:      ? body.anggota
+src\app\api\auth\daftar\route.ts:67:    if (!(["Pelajar", "Mahasiswa", 
+"Umum"].includes(kartuMasuk.jenis ?? ""))) throw new GalatApi("Jenis anggota tidak valid.");
+src\app\api\auth\daftar\route.ts:73:    // 1) Buat akun Auth lewat klien ANON agar cookie sesi 
+admin tidak tertimpa.
+src\app\api\auth\daftar\route.ts:134:      .select("id, nama, email, peran, anggota_id, 
+dibuat_pada")
+src\app\api\auth\daftar\route.ts:140:    let anggotaId = profil.anggota_id;
+src\app\api\auth\daftar\route.ts:141:    if (!anggotaId) {
+src\app\api\auth\daftar\route.ts:148:      if (errorKartu) throw new GalatApi(errorKartu.message 
+|| "Kartu anggota gagal ditautkan.");
+src\app\api\auth\daftar\route.ts:149:      anggotaId = typeof data === "string" ? data : null;
+src\app\api\auth\daftar\route.ts:156:      detail: anggotaId ? "terpaut kartu anggota" : null,
+src\app\api\auth\daftar\route.ts:158:      anggota_id: anggotaId,
+src\app\api\auth\daftar\route.ts:163:    const pengguna = kePengguna({ ...(profil as BarisProfil), 
+anggota_id: anggotaId });
+src\app\api\auth\daftar\route.ts:164:    const kartuAktif = Boolean(anggotaId);
+src\app\api\auth\daftar\route.ts:170:        : "Pendaftaran berhasil; kartu anggota akan aktif 
+setelah email dikonfirmasi.",
+src\app\api\auth\keluar\route.ts:14:        anggota_id: k.pengguna.anggotaId ?? null,
+src\app\api\auth\masuk\route.ts:30:      .select("id, nama, email, peran, anggota_id, dibuat_pada")
+src\app\api\auth\masuk\route.ts:38:    k.peran = profil.peran === "superadmin" ? "superadmin" : 
+profil.peran === "admin" ? "admin" : "user";
+src\app\api\auth\masuk\route.ts:46:      anggota_id: profil.anggota_id,
+src\app\api\auth\masuk\route.ts:58:          profil.peran === "superadmin"
+src\app\api\auth\masuk\route.ts:59:            ? "superadmin"
+src\app\api\auth\masuk\route.ts:60:            : profil.peran === "admin"
+src\app\api\auth\masuk\route.ts:61:              ? "admin"
+src\app\api\auth\masuk\route.ts:63:        anggotaId: profil.anggota_id ?? undefined,
+src\app\api\auth\sesi\route.ts:10:    // Sembuhkan tautan kartu anggota yang belum terpasang (mis. 
+akun lama
+src\app\api\buku\route.ts:1:// Katalog buku: daftar (publik sesuai izin) & penambahan (admin).
+src\app\api\buku\route.ts:18:    // sehingga tamu, anggota, dan admin masing-masing menerima set 
+yang benar —
+src\app\api\buku\route.ts:35:    // agar ketersediaan stok benar untuk semua peran — bukan hanya 
+admin.
+src\app\api\jejak\route.ts:21:  "anggota",
+src\app\api\jejak\route.ts:28:    // RLS: admin melihat semua; anggota hanya jejak miliknya / 
+kartunya.
+src\app\api\jejak\route.ts:63:        anggota_id: k.pengguna?.anggotaId ?? null,
+src\app\api\jejak\route.ts:77:    const k = await konteksRoute({ wajibMasuk: true, wajibAdmin: 
+true });
+src\app\api\jejak\route.ts:91:    detail: "seluruh riwayat dihapus oleh admin",
+src\app\api\jejak\route.ts:93:    aktor: k.pengguna?.nama ?? "Admin",
+src\app\api\kebijakan\route.ts:1:// Kebijakan akses (matriks RBAC): dibaca publik, diubah hanya 
+SUPER ADMIN.
+src\app\api\kebijakan\route.ts:3:// dijaga gerbang peran superadmin (RUTE_PERAN di 
+src/lib/akses.ts), sehingga
+src\app\api\kebijakan\route.ts:4:// Admin tak bisa menaikkan haknya sendiri lewat endpoint ini.
+src\app\api\kebijakan\route.ts:35:    const k = await konteksRoute({ wajibMasuk: true, 
+wajibSuperAdmin: true });
+src\app\api\kunjungan\route.ts:1:// Check-in kunjungan (kios perpustakaan) & rekap kunjungan 
+(admin).
+src\app\api\kunjungan\route.ts:6://       Menerima nomor anggota, memvalidasinya di route DAN di 
+fungsi
+src\app\api\kunjungan\route.ts:13://       anggota, pengurutan tanggal+waktu, dan paginasi 
+server-side agar
+src\app\api\kunjungan\route.ts:15://       (is_admin, migrasi 0009) tetap menegakkan batas walau 
+route dilewati.
+src\app\api\kunjungan\route.ts:36:  nomor_anggota: string;
+src\app\api\kunjungan\route.ts:90:    const nomor = typeof body?.nomorAnggota === "string" ? 
+body.nomorAnggota.trim() : "";
+src\app\api\kunjungan\route.ts:91:    if (!nomor) throw new GalatApi("Nomor anggota wajib diisi.");
+src\app\api\kunjungan\route.ts:93:      throw new GalatApi("Format nomor anggota tidak valid.");
+src\app\api\kunjungan\route.ts:105:      throw new GalatApi("Check-in gagal diproses. Coba lagi 
+atau hubungi petugas.", 500);
+src\app\api\kunjungan\route.ts:112:        nomorAnggota: r.nomor_anggota,
+src\app\api\kunjungan\route.ts:125:// GET — rekap/laporan kunjungan (admin, izin laporan.lihat)
+src\app\api\kunjungan\route.ts:159:    const ekspresiQ = q ? 
+`nomor_anggota.ilike.*${q}*,nama.ilike.*${q}*` : null;
+src\app\api\kunjungan\route.ts:165:        "id, anggota_id, tanggal_kunjungan, waktu_masuk, 
+anggota(nama, nomor_anggota, jenis)",
+src\app\api\kunjungan\route.ts:171:      kueriBaris = kueriBaris.or(ekspresiQ, { foreignTable: 
+"anggota" });
+src\app\api\kunjungan\route.ts:186:      .select("tanggal_kunjungan, anggota_id")
+src\app\api\kunjungan\route.ts:190:      kueriAgregat = kueriAgregat.or(ekspresiQ, { foreignTable: 
+"anggota" });
+src\app\api\kunjungan\route.ts:205:      anggota_id: string;
+src\app\api\kunjungan\route.ts:210:      anggota:
+src\app\api\kunjungan\route.ts:211:        | { nama: string; nomor_anggota: string; jenis?: string 
+| null }[]
+src\app\api\kunjungan\route.ts:212:        | { nama: string; nomor_anggota: string; jenis?: string 
+| null }
+src\app\api\kunjungan\route.ts:216:    const kartu = (b: Baris) => (Array.isArray(b.anggota) ? 
+b.anggota[0] : b.anggota);
+src\app\api\kunjungan\route.ts:220:    for (const a of (agregat ?? []) as { tanggal_kunjungan: 
+string; anggota_id: string }[]) {
+src\app\api\kunjungan\route.ts:222:      unik.add(a.anggota_id);
+src\app\api\kunjungan\route.ts:246:        anggotaId: b.anggota_id,
+src\app\api\kunjungan\route.ts:248:        nomorAnggota: kartu(b)?.nomor_anggota ?? "-",
+src\app\api\kunjungan\route.ts:249:        // Jenis keanggotaan (Pelajar/Mahasiswa/Umum/Staf) 
+untuk badge kategori.
+src\app\api\migrasi\route.ts:9://     Auth. Akun lama hanya dibuat ulang bila admin mengisi sandi 
+sementara.
+src\app\api\migrasi\route.ts:20:import { createSupabaseAdmin, createSupabaseAnon } from 
+"@/lib/supabase/server";
+src\app\api\migrasi\route.ts:22:import { dariBuku, dariAnggota, type BarisAnggota, type BarisBuku 
+} from "@/lib/supabase/peta";
+src\app\api\migrasi\route.ts:23:import { sahkanBukuBody, sahkanAnggotaBody, emailSah, sahkanSandi 
+} from "@/lib/supabase/validasi";
+src\app\api\migrasi\route.ts:54:    // Gerbang peran: /admin/migrasi khusus SUPER ADMIN 
+(RUTE_PERAN).
+src\app\api\migrasi\route.ts:55:    const k = await konteksRoute({ wajibMasuk: true, 
+wajibSuperAdmin: true });
+src\app\api\migrasi\route.ts:62:      anggota: kelompokBaru(),
+src\app\api\migrasi\route.ts:120:    // ---------- 2. Anggota ----------
+src\app\api\migrasi\route.ts:121:    const barisAnggota = daftar(body.anggota);
+src\app\api\migrasi\route.ts:122:    const { data: anggotaLama, error: errAnggotaLama } = await 
+k.supabase
+src\app\api\migrasi\route.ts:123:      .from("anggota")
+src\app\api\migrasi\route.ts:124:      .select("id, email, nomor_anggota, nama");
+src\app\api\migrasi\route.ts:125:    if (errAnggotaLama) throw new GalatApi("Gagal membaca data 
+anggota yang sudah ada.");
+src\app\api\migrasi\route.ts:126:    const adaAnggota = (anggotaLama ?? []) as Pick<
+src\app\api\migrasi\route.ts:127:      BarisAnggota,
+src\app\api\migrasi\route.ts:128:      "id" | "email" | "nomor_anggota" | "nama"
+src\app\api\migrasi\route.ts:130:    const kunciAnggota = new Map<string, string>();
+src\app\api\migrasi\route.ts:131:    for (const a of adaAnggota) {
+src\app\api\migrasi\route.ts:132:      if (a.email) 
+kunciAnggota.set(`email:${a.email.toLowerCase()}`, a.id);
+src\app\api\migrasi\route.ts:133:      kunciAnggota.set(`nomor:${a.nomor_anggota.toLowerCase()}`, 
+a.id);
+src\app\api\migrasi\route.ts:135:    const petaAnggota = new Map<string, string>();
+src\app\api\migrasi\route.ts:137:    for (const raw of barisAnggota) {
+src\app\api\migrasi\route.ts:140:        const isi = sahkanAnggotaBody(raw, { wajibSemua: true });
+src\app\api\migrasi\route.ts:142:        const kunciNomor = isi.nomorAnggota ? 
+`nomor:${isi.nomorAnggota.toLowerCase()}` : "";
+src\app\api\migrasi\route.ts:143:        const sudah = kunciAnggota.get(kunciEmail) ?? 
+kunciAnggota.get(kunciNomor);
+src\app\api\migrasi\route.ts:145:          hasil.anggota.dilewati++;
+src\app\api\migrasi\route.ts:146:          if (idLama) petaAnggota.set(idLama, sudah);
+src\app\api\migrasi\route.ts:150:          hasil.anggota.berhasil++;
+src\app\api\migrasi\route.ts:151:          if (idLama) petaAnggota.set(idLama, 
+`preview:${idLama}`);
+src\app\api\migrasi\route.ts:155:          .from("anggota")
+src\app\api\migrasi\route.ts:156:          .insert(dariAnggota(isi))
+src\app\api\migrasi\route.ts:161:        hasil.anggota.berhasil++;
+src\app\api\migrasi\route.ts:162:        if (idLama) petaAnggota.set(idLama, baru);
+src\app\api\migrasi\route.ts:163:        if (kunciEmail) kunciAnggota.set(kunciEmail, baru);
+src\app\api\migrasi\route.ts:164:        if (kunciNomor) kunciAnggota.set(kunciNomor, baru);
+src\app\api\migrasi\route.ts:166:        hasil.anggota.gagal++;
+src\app\api\migrasi\route.ts:167:        catat(hasil.anggota, `anggota "${teks(raw.nama) || 
+idLama}": ${pesan(e)}`);
+src\app\api\migrasi\route.ts:190:        const anggotaIdLama = teks(raw.anggotaId) || 
+teks(raw.anggota_id);
+src\app\api\migrasi\route.ts:192:        const anggotaId = petaAnggota.get(anggotaIdLama);
+src\app\api\migrasi\route.ts:194:        if (!anggotaId) throw new GalatApi(`Anggota 
+"${anggotaIdLama}" tidak ikut terimpor.`);
+src\app\api\migrasi\route.ts:210:          anggota_id: anggotaId,
+src\app\api\migrasi\route.ts:286:        const peran = teks(raw.peran) === "admin" ? "admin" : 
+"user";
+src\app\api\migrasi\route.ts:287:        const anggotaId = petaAnggota.get(teks(raw.anggotaId) || 
+teks(raw.anggota_id)) ?? null;
+src\app\api\migrasi\route.ts:303:          const admin = createSupabaseAdmin();
+src\app\api\migrasi\route.ts:304:          const { data, error } = await 
+admin.auth.admin.createUser({
+src\app\api\migrasi\route.ts:338:          .update({ peran, anggota_id: anggotaId })
+src\app\api\migrasi\route.ts:350:    if (!pratinjau && (hasil.anggota.berhasil > 0 || 
+hasil.peminjaman.berhasil > 0)) {
+src\app\api\migrasi\route.ts:359:      hasil.anggota.berhasil + hasil.anggota.dilewati + 
+hasil.anggota.gagal +
+src\app\api\migrasi\route.ts:372:          `anggota 
+${hasil.anggota.berhasil}/${hasil.anggota.dilewati}/${hasil.anggota.gagal} · ` +
+src\app\api\migrasi\route.ts:380:        hasil.buku.berhasil + hasil.anggota.berhasil + 
+hasil.peminjaman.berhasil + hasil.pengguna.berhasil,
+src\app\api\migrasi\route.ts:382:        hasil.buku.dilewati + hasil.anggota.dilewati + 
+hasil.peminjaman.dilewati + hasil.pengguna.dilewati,
+src\app\api\migrasi\route.ts:383:      gagal: hasil.buku.gagal + hasil.anggota.gagal + 
+hasil.peminjaman.gagal + hasil.pengguna.gagal,
+src\app\api\peminjaman\route.ts:17:    // RLS: admin/petugas melihat semua (sirkulasi.lihat), 
+anggota hanya
+src\app\api\peminjaman\route.ts:37:    const anggotaId = typeof body?.anggotaId === "string" ? 
+body.anggotaId : "";
+src\app\api\peminjaman\route.ts:38:    if (!bukuId || !anggotaId) throw new GalatApi("Buku dan 
+anggota harus dipilih.");
+src\app\api\peminjaman\route.ts:44:      p_anggota_id: anggotaId,
+src\app\api\peminjaman\[id]\perpanjang\route.ts:2:// petugas sirkulasi untuk semua pinjaman, 
+anggota hanya untuk miliknya.
+src\app\api\pengaturan\route.ts:1:// Pengaturan sistem perpustakaan: dibaca publik, diubah hanya 
+admin.
+src\app\api\pengaturan\route.ts:36:// dan hanya berubah saat admin menyimpan. Di-cache sebentar di 
+memori proses
+src\app\api\pengaturan\route.ts:63:    // Gerbang: izin `pengaturan.kelola` — bawaan hanya SUPER 
+ADMIN.
+src\app\api\profil\route.ts:39:      .select("id, nama, email, peran, anggota_id, dibuat_pada")
+src\app\dashboard\page.tsx:23:  anggota: "M16 20v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2 M9 10a4 4 0 
+100-8 4 4 0 000 8 M22 20v-2a4 4 0 00-3-3.87",
+src\app\dashboard\page.tsx:41:export default function DashboardAdminPage() {
+src\app\dashboard\page.tsx:42:  const { buku, anggota, peminjaman, siap } = useLibrary();
+src\app\dashboard\page.tsx:43:  const { cariBuku, cariAnggota } = useHelper();
+src\app\dashboard\page.tsx:159:        <StatCard label="Anggota Terdaftar" value={anggota.length} 
+sub={`${anggota.filter((a) => a.aktif).length} aktif`} tone="sky" ikon="M16 20v-2a4 4 0 00-4-4H6a4 
+4 0 00-4 4v2 M9 10a4 4 0 100-8 4 4 0 000 8 M22 20v-2a4 4 0 00-3-3.87" />
+src\app\dashboard\page.tsx:281:                    <th>Anggota</th>
+src\app\dashboard\page.tsx:289:                    const a = cariAnggota(p.anggotaId);
+src\app\katalog\page.tsx:97:  const anggotaIdUser = sedangMasuk?.anggotaId;
+src\app\katalog\page.tsx:260:    if (!pinjamTarget || !anggotaIdUser) return;
+src\app\katalog\page.tsx:264:      anggotaIdUser,
+src\app\katalog\page.tsx:581:                        anggotaIdUser &&
+src\app\katalog\page.tsx:619:                Masuk ke akun atau daftar sebagai anggota untuk 
+mengajukan
+src\app\katalog\[id]\page.tsx:36:  const anggotaIdUser = sedangMasuk?.anggotaId;
+src\app\katalog\[id]\page.tsx:69:    if (!bukuDipilih || !anggotaIdUser) return;
+src\app\katalog\[id]\page.tsx:70:    const r = await pinjamBuku(bukuDipilih.id, anggotaIdUser, 
+tanggalPinjam);
+src\app\katalog\[id]\page.tsx:109:                {anggotaIdUser && bolehPinjam ? (
+src\app\katalog\[id]\page.tsx:120:                ) : anggotaIdUser ? (
+src\app\kunjungan\page.tsx:15:// Halaman presensi/buku tamu di DALAM panel admin 
+(src/components/AppShell.tsx):
+src\app\kunjungan\page.tsx:16:// sidebar, header, menu mobile, dan kontrol akun dipakai BERSAMA 
+halaman admin
+src\app\kunjungan\page.tsx:21:// anggota per hari (tanggal_kunjungan + waktu_masuk, zona 
+Asia/Jakarta). Tabel
+src\app\kunjungan\page.tsx:43:  anggotaId: string;
+src\app\kunjungan\page.tsx:45:  nomorAnggota: string;
+src\app\kunjungan\page.tsx:46:  /** Jenis keanggotaan (Pelajar/Mahasiswa/Umum/Staf) dari relasi 
+`anggota`. */
+src\app\kunjungan\page.tsx:134:    "Nomor Anggota",
+src\app\kunjungan\page.tsx:144:    b.nomorAnggota,
+src\app\kunjungan\page.tsx:269:        body: { nomorAnggota: nilai },
+src\app\kunjungan\page.tsx:342:            Log pengunjung perpustakaan — satu anggota tercatat 
+sekali per
+src\app\kunjungan\page.tsx:411:          label="Anggota Unik"
+src\app\kunjungan\page.tsx:459:                Cari nomor / nama anggota
+src\app\kunjungan\page.tsx:473:                  placeholder="Nomor anggota / nama…"
+src\app\kunjungan\page.tsx:594:                                {b.nomorAnggota}
+src\app\kunjungan\page.tsx:663:          <label className="label" htmlFor="nomor-anggota">
+src\app\kunjungan\page.tsx:664:            Nomor Anggota
+src\app\kunjungan\page.tsx:667:            id="nomor-anggota"
+src\app\kunjungan\page.tsx:679:            tidak dikenal, dan satu anggota hanya tercatat sekali 
+per hari.
+src\app\laporan\page.tsx:31:type TabLaporan = "semua" | "buku" | "peminjaman" | "anggota";
+src\app\laporan\page.tsx:37:  { id: "anggota", label: "Direktori Anggota" },
+src\app\laporan\page.tsx:47:  const { buku, anggota, peminjaman, siap } = useLibrary();
+src\app\laporan\page.tsx:48:  const { cariBuku, cariAnggota, jumlahDipinjam, stokTersedia } = 
+useHelper();
+src\app\laporan\page.tsx:58:  const [filterJenisAnggota, setFilterJenisAnggota] = 
+useState("semua");
+src\app\laporan\page.tsx:59:  const [filterStatusAnggota, setFilterStatusAnggota] = 
+useState("semua");
+src\app\laporan\page.tsx:111:      aktivitasPeriode.map((p) => p.anggotaId)
+src\app\laporan\page.tsx:127:        anggotaId: string;
+src\app\laporan\page.tsx:136:      const g = grup.get(p.anggotaId) ?? {
+src\app\laporan\page.tsx:137:        anggotaId: p.anggotaId,
+src\app\laporan\page.tsx:155:      grup.set(p.anggotaId, g);
+src\app\laporan\page.tsx:258:  // Statistik direktori anggota
+src\app\laporan\page.tsx:259:  const statistikAnggota = useMemo(() => {
+src\app\laporan\page.tsx:260:    const total = anggota.length;
+src\app\laporan\page.tsx:261:    const aktif = anggota.filter((a) => a.aktif).length;
+src\app\laporan\page.tsx:264:    const jenis = anggota.reduce<Record<string, number>>((acc, a) => {
+src\app\laporan\page.tsx:271:    const anggotaMeminjam = new Set(
+src\app\laporan\page.tsx:272:      peminjaman.map((p) => p.anggotaId)
+src\app\laporan\page.tsx:283:      anggotaMeminjam,
+src\app\laporan\page.tsx:285:  }, [anggota, peminjaman]);
+src\app\laporan\page.tsx:287:  const maxJenisAnggota = Math.max(
+src\app\laporan\page.tsx:289:    ...statistikAnggota.jenis.map((j) => j.jumlah)
+src\app\laporan\page.tsx:292:  const anggotaTersaring = useMemo(() => {
+src\app\laporan\page.tsx:295:    return anggota
+src\app\laporan\page.tsx:301:            a.nomorAnggota,
+src\app\laporan\page.tsx:309:          filterJenisAnggota === "semua" ||
+src\app\laporan\page.tsx:310:          a.jenis === filterJenisAnggota;
+src\app\laporan\page.tsx:313:          filterStatusAnggota === "semua" ||
+src\app\laporan\page.tsx:314:          (filterStatusAnggota === "aktif" && a.aktif) ||
+src\app\laporan\page.tsx:315:          (filterStatusAnggota === "nonaktif" && !a.aktif);
+src\app\laporan\page.tsx:321:    anggota,
+src\app\laporan\page.tsx:323:    filterJenisAnggota,
+src\app\laporan\page.tsx:324:    filterStatusAnggota,
+src\app\laporan\page.tsx:327:  const daftarJenisAnggota = useMemo(
+src\app\laporan\page.tsx:330:        new Set(anggota.map((a) => a.jenis).filter(Boolean))
+src\app\laporan\page.tsx:332:    [anggota]
+src\app\laporan\page.tsx:430:        "Anggota",
+src\app\laporan\page.tsx:431:        "No. Anggota",
+src\app\laporan\page.tsx:441:        cariAnggota(p.anggotaId)?.nama ?? "-",
+src\app\laporan\page.tsx:442:        cariAnggota(p.anggotaId)?.nomorAnggota ?? "-",
+src\app\laporan\page.tsx:452:        cariAnggota(p.anggotaId)?.nama ?? "-",
+src\app\laporan\page.tsx:453:        cariAnggota(p.anggotaId)?.nomorAnggota ?? "-",
+src\app\laporan\page.tsx:486:      "Anggota",
+src\app\laporan\page.tsx:487:      "No. Anggota",
+src\app\laporan\page.tsx:502:      const a = cariAnggota(p.anggotaId);
+src\app\laporan\page.tsx:519:        a?.nomorAnggota ?? "-",
+src\app\laporan\page.tsx:548:            "No. Anggota",
+src\app\laporan\page.tsx:559:            const a = cariAnggota(g.anggotaId);
+src\app\laporan\page.tsx:562:              a?.nomorAnggota ?? "-",
+src\app\laporan\page.tsx:667:      const nama = cariAnggota(p.anggotaId)?.nama ?? "";
+src\app\laporan\page.tsx:720:                : item.id === "anggota"
+src\app\laporan\page.tsx:721:                  ? anggota.length
+src\app\laporan\page.tsx:746:      {/* DIREKTORI ANGGOTA */}
+src\app\laporan\page.tsx:747:      {tab === "anggota" ? (
+src\app\laporan\page.tsx:753:                Direktori Anggota
+src\app\laporan\page.tsx:756:                Kelola dan lihat informasi seluruh anggota 
+perpustakaan.
+src\app\laporan\page.tsx:763:                Data anggota
+src\app\laporan\page.tsx:768:          {/* KPI anggota */}
+src\app\laporan\page.tsx:772:                label: "Total Anggota",
+src\app\laporan\page.tsx:773:                value: statistikAnggota.total,
+src\app\laporan\page.tsx:774:                sub: "Seluruh anggota terdaftar",
+src\app\laporan\page.tsx:779:                label: "Anggota Aktif",
+src\app\laporan\page.tsx:780:                value: statistikAnggota.aktif,
+src\app\laporan\page.tsx:781:                sub: "Status keanggotaan aktif",
+src\app\laporan\page.tsx:786:                label: "Anggota Nonaktif",
+src\app\laporan\page.tsx:787:                value: statistikAnggota.tidakAktif,
+src\app\laporan\page.tsx:788:                sub: "Status keanggotaan nonaktif",
+src\app\laporan\page.tsx:794:                value: statistikAnggota.anggotaMeminjam,
+src\app\laporan\page.tsx:795:                sub: "Anggota dengan riwayat transaksi",
+src\app\laporan\page.tsx:833:          {/* Analitik anggota */}
+src\app\laporan\page.tsx:842:                    Analitik Keanggotaan
+src\app\laporan\page.tsx:845:                    Distribusi anggota berdasarkan jenis keanggotaan.
+src\app\laporan\page.tsx:859:                  Distribusi berdasarkan jenis anggota
+src\app\laporan\page.tsx:862:                {statistikAnggota.jenis.length === 0 ? (
+src\app\laporan\page.tsx:863:                  <EmptyState pesan="Belum ada data anggota." />
+src\app\laporan\page.tsx:865:                  statistikAnggota.jenis.map((item) => (
+src\app\laporan\page.tsx:872:                          {item.jumlah} anggota
+src\app\laporan\page.tsx:880:                            width: `${(item.jumlah / maxJenisAnggota) 
+* 100}%`,
+src\app\laporan\page.tsx:891:                  Ringkasan keanggotaan
+src\app\laporan\page.tsx:895:                  <span className="text-slate-600">Total 
+anggota</span>
+src\app\laporan\page.tsx:896:                  <strong>{statistikAnggota.total}</strong>
+src\app\laporan\page.tsx:900:                  <span className="text-slate-600">Anggota 
+aktif</span>
+src\app\laporan\page.tsx:902:                    {statistikAnggota.aktif}
+src\app\laporan\page.tsx:907:                  <span className="text-slate-600">Anggota 
+nonaktif</span>
+src\app\laporan\page.tsx:909:                    {statistikAnggota.tidakAktif}
+src\app\laporan\page.tsx:915:                  <strong>{statistikAnggota.anggotaMeminjam}</strong>
+src\app\laporan\page.tsx:920:                  <strong>{statistikAnggota.totalTransaksi}</strong>
+src\app\laporan\page.tsx:931:                  Daftar Anggota Perpustakaan
+src\app\laporan\page.tsx:934:                  Informasi identitas dan status keanggotaan.
+src\app\laporan\page.tsx:939:                {anggotaTersaring.length} anggota ditemukan
+src\app\laporan\page.tsx:951:                  placeholder="Cari nama, nomor anggota, email, 
+telepon..."
+src\app\laporan\page.tsx:957:                value={filterJenisAnggota}
+src\app\laporan\page.tsx:958:                onChange={(e) => 
+setFilterJenisAnggota(e.target.value)}
+src\app\laporan\page.tsx:962:                {daftarJenisAnggota.map((jenis) => (
+src\app\laporan\page.tsx:970:                value={filterStatusAnggota}
+src\app\laporan\page.tsx:971:                onChange={(e) => 
+setFilterStatusAnggota(e.target.value)}
+src\app\laporan\page.tsx:984:                    <th className="px-4 py-3">Anggota</th>
+src\app\laporan\page.tsx:985:                    <th className="px-4 py-3">Nomor Anggota</th>
+src\app\laporan\page.tsx:994:                  {anggotaTersaring.length === 0 ? (
+src\app\laporan\page.tsx:1000:                        Tidak ada anggota yang sesuai dengan 
+pencarian.
+src\app\laporan\page.tsx:1004:                    anggotaTersaring.map((a) => (
+src\app\laporan\page.tsx:1035:                          {a.nomorAnggota || "—"}
+src\app\laporan\page.tsx:1079:                Menampilkan {anggotaTersaring.length} dari 
+{anggota.length}{" "}
+src\app\laporan\page.tsx:1080:                anggota.
+src\app\laporan\page.tsx:1083:                Direktori anggota diperbarui berdasarkan data 
+perpustakaan.
+src\app\laporan\page.tsx:1117:                    : "Sedang di tangan anggota",
+src\app\laporan\page.tsx:1524:                        "Anggota",
+src\app\laporan\page.tsx:1544:                          {cariAnggota(p.anggotaId)?.nama ?? "—"}
+src\app\laporan\page.tsx:1600:                        const a = cariAnggota(p.anggotaId);
+src\app\login\page.tsx:179:              pantau pinjaman pribadi sebagai anggota.
+src\app\login\page.tsx:323:                  Daftar sebagai anggota
+src\app\login\page.tsx:328:                Pendaftaran anggota sedang ditutup.
+src\app\login\page.tsx:341:                  onClick={() => isiDemo("admin@perpus.id", 
+"Latansa2717")}
+src\app\login\page.tsx:343:                  admin@perpus.id
+src\app\panel\page.tsx:68:              Selamat datang di panel anggota PustakaKu.
+src\app\panel\page.tsx:226:              Akses menu anggota dengan mudah.
+src\app\panel\page.tsx:275:                    Profil Anggota
+src\app\panel\bantuan\page.tsx:11:// Halaman Bantuan — hero, panduan singkat, tiket layanan, & FAQ 
+untuk anggota.
+src\app\panel\bantuan\page.tsx:66:      aktor: sedangMasuk?.nama ?? "Anggota",
+src\app\panel\bantuan\page.tsx:79:      t: "Bagaimana cara mendaftar sebagai anggota?",
+src\app\panel\bantuan\page.tsx:80:      j: "Buka halaman masuk lalu tekan \"Daftar sebagai 
+anggota\". Isi data diri (dan foto profil bila diinginkan), lalu kartu anggota digital Anda dibuat 
+otomatis.",
+src\app\panel\pinjaman\page.tsx:1:// Peminjaman Saya — anggota melihat pinjaman aktif & 
+memperpanjangnya.
+src\app\panel\profil\page.tsx:7:import type { Anggota } from "@/lib/types";
+src\app\panel\profil\page.tsx:238:  const { anggota, siap } = useLibrary();
+src\app\panel\profil\page.tsx:244:    if (sedangMasuk.anggotaId) {
+src\app\panel\profil\page.tsx:245:      return anggota.find((a) => a.id === sedangMasuk.anggotaId);
+src\app\panel\profil\page.tsx:248:    return anggota.find(
+src\app\panel\profil\page.tsx:252:  }, [anggota, sedangMasuk]);
+src\app\panel\profil\page.tsx:270:  kartu: Anggota;
+src\app\panel\profil\page.tsx:273:  const { ubahAnggota } = useLibrary();
+src\app\panel\profil\page.tsx:395:    const hasilAnggota = await ubahAnggota(kartu.id, {
+src\app\panel\profil\page.tsx:403:    if (!hasilAnggota.ok) {
+src\app\panel\profil\page.tsx:404:      toast.gagal(hasilAnggota.pesan);
+src\app\panel\profil\page.tsx:549:        {/* NOMOR ANGGOTA DAN STATUS */}
+src\app\panel\profil\page.tsx:553:            {kartu.nomorAnggota}
+src\app\panel\profil\page.tsx:577:              ? "Anggota Aktif • Terverifikasi"
+src\app\panel\profil\page.tsx:578:              : "Anggota Nonaktif"}
+src\app\panel\profil\page.tsx:583:        {/* NAMA ANGGOTA */}
+src\app\panel\profil\page.tsx:690:                    Informasi Lengkap Keanggotaan
+src\app\panel\profil\page.tsx:693:                    Rincian data identitas resmi anggota yang 
+terdaftar pada sistem PustakaKu.
+src\app\panel\profil\page.tsx:707:                <Informasi label="Nomor Anggota" 
+nilai={kartu.nomorAnggota} ikon="card" />
+src\app\panel\profil\page.tsx:711:                <Informasi label="Jenis Keanggotaan" 
+nilai={kartu.jenis} />
+src\app\panel\profil\page.tsx:713:                <Informasi label="Status Keanggotaan" 
+nilai={kartu.aktif ? "Aktif" : "Nonaktif"} />
+src\app\panel\profil\page.tsx:724:                  Data identitas ini digunakan untuk keperluan 
+administrasi dan layanan keanggotaan perpustakaan digital PustakaKu.
+src\app\panel\profil\page.tsx:736:                    Edit Data Diri Anggota
+src\app\panel\profil\page.tsx:739:                    Perbarui data diri Anda. Perubahan akan 
+tersinkronisasi pada kartu anggota digital.
+src\app\panel\profil\page.tsx:1119:                Lencana Kehormatan Anggota
+src\app\panel\profil\page.tsx:1180:                Ringkasan aktivitas membaca selama menjadi 
+anggota PustakaKu.
+src\app\panel\riwayat\page.tsx:1:// Riwayat Peminjaman — seluruh pinjaman anggota (tab "Riwayat") 
+beserta
+src\app\register\page.tsx:110:            Pendaftaran anggota baru sedang ditutup oleh kebijakan 
+akses
+src\app\register\page.tsx:171:        "Anda harus menyetujui syarat keanggotaan dan kebijakan 
+privasi."
+src\app\register\page.tsx:191:        anggota: {
+src\app\register\page.tsx:370:              Pendaftaran Anggota
+src\app\register\page.tsx:383:              lainnya dengan menjadi anggota {sistem.nama}.
+src\app\register\page.tsx:432:              “Buku adalah jendela dunia, dan keanggotaan ini adalah 
+langkah
+src\app\register\page.tsx:486:                    Daftar Anggota
+src\app\register\page.tsx:512:                Daftar Akun Anggota
+src\app\register\page.tsx:722:                          Jenis Anggota
+src\app\register\page.tsx:783:                        Data anggota
+src\app\register\page.tsx:846:                        Saya menyetujui syarat keanggotaan dan 
+kebijakan privasi,
+src\app\sirkulasi\page.tsx:47:    anggota,
+src\app\sirkulasi\page.tsx:55:  const { cariBuku, cariAnggota, stokTersedia } = useHelper();
+src\app\sirkulasi\page.tsx:65:    anggotaId: "",
+src\app\sirkulasi\page.tsx:75:  const anggotaAktif = useMemo(
+src\app\sirkulasi\page.tsx:76:    () => anggota.filter((a) => a.aktif),
+src\app\sirkulasi\page.tsx:77:    [anggota]
+src\app\sirkulasi\page.tsx:102:        const a = cariAnggota(p.anggotaId);
+src\app\sirkulasi\page.tsx:123:  }, [peminjaman, tab, q, cariBuku, cariAnggota]);
+src\app\sirkulasi\page.tsx:130:      formPinjam.anggotaId
+src\app\sirkulasi\page.tsx:136:      setFormPinjam({ bukuId: "", anggotaId: "" });
+src\app\sirkulasi\page.tsx:400:                      Anggota
+src\app\sirkulasi\page.tsx:420:                    const a = cariAnggota(p.anggotaId);
+src\app\sirkulasi\page.tsx:456:                          {a?.nomorAnggota && (
+src\app\sirkulasi\page.tsx:458:                              {a.nomorAnggota}
+src\app\sirkulasi\page.tsx:610:            <label className="label">Anggota</label>
+src\app\sirkulasi\page.tsx:614:              value={formPinjam.anggotaId}
+src\app\sirkulasi\page.tsx:618:                  anggotaId: e.target.value,
+src\app\sirkulasi\page.tsx:622:              <option value="">— Pilih anggota —</option>
+src\app\sirkulasi\page.tsx:623:              {anggotaAktif.map((a) => (
+src\app\sirkulasi\page.tsx:625:                  {a.nomorAnggota} — {a.nama}
+src\app\sirkulasi\page.tsx:673:                {cariAnggota(konfirmasiKembali.anggotaId)?.nama}
+src\components\AppShell.tsx:15:  petugas,
+src\components\AppShell.tsx:26:// kebijakan di src/lib/akses.ts — mengubahnya lewat /admin/akses 
+langsung
+src\components\AppShell.tsx:34:  /** Label grup khusus tampilan anggota (default: grup). */
+src\components\AppShell.tsx:36:  /** Filter menu per peran — di luar matriks izin (mis. item panel 
+anggota). */
+src\components\AppShell.tsx:70:  // Riwayat peminjaman anggota — tab "Riwayat" dari halaman 
+pinjaman yang
+src\components\AppShell.tsx:71:  // dijadikan halaman sendiri sesuai menu panel anggota.
+src\components\AppShell.tsx:75:    href: "/anggota/kartu",
+src\components\AppShell.tsx:76:    label: "Kartu Anggota",
+src\components\AppShell.tsx:90:    href: "/anggota",
+src\components\AppShell.tsx:91:    label: "Data Anggota",
+src\components\AppShell.tsx:93:    izin: "anggota.lihat",
+src\components\AppShell.tsx:113:    href: "/admin/akun",
+src\components\AppShell.tsx:118:  // Kontrol Akses: dijaga gerbang peran Super Admin (RUTE_PERAN 
+di lib/akses.ts),
+src\components\AppShell.tsx:122:    href: "/admin/akses",
+src\components\AppShell.tsx:125:    hanyaPeran: ["superadmin"],
+src\components\AppShell.tsx:129:    href: "/admin/pengaturan",
+src\components\AppShell.tsx:134:  // CATATAN: "Migrasi Data" (/admin/migrasi) sengaja TIDAK 
+dimasukkan ke NAV —
+src\components\AppShell.tsx:136:  //   * /admin/migrasi dijaga gerbang peran Super Admin 
+(RUTE_PERAN);
+src\components\AppShell.tsx:140:  // dengan sidebar yang sama seperti halaman admin lainnya.
+src\components\AppShell.tsx:228:  const { anggota } = useLibrary();
+src\components\AppShell.tsx:229:  // Kartu anggota sesi ini (untuk foto profil pada kartu sapaan).
+src\components\AppShell.tsx:231:    ? (anggota.find((a) => a.id === sedangMasuk.anggotaId) ??
+src\components\AppShell.tsx:232:      anggota.find(
+src\components\AppShell.tsx:242:  // Label grup mengikuti peran: anggota memakai struktur MENU 
+UTAMA / LAYANAN.
+src\components\AppShell.tsx:279:            nama={sedangMasuk?.nama ?? "Anggota"}
+src\components\AppShell.tsx:288:              {sedangMasuk?.nama ?? "Anggota"}
+src\components\AppShell.tsx:290:            <div className="text-[11px] 
+text-[var(--muted)]">Anggota</div>
+src\components\AppShell.tsx:321:  const { buku, anggota, peminjaman } = useLibrary();
+src\components\AppShell.tsx:327:      <span className="hidden sm:inline">{anggota.length} 
+anggota</span>
+src\components\AppShell.tsx:338:  const { anggota } = useLibrary();
+src\components\AppShell.tsx:343:  // Kartu anggota sesi ini — foto profil tampil di chip akun 
+anggota.
+src\components\AppShell.tsx:345:    anggota.find((a) => a.id === sedangMasuk.anggotaId) ??
+src\components\AppShell.tsx:346:    anggota.find(
+src\components\AppShell.tsx:350:  // Anggota: chip nama dengan dropdown (Profil + Keluar) —
+src\components\AppShell.tsx:351:  // sesuai desain panel anggota yang dirujuk.
+src\components\AppShell.tsx:380:              Anggota
+src\components\AppShell.tsx:460:            {peran === "superadmin" ? "Super Admin" : peran === 
+"admin" ? "Admin" : "Anggota"}
+src\components\AppShell.tsx:566:  // Pintasan peran di luar matriks izin: /admin/akses khusus 
+Super Admin.
+src\components\AppShell.tsx:605:    // Salah peran pada rute khusus peran (mis. anggota membuka 
+/admin/akses):
+src\components\AppShell.tsx:672:  // Halaman landing / masuk / daftar tampil polos (tanpa sidebar 
+& menu admin).
+src\components\AppShell.tsx:793:              {petugas(peran) ? "Operasional perpustakaan" : 
+"Panel Anggota"}
+src\components\AppShell.tsx:797:            {petugas(peran) ? (
+src\components\laporan-kunjungan.tsx:13:// Isi tab "Laporan Kunjungan" di halaman /laporan (panel 
+admin).
+src\components\laporan-kunjungan.tsx:16:// laporan.lihat, RLS `kunjungan_lihat` is_admin) — tanpa 
+data dummy dan tanpa
+src\components\laporan-kunjungan.tsx:19://   * Anggota Unik    = jumlah kartu berbeda (bukan total 
+kunjungan);
+src\components\laporan-kunjungan.tsx:29:  anggotaId: string;
+src\components\laporan-kunjungan.tsx:31:  nomorAnggota: string;
+src\components\laporan-kunjungan.tsx:213:            ["Anggota Unik", r.pengunjungUnik],
+src\components\laporan-kunjungan.tsx:216:            ["No.", "Tanggal Kunjungan", "Waktu Masuk", 
+"No. Anggota", "Nama Anggota"],
+src\components\laporan-kunjungan.tsx:221:              b.nomorAnggota,
+src\components\laporan-kunjungan.tsx:244:            
+`<td>${jamWIB(b.waktuMasuk)}</td><td>${eskapHTML(b.nomorAnggota)}</td>` +
+src\components\laporan-kunjungan.tsx:252:        `Total kunjungan: ${r.total} · Anggota unik: 
+${r.pengunjungUnik} · Hari ini: ${r.hariIni}<br/>` +
+src\components\laporan-kunjungan.tsx:254:        
+`<table><thead><tr><th>No.</th><th>Tanggal</th><th>Waktu</th><th>No. 
+Anggota</th><th>Nama</th></tr></thead>` +
+src\components\laporan-kunjungan.tsx:278:          label="Anggota Unik"
+src\components\laporan-kunjungan.tsx:316:              <label className="label" 
+htmlFor="kunjungan-cari">Cari nomor / nama anggota</label>
+src\components\laporan-kunjungan.tsx:326:                  placeholder="Nomor anggota / nama…"
+src\components\laporan-kunjungan.tsx:472:                    <th>No. Anggota</th>
+src\components\laporan-kunjungan.tsx:473:                    <th>Nama Anggota</th>
+src\components\laporan-kunjungan.tsx:484:                      <td className="font-mono 
+text-sm">{b.nomorAnggota}</td>
+src\components\pinjaman-saya.tsx:179:    pinjamanAnggota,
+src\components\pinjaman-saya.tsx:211:  const anggotaId = sedangMasuk?.anggotaId;
+src\components\pinjaman-saya.tsx:214:    if (!anggotaId) return [];
+src\components\pinjaman-saya.tsx:215:    return pinjamanAnggota(anggotaId);
+src\components\pinjaman-saya.tsx:216:  }, [anggotaId, pinjamanAnggota]);
+src\components\pinjaman-saya.tsx:243:  if (!anggotaId) {
+src\components\pinjaman-saya.tsx:246:        pesan="Akun ini tidak terikat kartu anggota"
+src\components\pinjaman-saya.tsx:247:        sub="Hubungi pustakawan untuk menghubungkan kartu 
+anggota Anda."
+src\components\pinjaman-saya.tsx:270:    if (!anggotaId || !bukuDipilih) return;
+src\components\pinjaman-saya.tsx:274:      anggotaId,
+src\components\ui.tsx:396:// 1. `buku.gambar` (URL dari admin) — dipasang apa adanya; bila gagal 
+dimuat
+src\components\ui.tsx:399://    (--g1..--g6, ikut warna pilihan admin di /admin/pengaturan) — jadi
+src\lib\akses.ts:19:// ini (cekIzin/useBoleh), sehingga mengubah kebijakan lewat /admin/akses
+src\lib\akses.ts:114:  { path: "/anggota/kartu", izin: "kartu.lihat" },
+src\lib\akses.ts:119:  { path: "/anggota", izin: "anggota.lihat" },
+src\lib\akses.ts:123:  { path: "/admin/akun", izin: "akun.kelola" },
+src\lib\akses.ts:124:  { path: "/admin/pengaturan", izin: "pengaturan.kelola" },
+src\lib\akses.ts:136: * Kelola Akses & Migrasi Data hanya SUPER ADMIN — halaman inilah yang
+src\lib\akses.ts:137: * menentukan siapa boleh mengubah matriks izin, sehingga peran Admin tidak
+src\lib\akses.ts:141:  { path: "/admin/akses", peran: "superadmin" },
+src\lib\akses.ts:142:  { path: "/admin/migrasi", peran: "superadmin" },
+src\lib\akses.ts:170:    peran === "admin" || peran === "superadmin"
+src\lib\audit.ts:18:  | "anggota"
+src\lib\audit.ts:26:  peran: string; // admin | user | -
+src\lib\audit.ts:29:  objek: string; // judul buku / nama anggota / email
+src\lib\auth.tsx:16:// dibuat ulang lewat halaman /admin/migrasi dengan sandi sementara.
+src\lib\auth.tsx:21:// Peran aplikasi (nilainya identik dengan kolom profiles.peran di database).
+src\lib\auth.tsx:22:// Super Admin = pengelola sistem; Admin = petugas operasional; user = anggota.
+src\lib\auth.tsx:23:export type Peran = "admin" | "user" | "superadmin";
+src\lib\auth.tsx:32:  anggotaId?: string;
+src\lib\auth.tsx:49:  /** Daftar semua akun — hanya diisi untuk sesi admin (halaman Kelola Akun). 
+*/
+src\lib\auth.tsx:75:    // Daftar akun hanya untuk Super Admin — /api/akun menolak peran lain.
+src\lib\auth.tsx:76:    if (pengguna?.peran === "superadmin") await muatDaftar();
+src\lib\auth.tsx:113:    daftar: daftar ?? (p?.peran === "superadmin" ? snapshot.daftar : []),
+src\lib\auth.tsx:121:export function aktorSesi(): { nama: string; peran: string; anggotaId?: 
+string } {
+src\lib\auth.tsx:124:  return { nama: u?.nama ?? "Tamu", peran: u?.peran ?? "-", anggotaId: 
+u?.anggotaId };
+src\lib\auth.tsx:135:    anggota?: InputKartu;
+src\lib\auth.tsx:143:  // Manajemen akun — khusus dipanggil dari panel admin.
+src\lib\auth.tsx:149:    anggotaId?: string;
+src\lib\auth.tsx:152:  /** Ganti peran akun yang sudah ada (Super Admin / Admin / Anggota). */
+src\lib\auth.tsx:186:      if (res.pengguna.peran === "superadmin") void muatDaftar();
+src\lib\auth.tsx:211:      setPengguna(res.pengguna, res.pengguna.peran === "superadmin" ? 
+snapshot.daftar : []);
+src\lib\auth.tsx:312: * yang disimpan lewat /admin/akses. Dipakai untuk menampilkan/menyembunyikan
+src\lib\izin.ts:7:// profiles.peran di database dan dengan kunci objek `izin` di tabel
+src\lib\izin.ts:9:export type PeranAkses = "tamu" | "user" | "admin" | "superadmin";
+src\lib\izin.ts:12:export const PERAN_AKSES: PeranAkses[] = ["tamu", "user", "admin", 
+"superadmin"];
+src\lib\izin.ts:16:  user: { label: "Anggota", bantuan: "Peran user — anggota terdaftar" },
+src\lib\izin.ts:17:  admin: { label: "Admin", bantuan: "Pustakawan — operasional perpustakaan" },
+src\lib\izin.ts:18:  superadmin: {
+src\lib\izin.ts:19:    label: "Super Admin",
+src\lib\izin.ts:35:// Super Admin selalu berada di atas Admin: bila tidak ditentukan eksplisit,
+src\lib\izin.ts:36:// nilainya mengikuti kolom Admin (kecuali izin sistem yang Admin tak punya).
+src\lib\izin.ts:44:  admin: boolean,
+src\lib\izin.ts:45:  superadmin: boolean = admin
+src\lib\izin.ts:46:): DefinisiIzin => ({ id, label, bantuan, grup, bawaan: { tamu, user, admin, 
+superadmin } });
+src\lib\izin.ts:53:  // Panel anggota
+src\lib\izin.ts:54:  I("panel.lihat", "Buka panel anggota", "Beranda panel pribadi", "Panel 
+Anggota", false, true, false),
+src\lib\izin.ts:55:  I("panel.pinjaman", "Pinjaman saya", "Melihat & memperpanjang pinjaman 
+sendiri", "Panel Anggota", false, true, false),
+src\lib\izin.ts:56:  I("panel.profil", "Ubah profil sendiri", "Edit profil & ganti kata sandi 
+akun", "Panel Anggota", false, true, true),
+src\lib\izin.ts:57:  I("panel.bantuan", "Halaman bantuan", "Panduan singkat & FAQ layanan 
+perpustakaan", "Panel Anggota", false, true, true),
+src\lib\izin.ts:58:  I("kartu.lihat", "Kartu anggota", "Melihat, mencetak, & mengunduh kartu 
+keanggotaan pribadi", "Panel Anggota", false, true, true),
+src\lib\izin.ts:63:  I("anggota.lihat", "Data anggota (lihat)", "Melihat daftar kartu anggota", 
+"Operasional", false, false, true),
+src\lib\izin.ts:64:  I("anggota.kelola", "Data anggota (kelola)", "Tambah, ubah, hapus, & status 
+anggota", "Operasional", false, false, true),
+src\lib\izin.ts:69:  // Kelola akun, akses, & pengaturan = kewenangan SUPER ADMIN saja.
+src\lib\izin.ts:73:  // Kontrol Akses dijaga gerbang peran Super Admin (RUTE_PERAN), sehingga 
+anggota
+src\lib\izin.ts:105:/** Matriks bawaan — titik mulai sebelum admin mengubah apa pun. */
+src\lib\izin.ts:166:  return peran === "admin" || peran === "user" || peran === "superadmin"
+src\lib\izin.ts:171:/** Apakah peran ini petugas perpustakaan (Admin ATAU Super Admin)? */
+src\lib\izin.ts:172:export function petugas(peran: PeranAkses): boolean {
+src\lib\izin.ts:173:  return peran === "admin" || peran === "superadmin";
+src\lib\kartu.ts:1:import type { Anggota } from "./types";
+src\lib\kartu.ts:11:export function normalisasiNomorAnggota(nomorAnggota: string): string {
+src\lib\kartu.ts:12:  const nomor = nomorAnggota.trim().toUpperCase();
+src\lib\kartu.ts:14:    throw new Error("Nomor anggota tidak valid.");
+src\lib\kartu.ts:19:export function payloadQrAnggota(nomorAnggota: string): string {
+src\lib\kartu.ts:22:  return normalisasiNomorAnggota(nomorAnggota);
+src\lib\kartu.ts:25:export function statusAnggota(anggota: Pick<Anggota, "aktif">): string {
+src\lib\kartu.ts:26:  return anggota.aktif ? "Aktif" : "Nonaktif";
+src\lib\library-context.tsx:13:import type { Anggota, Buku, Peminjaman } from "./types";
+src\lib\library-context.tsx:22:// localStorage TIDAK lagi dipakai untuk buku/anggota/peminjaman — 
+hanya
+src\lib\library-context.tsx:29:  anggota: Anggota[];
+src\lib\library-context.tsx:40:  anggota: [],
+src\lib\library-context.tsx:52:export type KunciData = "buku" | "anggota" | "peminjaman";
+src\lib\library-context.tsx:53:const SEMUA_KUNCI: KunciData[] = ["buku", "anggota", "peminjaman"];
+src\lib\library-context.tsx:59:// menampilkan ringkasan buku/anggota/peminjaman di header).
+src\lib\library-context.tsx:77:    const [bukuRes, anggotaRes, pinjamRes] = await Promise.all([
+src\lib\library-context.tsx:81:      perlu("anggota")
+src\lib\library-context.tsx:82:        ? apiFetch<{ anggota: Anggota[] }>("/api/anggota")
+src\lib\library-context.tsx:92:      anggota: anggotaRes
+src\lib\library-context.tsx:93:        ? Array.isArray(anggotaRes.anggota)
+src\lib\library-context.tsx:94:          ? anggotaRes.anggota
+src\lib\library-context.tsx:95:          : snapshot.anggota
+src\lib\library-context.tsx:96:        : snapshot.anggota,
+src\lib\library-context.tsx:179:  anggota: Anggota[];
+src\lib\library-context.tsx:193:  tambahAnggota: (
+src\lib\library-context.tsx:194:    a: Omit<Anggota, "id" | "nomorAnggota" | "bergabungPada">
+src\lib\library-context.tsx:195:  ) => Promise<Hasil & { anggota?: Anggota }>;
+src\lib\library-context.tsx:196:  ubahAnggota: (id: string, patch: Partial<Anggota>) => 
+Promise<Hasil>;
+src\lib\library-context.tsx:197:  hapusAnggota: (id: string) => Promise<Hasil>;
+src\lib\library-context.tsx:201:    anggotaId: string,
+src\lib\library-context.tsx:258:  const tambahAnggota = useCallback(
+src\lib\library-context.tsx:259:    async (a: Omit<Anggota, "id" | "nomorAnggota" | 
+"bergabungPada">): Promise<
+src\lib\library-context.tsx:260:      Hasil & { anggota?: Anggota }
+src\lib\library-context.tsx:263:        const r = await apiFetch<{ anggota: Anggota 
+}>("/api/anggota", {
+src\lib\library-context.tsx:267:        muatUlang(["anggota"]);
+src\lib\library-context.tsx:268:        return { ok: true, pesan: `Anggota "${a.nama}" 
+ditambahkan.`, anggota: r.anggota };
+src\lib\library-context.tsx:276:  const ubahAnggota = useCallback(
+src\lib\library-context.tsx:277:    (id: string, patch: Partial<Anggota>) =>
+src\lib\library-context.tsx:279:        () => apiFetch<{ anggota: Anggota }>(`/api/anggota/${id}`, 
+{ method: "PUT", body: patch }),
+src\lib\library-context.tsx:280:        "Data anggota diperbarui.",
+src\lib\library-context.tsx:281:        ["anggota"]
+src\lib\library-context.tsx:286:  const hapusAnggota = useCallback(
+src\lib\library-context.tsx:289:        () => apiFetch(`/api/anggota/${id}`, { method: "DELETE" }),
+src\lib\library-context.tsx:290:        "Anggota dihapus.",
+src\lib\library-context.tsx:291:        ["anggota"]
+src\lib\library-context.tsx:297:    (bukuId: string, anggotaId: string, tanggalPinjam?: string) =>
+src\lib\library-context.tsx:302:            body: { bukuId, anggotaId, tanggalPinjam },
+src\lib\library-context.tsx:341:      anggota: s.anggota,
+src\lib\library-context.tsx:350:      tambahAnggota,
+src\lib\library-context.tsx:351:      ubahAnggota,
+src\lib\library-context.tsx:352:      hapusAnggota,
+src\lib\library-context.tsx:362:      tambahAnggota,
+src\lib\library-context.tsx:363:      ubahAnggota,
+src\lib\library-context.tsx:364:      hapusAnggota,
+src\lib\library-context.tsx:382:  const { buku, anggota, peminjaman, dipinjam } = useLibrary();
+src\lib\library-context.tsx:385:  const cariAnggota = useCallback((id: string) => anggota.find((a) 
+=> a.id === id), [anggota]);
+src\lib\library-context.tsx:405:  const pinjamanAnggota = useCallback(
+src\lib\library-context.tsx:406:    (anggotaId: string) => peminjaman.filter((p) => p.anggotaId 
+=== anggotaId),
+src\lib\library-context.tsx:410:  return { cariBuku, cariAnggota, jumlahDipinjam, stokTersedia, 
+pinjamanAnggota };
+src\lib\seed.ts:1:import type { Buku, Anggota, Peminjaman } from "./types";
+src\lib\seed.ts:179:export const SEED_ANGGOTA: Anggota[] = [
+src\lib\seed.ts:182:    nomorAnggota: "AGT-0001",
+src\lib\seed.ts:193:    nomorAnggota: "AGT-0002",
+src\lib\seed.ts:204:    nomorAnggota: "AGT-0003",
+src\lib\seed.ts:215:    nomorAnggota: "AGT-0004",
+src\lib\seed.ts:226:    nomorAnggota: "AGT-0005",
+src\lib\seed.ts:237:    nomorAnggota: "AGT-0006",
+src\lib\seed.ts:254:    anggotaId: "a1",
+src\lib\seed.ts:266:    anggotaId: "a2",
+src\lib\seed.ts:278:    anggotaId: "a3",
+src\lib\seed.ts:290:    anggotaId: "a4",
+src\lib\seed.ts:302:    anggotaId: "a6",
+src\lib\sistem-nilai.ts:16:  /** Batas maksimal buku yang boleh dipinjam satu anggota. */
+src\lib\sistem.ts:12:// Pengaturan sistem perpustakaan — diatur admin di /admin/pengaturan.
+src\lib\theme.ts:3:// Admin mengatur tema di /admin/pengaturan. Form disimpan (beserta map CSS
+src\lib\theme.ts:7:// dan applyVars() dipakai untuk pratinjau langsung saat admin menggeser warna.
+src\lib\theme.ts:88:// Default tema — warna yang berlaku sebelum admin mengubah apa pun.
+src\lib\types.ts:22:export interface Anggota {
+src\lib\types.ts:24:  nomorAnggota: string;
+src\lib\types.ts:32:  /** Foto profil anggota (data URL hasil unggahan, sudah dikecilkan).
+src\lib\types.ts:43:  anggotaId: string;
+src\lib\supabase\jejak.ts:12:  /** Kartu anggota yang terdampak (untuk feed panel anggota). */
+src\lib\supabase\jejak.ts:13:  anggotaId?: string | null;
+src\lib\supabase\jejak.ts:23:    anggota_id: input.anggotaId ?? k.pengguna?.anggotaId ?? null,
+src\lib\supabase\konteks.ts:41:  /** Wajib peran petugas (Admin ATAU Super Admin). */
+src\lib\supabase\konteks.ts:42:  wajibAdmin?: boolean;
+src\lib\supabase\konteks.ts:43:  /** Wajib peran Super Admin — kelola akun, kebijakan akses, & 
+pengaturan. */
+src\lib\supabase\konteks.ts:44:  wajibSuperAdmin?: boolean;
+src\lib\supabase\konteks.ts:51:// hanya berubah saat admin menyimpannya lewat PUT /api/kebijakan. 
+Tanpa cache,
+src\lib\supabase\konteks.ts:59:/** Buang cache matriks izin — dipanggil setiap kali admin 
+menyimpan kebijakan. */
+src\lib\supabase\konteks.ts:135:      .select("id, nama, email, peran, anggota_id, dibuat_pada")
+src\lib\supabase\konteks.ts:155:  if (opsi.wajibSuperAdmin && peran !== "superadmin") {
+src\lib\supabase\konteks.ts:156:    throw new GalatApi("Halaman ini hanya untuk Super Admin.", 
+403);
+src\lib\supabase\konteks.ts:158:  if (opsi.wajibAdmin && peran !== "admin" && peran !== 
+"superadmin") {
+src\lib\supabase\konteks.ts:159:    throw new GalatApi("Halaman ini hanya untuk Admin dan Super 
+Admin.", 403);
+src\lib\supabase\peta.ts:5:import type { Anggota, Buku, Peminjaman, StatusPinjam } from "../types";
+src\lib\supabase\peta.ts:24:export interface BarisAnggota {
+src\lib\supabase\peta.ts:26:  nomor_anggota: string;
+src\lib\supabase\peta.ts:41:  anggota_id: string;
+src\lib\supabase\peta.ts:66:  anggota_id: string | null;
+src\lib\supabase\peta.ts:104:// ---- Anggota 
+--------------------------------------------------------------
+src\lib\supabase\peta.ts:105:export function keAnggota(r: BarisAnggota): Anggota {
+src\lib\supabase\peta.ts:108:    nomorAnggota: r.nomor_anggota,
+src\lib\supabase\peta.ts:113:    jenis: r.jenis as Anggota["jenis"],
+src\lib\supabase\peta.ts:120:export function dariAnggota(a: Partial<Anggota>): Record<string, 
+unknown> {
+src\lib\supabase\peta.ts:122:  if (a.nomorAnggota !== undefined) p.nomor_anggota = a.nomorAnggota;
+src\lib\supabase\peta.ts:140:    anggotaId: r.anggota_id,
+src\lib\supabase\peta.ts:171:    peran: p.peran === "admin" ? "admin" : p.peran === "superadmin" ? 
+"superadmin" : "user",
+src\lib\supabase\peta.ts:172:    anggotaId: p.anggota_id ?? undefined,
+src\lib\supabase\server.ts:7://   2. createSupabaseAdmin()  — kunci service role, HANYA di server, 
+HANYA
+src\lib\supabase\server.ts:9://      membuat/menghapus akun Supabase Auth (admin), dan impor data 
+lama.
+src\lib\supabase\server.ts:45: * cookie sesi admin tidak tertimpa oleh sesi pengguna baru.
+src\lib\supabase\server.ts:58:export function createSupabaseAdmin(): SupabaseClient {
+src\lib\supabase\tautan.ts:1:// Tautan kartu anggota ↔ akun login.
+src\lib\supabase\tautan.ts:7:import { keAnggota, type BarisAnggota } from "./peta";
+src\lib\supabase\tautan.ts:8:import type { Anggota } from "../types";
+src\lib\supabase\tautan.ts:11:  anggotaId: string | null;
+src\lib\supabase\tautan.ts:12:  kartu: Anggota | null;
+src\lib\supabase\tautan.ts:15:/** Cari kartu anggota beremail sama (persis, tanpa wildcard). */
+src\lib\supabase\tautan.ts:19:): Promise<BarisAnggota | null> {
+src\lib\supabase\tautan.ts:24:      .from("anggota")
+src\lib\supabase\tautan.ts:33:    if (data) return data as BarisAnggota;
+src\lib\supabase\tautan.ts:39:  if (!k.pengguna) return { anggotaId: null, kartu: null };
+src\lib\supabase\tautan.ts:44:  if (k.pengguna.anggotaId) {
+src\lib\supabase\tautan.ts:45:    return { anggotaId: k.pengguna.anggotaId, kartu: null };
+src\lib\supabase\tautan.ts:49:  if (!baris) return { anggotaId: null, kartu: null };
+src\lib\supabase\tautan.ts:51:  const kartu = keAnggota(baris);
+src\lib\supabase\tautan.ts:55:    .update({ anggota_id: kartu.id })
+src\lib\supabase\tautan.ts:57:    .is("anggota_id", null);
+src\lib\supabase\tautan.ts:61:    return { anggotaId: null, kartu: null };
+src\lib\supabase\tautan.ts:64:  k.pengguna.anggotaId = kartu.id;
+src\lib\supabase\tautan.ts:65:  return { anggotaId: kartu.id, kartu };
+src\lib\supabase\validasi.ts:5:import { KATEGORI_LIST, type Anggota, type Buku } from "../types";
+src\lib\supabase\validasi.ts:89:/** Validasi payload anggota (tambah/ubah). */
+src\lib\supabase\validasi.ts:90:export function sahkanAnggotaBody(body: Raw, { wajibSemua = false 
+} = {}): Partial<Anggota> {
+src\lib\supabase\validasi.ts:92:  const out: Partial<Anggota> = {};
+src\lib\supabase\validasi.ts:100:    const j = teks(o.jenis, { nama: "Jenis anggota", max: 20, 
+kosong: "Umum" });
+src\lib\supabase\validasi.ts:101:    if (!["Pelajar", "Mahasiswa", "Umum", "Staf"].includes(j)) 
+throw new GalatApi("Jenis anggota tidak dikenal.");
+src\lib\supabase\validasi.ts:102:    out.jenis = j as Anggota["jenis"];
+src\lib\supabase\validasi.ts:117:  if (o.nomorAnggota !== undefined) out.nomorAnggota = 
+teks(o.nomorAnggota, { nama: "Nomor anggota", max: 30 });
+
+

@@ -1,62 +1,183 @@
 "use client";
 
-// Cetak PDF tanpa dependensi: menyusun dokumen HTML bergaya A4 ke dalam
-// iframe tersembunyi lalu memanggil dialog print browser — pengguna memilih
-// "Simpan sebagai PDF" untuk menghasilkan berkas PDF.
-
 export function eskapHTML(s: string): string {
-  return s
+  return String(s ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 const GAYA_CETAK = `
-@page { size: A4; margin: 14mm; }
-* { box-sizing: border-box; }
-body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #0f172a; font-size: 12px; margin: 0; }
-h1 { font-size: 17px; margin: 0 0 2px; }
-h2 { font-size: 13px; margin: 16px 0 6px; }
-.meta { color: #475569; font-size: 11px; margin-bottom: 12px; line-height: 1.6; }
-table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
-th, td { border: 1px solid #cbd5e1; padding: 4px 6px; text-align: left; vertical-align: top; }
-th { background: #f1f5f9; font-weight: 600; }
-tr { page-break-inside: avoid; }
-table.ringkas td:first-child { font-weight: 600; background: #f8fafc; width: 45%; }
-.kaki { margin-top: 14px; padding-top: 6px; border-top: 1px solid #cbd5e1; color: #64748b; font-size: 10px; }
+@page {
+  size: A4;
+  margin: 14mm;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #172b35;
+  font-size: 11px;
+  margin: 0;
+}
+
+h1 {
+  font-size: 18px;
+  margin: 0 0 12px;
+  color: #005f56;
+}
+
+h2 {
+  font-size: 13px;
+  margin: 18px 0 7px;
+  color: #005f56;
+  page-break-after: avoid;
+}
+
+.meta {
+  color: #64748b;
+  font-size: 10px;
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9px;
+  margin-bottom: 12px;
+}
+
+th,
+td {
+  border: 1px solid #d8e2e5;
+  padding: 5px 6px;
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+th {
+  background: #eaf5f2;
+  color: #164e46;
+  font-weight: 700;
+}
+
+tr {
+  page-break-inside: avoid;
+}
+
+thead {
+  display: table-header-group;
+}
+
+tfoot {
+  display: table-footer-group;
+}
+
+table.ringkas {
+  font-size: 10px;
+}
+
+table.ringkas td:first-child {
+  font-weight: 700;
+  background: #f4f8f7;
+  width: 42%;
+}
+
+.kaki {
+  margin-top: 18px;
+  padding-top: 8px;
+  border-top: 1px solid #d8e2e5;
+  color: #64748b;
+  font-size: 9px;
+}
+
+@media print {
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
 `;
 
-/**
- * Cetak isi HTML (sudah memakai elemen sederhana: h1/h2/table) lewat dialog
- * print browser — pilih "Simpan sebagai PDF" untuk menyimpan sebagai PDF.
- */
 export function cetakHTML(bodyHtml: string, judul: string) {
   if (typeof window === "undefined") return;
+
   const iframe = document.createElement("iframe");
+
   iframe.setAttribute("aria-hidden", "true");
-  // Posisikan di luar layar (bukan display:none) agar kontennya tetap dirender.
-  iframe.style.cssText = "position:fixed;left:-10000px;top:0;width:794px;height:1123px;border:0;";
+  iframe.setAttribute("title", "Pratinjau dokumen cetak");
+
+  iframe.style.cssText = [
+    "position:fixed",
+    "left:-10000px",
+    "top:0",
+    "width:794px",
+    "height:1123px",
+    "border:0",
+  ].join(";");
+
   document.body.appendChild(iframe);
 
   const doc = iframe.contentWindow?.document;
-  if (!doc) {
+  const win = iframe.contentWindow;
+
+  if (!doc || !win) {
     iframe.remove();
     return;
   }
-  doc.open();
-  doc.write(
-    `<!doctype html><html lang="id"><head><meta charSet="utf-8"/>` +
-      `<title>${eskapHTML(judul)}</title><style>${GAYA_CETAK}</style></head>` +
-      `<body>${bodyHtml}</body></html>`
-  );
-  doc.close();
 
-  // Beri jarak sebentar agar layout selesai dirender sebelum dialog print.
-  window.setTimeout(() => {
-    iframe.contentWindow?.focus();
-    iframe.contentWindow?.print();
-    // Bersihkan iframe setelah dialog print tertutup.
-    window.setTimeout(() => iframe.remove(), 1000);
-  }, 250);
+  let sudahDibersihkan = false;
+
+  const bersihkan = () => {
+    if (sudahDibersihkan) return;
+
+    sudahDibersihkan = true;
+    iframe.remove();
+  };
+
+  win.addEventListener("afterprint", bersihkan, { once: true });
+
+  try {
+    doc.open();
+
+    doc.write(
+      `<!doctype html>
+      <html lang="id">
+        <head>
+          <meta charset="utf-8"/>
+          <meta name="viewport" content="width=device-width, initial-scale=1"/>
+          <title>${eskapHTML(judul)}</title>
+          <style>${GAYA_CETAK}</style>
+        </head>
+        <body>${bodyHtml}</body>
+      </html>`
+    );
+
+    doc.close();
+
+    window.setTimeout(() => {
+      if (sudahDibersihkan) return;
+
+      try {
+        win.focus();
+        win.print();
+      } catch (error) {
+        console.error("Gagal membuka dialog cetak:", error);
+        bersihkan();
+      }
+    }, 500);
+
+    // Pengaman jika event afterprint tidak dijalankan browser.
+    window.setTimeout(bersihkan, 60000);
+  } catch (error) {
+    console.error("Gagal menyiapkan dokumen cetak:", error);
+    bersihkan();
+  }
 }

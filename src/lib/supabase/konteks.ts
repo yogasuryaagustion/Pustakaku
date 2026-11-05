@@ -6,6 +6,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseServer } from "./server";
 import {
   cekIzin,
+  KEBIJAKAN_BAWAAN,
   normalisasiKebijakan,
   peranEfektif,
   type Kebijakan,
@@ -37,10 +38,77 @@ export interface Konteks {
 interface OpsiKonteks {
   /** Wajib ada sesi login. */
   wajibMasuk?: boolean;
-  /** Wajib peran admin. */
+  /** Wajib peran petugas (Admin ATAU Super Admin). */
   wajibAdmin?: boolean;
+  /** Wajib peran Super Admin — kelola akun, kebijakan akses, & pengaturan. */
+  wajibSuperAdmin?: boolean;
   /** Wajib izin tertentu dari matriks kebijakan akses. */
   wajibIzin?: string;
+}
+
+// === Cache matriks izin =====================================================
+// Baris `kebijakan_akses` dibaca pada SETIAP request API (konteksRoute) tetapi
+// hanya berubah saat admin menyimpannya lewat PUT /api/kebijakan. Tanpa cache,
+// tiap request menambah satu roundtrip Supabase (~150–300 ms) — terasa sebagai
+// jeda sebelum seluruh halaman terisi. TTL pendek + invalidasi eksplisit saat
+// menyimpan membuat perubahan kebijakan tetap berlaku seketika; proses lain
+// paling lama menunggu TTL.
+const TTL_KEBIJAKAN_MS = 30_000;
+let cacheKebijakan: { nilai: Kebijakan; kedaluwarsa: number } | null = null;
+
+/** Buang cache matriks izin — dipanggil setiap kali admin menyimpan kebijakan. */
+export function hapusCacheKebijakan(): void {
+  cacheKebijakan = null;
+}
+
+/** Matriks izin terbaru (dari cache bila masih berlaku). */
+async function bacaKebijakan(supabase: SupabaseClient): Promise<Kebijakan> {
+  const kini = Date.now();
+  if (cacheKebijakan && cacheKebijakan.kedaluwarsa > kini) {
+    return cacheKebijakan.nilai;
+  }
+  const { data, error } = await supabase
+    .from("kebijakan_akses")
+    .select("izin, versi, diubah_pada, diubah_oleh")
+    .eq("id", true)
+    .maybeSingle();
+  if (error) throw dariSupabase(error);
+  const nilai = normalisasiKebijakan(data ?? KEBIJAKAN_BAWAAN);
+  cacheKebijakan = { nilai, kedaluwarsa: kini + TTL_KEBIJAKAN_MS };
+  return nilai;
+}
+
+/**
+ * Matriks izin untuk pembacaan publik (GET /api/kebijakan): tanpa sesi, dan
+ * tanpa query tambahan bila cache masih berlaku — endpoint ini dibaca setiap
+ * kali halaman dibuka untuk menentukan menu & tombol yang tampil.
+ */
+export async function kebijakanPublik(): Promise<Kebijakan> {
+  const kini = Date.now();
+  if (cacheKebijakan && cacheKebijakan.kedaluwarsa > kini) return cacheKebijakan.nilai;
+  return bacaKebijakan(await createSupabaseServer());
+}
+
+/**
+ * Konteks untuk pembacaan murni-RLS (route GET tanpa gerbang):
+ * TANPA validasi sesi ke GoTrue dan TANPA baca tabel `profiles`.
+ *
+ * Data yang dikembalikan tetap persis sama karena scoping dilakukan RLS di
+ * database memakai token cookie — dua roundtrip (~0,4–1 dtk) dihemat pada
+ * setiap muat halaman. `pengguna`/`peran` sengaja `null`/`tamu`, sehingga bila
+ * route mulai membaca k.pengguna, k.peran, atau k.izin, ia harus kembali ke
+ * konteksRoute() (baca komentar di pemakaian).
+ */
+export async function konteksPublik(): Promise<Konteks> {
+  const supabase = await createSupabaseServer();
+  const kebijakan = await bacaKebijakan(supabase);
+  return {
+    supabase,
+    pengguna: null,
+    peran: "tamu",
+    kebijakan,
+    izin: (idIzin: string) => cekIzin(kebijakan, "tamu", idIzin),
+  };
 }
 
 /**
@@ -50,8 +118,14 @@ interface OpsiKonteks {
 export async function konteksRoute(opsi: OpsiKonteks = {}): Promise<Konteks> {
   const supabase = await createSupabaseServer();
 
-  // auth.getUser() memvalidasi token ke GoTrue (bukan sekadar membaca cookie).
-  const { data: auth, error: errAuth } = await supabase.auth.getUser();
+  // Validasi sesi (GoTrue) dan pembacaan matriks izin berjalan PARALEL —
+  // dahulu berurutan, sehingga menambah satu jeda roundtrip penuh tiap request.
+  const [hasilAuth, kebijakan] = await Promise.all([
+    // auth.getUser() memvalidasi token ke GoTrue (bukan sekadar membaca cookie).
+    supabase.auth.getUser(),
+    bacaKebijakan(supabase),
+  ]);
+  const { data: auth, error: errAuth } = hasilAuth;
   const uid = auth.user?.id ?? null;
 
   let profil: BarisProfil | null = null;
@@ -65,15 +139,6 @@ export async function konteksRoute(opsi: OpsiKonteks = {}): Promise<Konteks> {
     profil = data;
   }
 
-  // Matriks izin terbuka untuk semua peran (dipakai seluruh UI juga).
-  const { data: barisKb, error: errKb } = await supabase
-    .from("kebijakan_akses")
-    .select("izin, versi, diubah_pada, diubah_oleh")
-    .eq("id", true)
-    .maybeSingle();
-  if (errKb) throw dariSupabase(errKb);
-
-  const kebijakan = normalisasiKebijakan(barisKb);
   const peran: PeranAkses = peranEfektif(profil?.peran);
   const izin = (idIzin: string) => cekIzin(kebijakan, peran, idIzin);
 
@@ -87,11 +152,14 @@ export async function konteksRoute(opsi: OpsiKonteks = {}): Promise<Konteks> {
       401
     );
   }
-  if (opsi.wajibAdmin && peran !== "admin") {
-    throw new GalatApi("Halaman ini hanya untuk admin.", 403);
+  if (opsi.wajibSuperAdmin && peran !== "superadmin") {
+    throw new GalatApi("Halaman ini hanya untuk Super Admin.", 403);
+  }
+  if (opsi.wajibAdmin && peran !== "admin" && peran !== "superadmin") {
+    throw new GalatApi("Halaman ini hanya untuk Admin dan Super Admin.", 403);
   }
   if (opsi.wajibIzin && !izin(opsi.wajibIzin)) {
-    throw new GalatApi("Anda tidak memiliki izin untuk melakukan aaksi ini.", 403);
+    throw new GalatApi("Anda tidak memiliki izin untuk melakukan aksi ini.", 403);
   }
 
   return { supabase, pengguna, peran, kebijakan, izin };

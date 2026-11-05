@@ -157,16 +157,44 @@ function lembarXml(baris: SelXlsx[][]): string {
 
 /** Nama sheet aman: maks 31 karakter, tanpa karakter terlarang Excel. */
 function namaSheetAman(nama: string, nomor: number): string {
-  const bersih = nama.replace(/[*?:/\\[\]]/g, "-").trim().slice(0, 31);
+  const bersih = nama
+    .replace(/[*?:/\\[\]]/g, "-")
+    .replace(/[\u0000-\u001f]/g, "")
+    .trim()
+    .slice(0, 31);
+
   return bersih || `Sheet${nomor}`;
 }
 
-/** Susun berkas .xlsx (bytes) dari beberapa sheet. */
+function daftarNamaSheet(lembar: LembarXlsx[]) {
+  const digunakan = new Set<string>();
+
+  return lembar.map((l, i) => {
+    const dasar = namaSheetAman(l.nama, i + 1);
+    let nama = dasar;
+    let nomor = 2;
+
+    while (digunakan.has(nama.toLowerCase())) {
+      const akhiran = ` (${nomor})`;
+      nama = `${dasar.slice(0, 31 - akhiran.length)}${akhiran}`;
+      nomor++;
+    }
+
+    digunakan.add(nama.toLowerCase());
+
+    return {
+      nama,
+      baris: l.baris,
+    };
+  });
+}
+
 export function buatXlsx(lembar: LembarXlsx[]): Uint8Array {
-  const daftar = lembar.map((l, i) => ({
-    nama: namaSheetAman(l.nama, i + 1),
-    baris: l.baris,
-  }));
+  const sumber = lembar.length
+    ? lembar
+    : [{ nama: "Ringkasan", baris: [["Tidak ada data"]] }];
+
+  const daftar = daftarNamaSheet(sumber);
 
   const contentTypes =
     `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
@@ -227,17 +255,26 @@ export function buatXlsx(lembar: LembarXlsx[]): Uint8Array {
 
 /** Unduh lembar kerja sebagai berkas .xlsx. */
 export function unduhXlsx(namaFile: string, lembar: LembarXlsx[]) {
+  if (typeof window === "undefined") return;
+
   const bytes = buatXlsx(lembar);
-  // bytes selalu Uint8Array atas ArrayBuffer biasa (hasil new Uint8Array).
+
   const blob = new Blob([bytes.buffer as ArrayBuffer], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
+
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
+
   a.href = url;
-  a.download = namaFile.endsWith(".xlsx") ? namaFile : `${namaFile}.xlsx`;
+  a.download = namaFile.endsWith(".xlsx")
+    ? namaFile
+    : `${namaFile}.xlsx`;
+
   document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  a.remove();
+
+  // Beri waktu kepada browser untuk memulai unduhan.
+  window.setTimeout(() => URL.revokeObjectURL(url), 1500);
 }

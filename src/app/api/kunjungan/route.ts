@@ -1,20 +1,3 @@
-// Check-in kunjungan (kios perpustakaan) & rekap kunjungan (admin).
-//
-// Dua endpoint dengan model akses berbeda, keduanya mengikuti pola proyek:
-//
-//   POST /api/kunjungan  — KIOS PUBLIK (tanpa sesi login, keputusan desain).
-//       Menerima nomor anggota, memvalidasinya di route DAN di fungsi
-//       database, lalu mencatat kunjungan lewat RPC SECURITY DEFINER
-//       `catat_kunjungan` (migrasi 0009). Tabel tidak bisa dibaca maupun
-//       ditulis langsung: RLS default-deny + tanpa GRANT untuk anon.
-//
-//   GET  /api/kunjungan  — REKAP/LAPORAN, khusus pihak berwenang
-//       (izin laporan.lihat). Mendukung filter tanggal, pencarian nomor/nama
-//       anggota, pengurutan tanggal+waktu, dan paginasi server-side agar
-//       halaman tetap cepat saat data bertambah. Kebijakan `kunjungan_lihat`
-//       (is_admin, migrasi 0009) tetap menegakkan batas walau route dilewati.
-//
-// Kunci service role TIDAK dipakai di berkas ini sama sekali.
 
 import {
   GalatApi,
@@ -25,41 +8,40 @@ import {
 } from "@/lib/supabase/konteks";
 import { createSupabaseServer } from "@/lib/supabase/server";
 
-const BATAS_HARI = 90; // rentang rekap maksimal
-const BATAS_BARIS = 100; // baris per halaman (pagination)
-const BATAS_EKSPOR = 1000; // baris untuk ekspor (semua=true)
-const BATAS_AGGREGAT = 5000; // baris yang dijadikan dasar grafik & jumlah unik
+const BATAS_HARI = 90;
+const BATAS_BARIS = 100;
+const BATAS_EKSPOR = 1000;
+const BATAS_AGGREGAT = 5000;
 
 interface BarisKunjunganRPC {
   status: "baru" | "sudah-tercatat";
   nama: string;
-  nomor_anggota: string;
+  nomor_anggota: string | null;
   tanggal: string;
   waktu_masuk: string;
 }
 
-/** Tanggal hari ini menurut zona Asia/Jakarta, format YYYY-MM-DD. */
 function hariJakarta(offsetHari = 0): string {
   const d = new Date(Date.now() + offsetHari * 86_400_000);
-  // Locale "sv-SE" menghasilkan pola ISO (YYYY-MM-DD).
-  return d.toLocaleDateString("sv-SE", { timeZone: "Asia/Jakarta" });
+  return d.toLocaleDateString("sv-SE", {
+    timeZone: "Asia/Jakarta",
+  });
 }
 
 function tanggalISO(v: unknown, nama: string): string | null {
   const s = typeof v === "string" ? v.trim() : "";
   if (!s) return null;
+
   if (!/^\d{4}-\d{2}-\d{2}$/.test(s) || Number.isNaN(Date.parse(s))) {
     throw new GalatApi(`${nama} harus berformat YYYY-MM-DD.`);
   }
+
   return s;
 }
 
-/**
- * Kata kunci pencarian: bersih dari karakter sintaks PostgREST (koma,
- * kurung) supaya tidak merusak ekspresi `or` pada filter tabel tertaut.
- */
 function bersihkanQ(v: unknown): string {
   const s = typeof v === "string" ? v : "";
+
   return s
     .replace(/[,%()\\]/g, " ")
     .replace(/\s+/g, " ")
@@ -67,49 +49,105 @@ function bersihkanQ(v: unknown): string {
     .slice(0, 60);
 }
 
-// ===========================================================================
-// POST — check-in kunjungan (kios, tanpa sesi)
-// ===========================================================================
+// =====================================================================
+// POST — check-in anggota dan pengunjung tamu
+// =====================================================================
+
 export async function POST(request: Request) {
   return jalankan(async () => {
-    // Penjaga ringan: tolak permintaan lintas asal (Origin berbeda). Kios
-    // selalu same-origin; permintaan tanpa header Origin (curl, PostgREST
-    // internal) tetap diterima.
     const origin = request.headers.get("origin");
+
     if (origin) {
       let sama = false;
+
       try {
         sama = new URL(origin).host === new URL(request.url).host;
       } catch {
         sama = false;
       }
-      if (!sama) throw new GalatApi("Permintaan ditolak (asal tidak dikenal).", 403);
+
+      if (!sama) {
+        throw new GalatApi("Permintaan ditolak (asal tidak dikenal).", 403);
+      }
     }
 
-    const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
-    const nomor = typeof body?.nomorAnggota === "string" ? body.nomorAnggota.trim() : "";
-    if (!nomor) throw new GalatApi("Nomor anggota wajib diisi.");
-    if (nomor.length > 30 || !/^[A-Za-z0-9 ./_-]+$/.test(nomor)) {
-      throw new GalatApi("Format nomor anggota tidak valid.");
+    const body = (await request.json().catch(() => null)) as
+      | Record<string, unknown>
+      | null;
+
+    if (!body) {
+      throw new GalatApi("Data check-in tidak valid.");
     }
 
-    // Klien sesi: tanpa cookie → peran `anon` (memiliki hak eksekusi fungsi
-    // sejak migrasi 0009); dengan cookie staf → `authenticated`. Keduanya
-    // hanya bisa MENULIS lewat fungsi, tidak membaca tabel.
+    const jenis =
+      typeof body.jenisPengunjung === "string"
+        ? body.jenisPengunjung
+        : "anggota";
+
     const supabase = await createSupabaseServer();
-    const { data, error } = await supabase.rpc("catat_kunjungan", { p_nomor: nomor });
-    if (error) throw dariSupabase(error);
 
-    const r = data as unknown as BarisKunjunganRPC;
+    let data: unknown;
+    let error: unknown;
+
+    if (jenis === "anggota") {
+      const nomor =
+        typeof body.nomorAnggota === "string"
+          ? body.nomorAnggota.trim()
+          : "";
+
+      if (!nomor) {
+        throw new GalatApi("Nomor anggota wajib diisi.");
+      }
+
+      if (nomor.length > 30 || !/^[A-Za-z0-9 ./_-]+$/.test(nomor)) {
+        throw new GalatApi("Format nomor anggota tidak valid.");
+      }
+
+      const hasil = await supabase.rpc("catat_kunjungan", {
+        p_nomor: nomor,
+      });
+
+      data = hasil.data;
+      error = hasil.error;
+    } else if (jenis === "tamu") {
+      const nama =
+        typeof body.nama === "string" ? body.nama.trim() : "";
+
+      if (nama.length < 2 || nama.length > 100) {
+        throw new GalatApi(
+          "Nama pengunjung harus berisi 2 sampai 100 karakter."
+        );
+      }
+
+      const hasil = await supabase.rpc("catat_kunjungan_tamu", {
+        p_nama: nama,
+      });
+
+      data = hasil.data;
+      error = hasil.error;
+    } else {
+      throw new GalatApi("Jenis pengunjung tidak dikenal.");
+    }
+
+    if (error) {
+      throw dariSupabase(error);
+    }
+
+    const r = data as BarisKunjunganRPC | null;
+
     if (!r || typeof r.nama !== "string") {
-      throw new GalatApi("Check-in gagal diproses. Coba lagi atau hubungi petugas.", 500);
+      throw new GalatApi(
+        "Check-in gagal diproses. Silakan coba kembali.",
+        500
+      );
     }
 
     return json({
       kunjungan: {
         status: r.status,
+        jenisPengunjung: jenis,
         nama: r.nama,
-        nomorAnggota: r.nomor_anggota,
+        nomorAnggota: r.nomor_anggota ?? null,
         tanggal: r.tanggal,
         waktuMasuk: r.waktu_masuk,
       },
@@ -121,100 +159,275 @@ export async function POST(request: Request) {
   });
 }
 
-// ===========================================================================
-// GET — rekap/laporan kunjungan (admin, izin laporan.lihat)
-// ===========================================================================
+// =====================================================================
+// GET — rekap kunjungan (khusus pihak berwenang)
+// =====================================================================
+
 export async function GET(request: Request) {
   return jalankan(async () => {
-    const k = await konteksRoute({ wajibMasuk: true, wajibIzin: "laporan.lihat" });
+    const k = await konteksRoute({
+      wajibMasuk: true,
+      wajibIzin: "laporan.lihat",
+    });
+
     const url = new URL(request.url);
 
     const sampai =
-      tanggalISO(url.searchParams.get("sampai"), "Tanggal sampai") ?? hariJakarta();
+      tanggalISO(url.searchParams.get("sampai"), "Tanggal sampai") ??
+      hariJakarta();
+
     const dari =
-      tanggalISO(url.searchParams.get("dari"), "Tanggal dari") ?? hariJakarta(-13);
-    if (dari > sampai) throw new GalatApi("Tanggal mulai harus sebelum tanggal sampai.");
+      tanggalISO(url.searchParams.get("dari"), "Tanggal dari") ??
+      hariJakarta(-13);
+
+    if (dari > sampai) {
+      throw new GalatApi(
+        "Tanggal mulai harus sebelum tanggal sampai."
+      );
+    }
+
     const rentangHari =
-      (Date.parse(sampai + "T00:00:00Z") - Date.parse(dari + "T00:00:00Z")) / 86_400_000 + 1;
+      (Date.parse(sampai + "T00:00:00Z") -
+        Date.parse(dari + "T00:00:00Z")) /
+        86_400_000 +
+      1;
+
     if (rentangHari > BATAS_HARI) {
-      throw new GalatApi(`Rentang laporan maksimal ${BATAS_HARI} hari.`);
+      throw new GalatApi(
+        `Rentang laporan maksimal ${BATAS_HARI} hari.`
+      );
     }
 
     const q = bersihkanQ(url.searchParams.get("q"));
-    const hal = Math.max(1, Number(url.searchParams.get("hal")) || 1);
-    const per = Math.min(BATAS_BARIS, Math.max(1, Number(url.searchParams.get("per")) || 20));
-    const semua = url.searchParams.get("semua") === "true"; // untuk ekspor
-    const turun = url.searchParams.get("arah") !== "naik"; // default: terbaru dulu
+
+    const hal = Math.max(
+      1,
+      Number(url.searchParams.get("hal")) || 1
+    );
+
+    const per = Math.min(
+      BATAS_BARIS,
+      Math.max(1, Number(url.searchParams.get("per")) || 20)
+    );
+
+    const semua = url.searchParams.get("semua") === "true";
+
+    const arahParam =
+      url.searchParams.get("turon") ??
+      url.searchParams.get("arah");
+
+    const turun =
+      arahParam !== "false" && arahParam !== "naik";
+
     const kolomUrut =
-      url.searchParams.get("urut") === "tanggal" ? "tanggal_kunjungan" : "waktu_masuk";
+      url.searchParams.get("urut") === "tanggal"
+        ? "tanggal_kunjungan"
+        : "waktu_masuk";
 
-    // Ekspresi filter tabel tertaut (PostgREST memakai `*` sebagai wildcard).
-    const ekspresiQ = q ? `nomor_anggota.ilike.*${q}*,nama.ilike.*${q}*` : null;
+    // Filter nama dan nomor anggota.
+    // Nama tamu juga ikut dicari melalui nama_tamu.
+    const ekspresiAnggota = q
+      ? `nomor_anggota.ilike.*${q}*,nama.ilike.*${q}*`
+      : null;
 
-    // ---- 1) Halaman tabel (dengan jumlah total untuk paginasi) ------------
     let kueriBaris = k.supabase
       .from("kunjungan")
-      .select("id, anggota_id, tanggal_kunjungan, waktu_masuk, anggota(nama, nomor_anggota)", {
-        count: "exact",
-      })
+      .select(
+        `
+          id,
+          anggota_id,
+          jenis_pengunjung,
+          nama_tamu,
+          tanggal_kunjungan,
+          waktu_masuk,
+          anggota(nama, nomor_anggota, jenis)
+        `,
+        { count: "exact" }
+      )
       .gte("tanggal_kunjungan", dari)
       .lte("tanggal_kunjungan", sampai);
-    if (ekspresiQ) {
-      kueriBaris = kueriBaris.or(ekspresiQ, { foreignTable: "anggota" });
-    }
-    const mulai = semua ? 0 : (hal - 1) * per;
-    const akhir = semua ? mulai + BATAS_EKSPOR - 1 : mulai + per - 1;
-    const { data, error, count } = await kueriBaris
-      .order(kolomUrut, { ascending: !turun })
-      .order("waktu_masuk", { ascending: !turun })
-      .range(mulai, akhir);
-    if (error) throw dariSupabase(error);
 
-    // ---- 2) Agregat seluruh baris terfilter (grafik + jumlah unik) --------
-    // Dipisah dari halaman tabel agar grafik/grup tetap utuh walau tabel
-    // dipaginasi — angka ringkasan selalu konsisten dengan filter aktif.
+    if (q) {
+      kueriBaris = kueriBaris.or(
+        `nama_tamu.ilike.*${q}*`
+      );
+
+      // Filter relasi anggota dilakukan terpisah agar hasil
+      // anggota dan tamu sama-sama dapat ditemukan.
+      // Untuk pencarian gabungan, gunakan dua kueri di bawah.
+    }
+
+    const mulai = semua ? 0 : (hal - 1) * per;
+    const akhir = semua
+      ? mulai + BATAS_EKSPOR - 1
+      : mulai + per - 1;
+
+    const [hasilSemua, hasilAnggota] = await Promise.all([
+      kueriBaris
+        .order(kolomUrut, { ascending: !turun })
+        .order("waktu_masuk", { ascending: !turun })
+        .range(mulai, akhir),
+
+      q
+        ? k.supabase
+            .from("kunjungan")
+            .select(
+              `
+                id,
+                anggota_id,
+                jenis_pengunjung,
+                nama_tamu,
+                tanggal_kunjungan,
+                waktu_masuk,
+                anggota!inner(nama, nomor_anggota, jenis)
+              `,
+              { count: "exact" }
+            )
+            .gte("tanggal_kunjungan", dari)
+            .lte("tanggal_kunjungan", sampai)
+            .or(ekspresiAnggota!, { foreignTable: "anggota" })
+            .order(kolomUrut, { ascending: !turun })
+            .order("waktu_masuk", { ascending: !turun })
+            .range(0, BATAS_EKSPOR - 1)
+        : Promise.resolve(null),
+    ]);
+
+    if (hasilSemua.error) {
+      throw dariSupabase(hasilSemua.error);
+    }
+
+    if (hasilAnggota?.error) {
+      throw dariSupabase(hasilAnggota.error);
+    }
+
+    // Gabungkan hasil tamu dan anggota berdasarkan ID.
+    const gabungan = new Map<string, any>();
+
+    for (const b of hasilSemua.data ?? []) {
+      if (b.jenis_pengunjung === "tamu") {
+        gabungan.set(b.id, b);
+      }
+    }
+
+    if (q && hasilAnggota?.data) {
+      for (const b of hasilAnggota.data) {
+        gabungan.set(b.id, b);
+      }
+    } else if (!q) {
+      for (const b of hasilSemua.data ?? []) {
+        gabungan.set(b.id, b);
+      }
+    }
+
+    let baris = Array.from(gabungan.values());
+
+    // Pencarian diterapkan lagi pada data hasil gabungan.
+    if (q) {
+      const kata = q.toLocaleLowerCase();
+
+      baris = baris.filter((b) => {
+        const anggota = Array.isArray(b.anggota)
+          ? b.anggota[0]
+          : b.anggota;
+
+        return (
+          String(b.nama_tamu ?? "")
+            .toLocaleLowerCase()
+            .includes(kata) ||
+          String(anggota?.nama ?? "")
+            .toLocaleLowerCase()
+            .includes(kata) ||
+          String(anggota?.nomor_anggota ?? "")
+            .toLocaleLowerCase()
+            .includes(kata)
+        );
+      });
+    }
+
+    baris.sort((a, b) => {
+      const nilaiA =
+        kolomUrut === "tanggal_kunjungan"
+          ? `${a.tanggal_kunjungan} ${a.waktu_masuk}`
+          : a.waktu_masuk;
+
+      const nilaiB =
+        kolomUrut === "tanggal_kunjungan"
+          ? `${b.tanggal_kunjungan} ${b.waktu_masuk}`
+          : b.waktu_masuk;
+
+      return nilaiA < nilaiB
+        ? turun
+          ? 1
+          : -1
+        : nilaiA > nilaiB
+          ? turun
+            ? -1
+            : 1
+          : 0;
+    });
+
+    // Ambil seluruh data yang telah digabung untuk paginasi.
+    const total = baris.length;
+    const halamanTerakhir = Math.max(
+      1,
+      Math.ceil(total / per)
+    );
+
+    const dataHalaman = semua
+      ? baris.slice(0, BATAS_EKSPOR)
+      : baris.slice(mulai, mulai + per);
+
+    // Agregat statistik.
     let kueriAgregat = k.supabase
       .from("kunjungan")
-      .select("tanggal_kunjungan, anggota_id")
+      .select(
+        "tanggal_kunjungan, anggota_id, jenis_pengunjung, nama_tamu"
+      )
       .gte("tanggal_kunjungan", dari)
       .lte("tanggal_kunjungan", sampai);
-    if (ekspresiQ) {
-      kueriAgregat = kueriAgregat.or(ekspresiQ, { foreignTable: "anggota" });
-    }
-    const { data: agregat, error: errAgregat } = await kueriAgregat.limit(BATAS_AGGREGAT);
-    if (errAgregat) throw dariSupabase(errAgregat);
 
-    // ---- 3) Hitung kunjungan hari ini (tanpa filter, selalu tampil) -------
-    const { count: hariIni, error: errHari } = await k.supabase
-      .from("kunjungan")
-      .select("id", { count: "exact", head: true })
-      .eq("tanggal_kunjungan", hariJakarta());
-    if (errHari) throw dariSupabase(errHari);
+    const { data: agregat, error: errAgregat } =
+      await kueriAgregat.limit(BATAS_AGGREGAT);
 
-    // ---- Susun respons ----------------------------------------------------
-    interface Baris {
-      id: string;
-      anggota_id: string;
-      tanggal_kunjungan: string;
-      waktu_masuk: string;
-      // Relasi many-to-one bisa dipetakan sebagai objek ATAU larik satu elemen
-      // tergantung versi supabase-js — dinormalisasi di bawah.
-      anggota: { nama: string; nomor_anggota: string }[] | { nama: string; nomor_anggota: string } | null;
+    if (errAgregat) {
+      throw dariSupabase(errAgregat);
     }
-    const baris = (data ?? []) as Baris[];
-    const kartu = (b: Baris) => (Array.isArray(b.anggota) ? b.anggota[0] : b.anggota);
+
+    const { count: hariIni, error: errHari } =
+      await k.supabase
+        .from("kunjungan")
+        .select("id", { count: "exact", head: true })
+        .eq("tanggal_kunjungan", hariJakarta());
+
+    if (errHari) {
+      throw dariSupabase(errHari);
+    }
 
     const perHari = new Map<string, number>();
-    const unik = new Set<string>();
-    for (const a of (agregat ?? []) as { tanggal_kunjungan: string; anggota_id: string }[]) {
-      perHari.set(a.tanggal_kunjungan, (perHari.get(a.tanggal_kunjungan) ?? 0) + 1);
-      unik.add(a.anggota_id);
+    const unikAnggota = new Set<string>();
+    const unikTamu = new Set<string>();
+
+    for (const a of agregat ?? []) {
+      perHari.set(
+        a.tanggal_kunjungan,
+        (perHari.get(a.tanggal_kunjungan) ?? 0) + 1
+      );
+
+      if (a.jenis_pengunjung === "anggota" && a.anggota_id) {
+        unikAnggota.add(a.anggota_id);
+      }
+
+      if (a.jenis_pengunjung === "tamu" && a.nama_tamu) {
+        unikTamu.add(
+          a.nama_tamu.trim().toLocaleLowerCase("id-ID")
+        );
+      }
     }
+
     const ringkasan = Array.from(perHari.entries())
       .map(([tanggal, jumlah]) => ({ tanggal, jumlah }))
       .sort((a, b) => (a.tanggal < b.tanggal ? 1 : -1));
 
-    const total = count ?? 0;
     return json({
       dari,
       sampai,
@@ -223,21 +436,38 @@ export async function GET(request: Request) {
       per,
       semua,
       urut: kolomUrut,
-      arah: turun ? "turun" : "naik",
+      turon: turun,
       total,
-      halTerakhir: Math.max(1, Math.ceil(total / per)),
-      pengunjungUnik: unik.size,
+      halTerakhir: halamanTerakhir,
+      pengunjungUnik:
+        unikAnggota.size + unikTamu.size,
       hariIni: hariIni ?? 0,
       terpotong: (agregat ?? []).length >= BATAS_AGGREGAT,
       ringkasan,
-      kunjungan: baris.map((b) => ({
-        id: b.id,
-        anggotaId: b.anggota_id,
-        nama: kartu(b)?.nama ?? "-",
-        nomorAnggota: kartu(b)?.nomor_anggota ?? "-",
-        tanggal: b.tanggal_kunjungan,
-        waktuMasuk: b.waktu_masuk,
-      })),
+      kunjungan: dataHalaman.map((b) => {
+        const anggota = Array.isArray(b.anggota)
+          ? b.anggota[0]
+          : b.anggota;
+
+        const tamu = b.jenis_pengunjung === "tamu";
+
+        return {
+          id: b.id,
+          anggotaId: b.anggota_id,
+          jenisPengunjung: b.jenis_pengunjung,
+          nama: tamu
+            ? b.nama_tamu
+            : anggota?.nama ?? "-",
+          nomorAnggota: tamu
+            ? "-"
+            : anggota?.nomor_anggota ?? "-",
+          kategori: tamu
+            ? "Tamu"
+            : anggota?.jenis ?? "Anggota",
+          tanggal: b.tanggal_kunjungan,
+          waktuMasuk: b.waktu_masuk,
+        };
+      }),
     });
   });
 }

@@ -3,15 +3,22 @@
 // oleh Worker API (worker/index.ts) supaya matriks izin di server dan di layar
 // selalu berasal dari SATU sumber — tidak pernah duplikasi yang bisa drift.
 
-export type PeranAkses = "tamu" | "user" | "admin";
+// Tiga peran aplikasi (+ tamu tanpa sesi). Nilai harus SAMA dengan isi kolom
+// profiles.peran di database dan dengan kunci objek `izin` di tabel
+// kebijakan_akses — public.boleh() di PostgreSQL membaca kunci persis ini.
+export type PeranAkses = "tamu" | "user" | "admin" | "superadmin";
 
 /** Urutan kolom matriks izin di layar Kontrol Akses. */
-export const PERAN_AKSES: PeranAkses[] = ["tamu", "user", "admin"];
+export const PERAN_AKSES: PeranAkses[] = ["tamu", "user", "admin", "superadmin"];
 
 export const INFO_PERAN: Record<PeranAkses, { label: string; bantuan: string }> = {
   tamu: { label: "Tamu", bantuan: "Pengunjung yang belum masuk" },
   user: { label: "Anggota", bantuan: "Peran user — anggota terdaftar" },
-  admin: { label: "Admin", bantuan: "Pustakawan / pengelola sistem" },
+  admin: { label: "Admin", bantuan: "Pustakawan — operasional perpustakaan" },
+  superadmin: {
+    label: "Super Admin",
+    bantuan: "Pengelola sistem — operasional plus kelola akun, akses, & pengaturan",
+  },
 };
 
 export interface DefinisiIzin {
@@ -25,6 +32,8 @@ export interface DefinisiIzin {
 }
 
 // Katalog izin — satu-satunya tempat mendefinisikan izin baru.
+// Super Admin selalu berada di atas Admin: bila tidak ditentukan eksplisit,
+// nilainya mengikuti kolom Admin (kecuali izin sistem yang Admin tak punya).
 const I = (
   id: string,
   label: string,
@@ -32,8 +41,51 @@ const I = (
   grup: string,
   tamu: boolean,
   user: boolean,
-  admin: boolean
-): DefinisiIzin => ({ id, label, bantuan, grup, bawaan: { tamu, user, admin } });
+  admin: boolean,
+  superadmin: boolean = admin
+): DefinisiIzin => ({ id, label, bantuan, grup, bawaan: { tamu, user, admin, superadmin } });
+
+//------|--------
+// Helper untuk pengecekan kebijakan di sisi klien.
+// Dipakai komponen React yang bukan di dalam aplikasi (AppShell, halaman
+// publik, panel) untuk mengambil kebijakan dari store.
+//
+// Interface store: { kebijakan: Kebijakan; update(kebijakan: Kebijakan): void }
+//
+// @returns kebijakan yang aktif saat ini (dari store, bawaan bila belum ada)
+export interface KebijakanStore {
+  kebijakan: Kebijakan;
+  update(kebijakan: Kebijakan): void;
+}
+
+
+export function ambilKebijakan(): Kebijakan {
+  return KEBIJAKAN_BAWAAN;
+}
+
+export function useKebijakan(store: KebijakanStore): Kebijakan {
+  return store.kebijakan;
+}
+
+export function bolehRute(kb: Kebijakan, peran: PeranAkses, path: string): boolean {
+  // Rute publik (path tidak cocok dengan apapun di matriks) → boleh
+  const publik = ["/", "/login", "/register", "/katalog", "/katalog/[id]", "/sirkulasi", "/laporan", "/dashboard", "/panel", "/panel/pinjaman", "/panel/profil", "/panel/riwayat", "/panel/bantuan", "/katalog/search", "/katalog/[id]", "/katalog/[id]/detail"];
+  if (path === "/" || publik.includes(path)) return true;
+  // Rute yang bersifat global (tidak terkait halaman tertentu) → boleh untuk
+  // peran yang mengizinkan akses global (user, admin, superadmin)
+  const globalRute = ["/katalog/search", "/katalog/[id]", "/katalog/[id]/detail", "/sirkulasi", "/laporan", "/dashboard", "/panel", "/panel/pinjaman", "/panel/profil", "/panel/riwayat", "/panel/bantuan", "/kunjungan", "/kunjungan/checkin", "/katalog/[id]", "/katalog/[id]/detail"];
+  if (globalRute.includes(path)) {
+    return peran !== "tamu";
+  }
+  // Rute institusional → hanya admin/superadmin
+  return peran === "admin" || peran === "superadmin";
+}
+
+export function tujuanRumah(kb: Kebijakan, peran: PeranAkses): string {
+  if (peran === "admin" || peran === "superadmin") return "/dashboard";
+  if (peran === "user") return "/panel";
+  return "/";
+}
 
 export const DAFTAR_IZIN: DefinisiIzin[] = [
   // Katalog & peminjaman
@@ -45,6 +97,7 @@ export const DAFTAR_IZIN: DefinisiIzin[] = [
   I("panel.pinjaman", "Pinjaman saya", "Melihat & memperpanjang pinjaman sendiri", "Panel Anggota", false, true, false),
   I("panel.profil", "Ubah profil sendiri", "Edit profil & ganti kata sandi akun", "Panel Anggota", false, true, true),
   I("panel.bantuan", "Halaman bantuan", "Panduan singkat & FAQ layanan perpustakaan", "Panel Anggota", false, true, true),
+  I("kartu.lihat", "Kartu anggota", "Melihat, mencetak, & mengunduh kartu keanggotaan pribadi", "Panel Anggota", false, true, true),
   // Operasional perpustakaan
   I("dashboard.lihat", "Dashboard", "Ringkasan operasional & aktivitas", "Operasional", false, false, true),
   I("sirkulasi.lihat", "Sirkulasi (lihat)", "Melihat data peminjaman", "Operasional", false, false, true),
@@ -55,12 +108,13 @@ export const DAFTAR_IZIN: DefinisiIzin[] = [
   I("laporan.ekspor", "Ekspor laporan", "Mengunduh laporan CSV", "Operasional", false, false, true),
   // Sistem & akun
   I("akun.daftar", "Pendaftaran publik", "Formulir daftar terbuka untuk tamu", "Sistem & Akun", true, false, false),
-  I("akun.kelola", "Kelola akun login", "Buat, reset sandi, & hapus akun", "Sistem & Akun", false, false, true),
-  I("pengaturan.kelola", "Pengaturan sistem", "Tema, nama, lama pinjam, & denda", "Sistem & Akun", false, false, true),
+  // Kelola akun, akses, & pengaturan = kewenangan SUPER ADMIN saja.
+  I("akun.kelola", "Kelola akun login", "Buat, reset sandi, & hapus akun", "Sistem & Akun", false, false, false, true),
+  I("pengaturan.kelola", "Pengaturan sistem", "Tema, nama, lama pinjam, & denda", "Sistem & Akun", false, false, false, true),
   // Catatan: "akses.kelola" sengaja TIDAK ada di matriks — akses halaman
-  // Kontrol Akses dijaga gerbang peran admin (RUTE_PERAN), sehingga anggota
+  // Kontrol Akses dijaga gerbang peran Super Admin (RUTE_PERAN), sehingga anggota
   // takkan pernah kena penolakan izin untuk halaman ini.
-  I("sistem.reset", "Reset data demo", "Mengembalikan data ke seed bawaan", "Sistem & Akun", false, false, true),
+  I("sistem.reset", "Reset data demo", "Mengembalikan data ke seed bawaan", "Sistem & Akun", false, false, false, true),
 ];
 
 /** Urutan grup tampil di matriks (mengikuti urutan kemunculan di katalog). */
@@ -71,7 +125,15 @@ export const GRUP_IZIN: string[] = Array.from(new Set(DAFTAR_IZIN.map((z) => z.g
  * saat memuat maupun menyimpan kebijakan. Saat ini kosong — mekanismenya
  * disiapkan untuk izin lain yang wajib melekat di peran tertentu.
  */
-export const KUNCI_IZIN: Partial<Record<string, PeranAkses[]>> = {};
+export const KUNCI_IZIN: Partial<Record<string, PeranAkses[]>> = {
+  // Hak dasar Super Admin
+  "anggota.lihat": ["superadmin"],
+
+  // Hak khusus sistem Super Admin
+  "akun.kelola": ["superadmin"],
+  "pengaturan.kelola": ["superadmin"],
+  "sistem.reset": ["superadmin"],
+};
 
 export interface Kebijakan {
   versi: number;
@@ -151,5 +213,12 @@ export function cekIzin(kb: Kebijakan, peran: PeranAkses, izinId: string): boole
 
 /** Peran efektif dari peran akun: tidak ada sesi = tamu. */
 export function peranEfektif(peran: string | null | undefined): PeranAkses {
-  return peran === "admin" || peran === "user" ? peran : "tamu";
+  return peran === "admin" || peran === "user" || peran === "superadmin"
+    ? peran
+    : "tamu";
+}
+
+/** Apakah peran ini petugas perpustakaan (Admin ATAU Super Admin)? */
+export function petugas(peran: PeranAkses): boolean {
+  return peran === "admin" || peran === "superadmin";
 }

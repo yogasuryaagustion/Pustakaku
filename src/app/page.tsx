@@ -6,6 +6,7 @@ import { Reveal, Angka, SampulBuku } from "@/components/ui";
 import { useBoleh } from "@/lib/auth";
 import { SEED_BUKU, SEED_ANGGOTA, SEED_PEMINJAMAN } from "@/lib/seed";
 import { useSistem, type SistemPengaturan } from "@/lib/sistem";
+import KoleksiPopuler from "@/components/landing/KoleksiPopuler";
 
 // Halaman publik — tampil tanpa sidebar (lihat PUBLIK di AppShell).
 // Konten "real": diambil langsung dari data seed (buku, anggota, peminjaman).
@@ -18,6 +19,7 @@ const NAVLINK = [
   { href: "/#fitur", label: "Fitur" },
   { href: "/#koleksi", label: "Koleksi" },
   { href: "/#tentang", label: "Cara Kerja" },
+  { href: "/#layanan", label: "Jam Layanan" },
   { href: "/#testimoni", label: "Testimoni" },
   { href: "/#faq", label: "FAQ" },
 ];
@@ -32,22 +34,32 @@ const grad = (i: number) => ({
 const IKON_BUKU =
   "M4 19.5A2.5 2.5 0 016.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z M14 3v5h5";
 
-// Daun dekoratif footer — seragam dengan panel branding halaman masuk.
-const IKON_DAUN =
-  "M11 20A7 7 0 019.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z M2 21c0-3 1.85-5.36 5.08-6";
-
 // Glyph media sosial footer — satu path stroke per ikon, senada ikon lain.
-const SOSIAL = [
-  { label: "Facebook", d: "M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" },
-  {
-    label: "Instagram",
-    d: "M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z M17.5 6.5h.01",
-  },
+// Isi `href` untuk menampilkannya sebagai tautan aktif. Baris ber-`href: null`
+// disimpan di sini tetapi TIDAK dirender (tombol yang tidak melakukan apa-apa
+// hanya menyesatkan) — begitu URL diisi, ikonnya otomatis muncul.
+const SOSIAL: { label: string; d: string; href: string | null }[] = [
   {
     label: "WhatsApp",
+    href: "https://wa.me/62221234567",
     d: "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z",
   },
-  { label: "X (Twitter)", d: "M4 4l16 16M20 4L4 20" },
+  {
+    label: "Email",
+    href: "mailto:info@pustakaku.id",
+    d: "M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM3.5 6.5 12 13l8.5-6.5",
+  },
+  {
+    label: "Facebook",
+    href: null,
+    d: "M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z",
+  },
+  {
+    label: "Instagram",
+    href: null,
+    d: "M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z M17.5 6.5h.01",
+  },
+  { label: "X (Twitter)", href: null, d: "M4 4l16 16M20 4L4 20" },
 ];
 
 const rupiahRb = (n: number) => "Rp" + new Intl.NumberFormat("id-ID").format(n);
@@ -60,13 +72,20 @@ function KartuKoleksi({ b }: { b: BukuPilihan }) {
     // Margin kanan seragam di SEMUA kartu (termasuk terakhir salinan):
     // lebar track = 2 × N × (190+16) sehingga translateX(-50%) = tepat
     // satu salinan penuh → putaran loop mulus, tanpa jeda maupun lompat.
-    <div className="card card-raised w-[190px] shrink-0 overflow-hidden" style={{ marginRight: "1rem" }}>
+    <div
+      className="card card-raised w-[190px] shrink-0 overflow-hidden"
+      style={{ marginRight: "1rem" }}
+    >
       <SampulBuku buku={b} className="h-32 w-full" rounded="" />
       <div className="p-3">
-        <div className="font-semibold text-sm leading-tight line-clamp-2">{b.judul}</div>
+        <div className="font-semibold text-sm leading-tight line-clamp-2">
+          {b.judul}
+        </div>
         <div className="text-xs text-[var(--muted)] truncate">{b.penulis}</div>
         <div className="mt-2 flex items-center justify-between">
-          <span className="text-[11px] font-semibold text-[var(--muted)]">{b.kategori}</span>
+          <span className="text-[11px] font-semibold text-[var(--muted)]">
+            {b.kategori}
+          </span>
           <span className="text-[11px] font-semibold rounded-full bg-[var(--brand-soft)] text-[var(--brand)] px-2 py-0.5">
             {b.pinjam > 0 ? `${b.pinjam}x dipinjam` : "Baru"}
           </span>
@@ -209,6 +228,7 @@ export default function LandingPage() {
   // terbaca (section terakhir yang melewati garis 40% viewport atas).
   const [turun, setTurun] = useState(false);
   const [aktifSection, setAktifSection] = useState<string | null>(null);
+  const [menuTerbuka, setMenuTerbuka] = useState(false);
   // Newsletter footer (demo tanpa backend) + tombol kembali ke atas
   // yang muncul setelah digulir — lihat pratinjau footer di rancangan.
   const [emailLangganan, setEmailLangganan] = useState("");
@@ -231,7 +251,15 @@ export default function LandingPage() {
   }, []);
   useEffect(() => {
     // Urutan section mengikuti urutan nav; id "tentang" = "Cara Kerja".
-    const SECTIONS = ["beranda", "fitur", "koleksi", "tentang", "testimoni", "faq"];
+    const SECTIONS = [
+      "beranda",
+      "fitur",
+      "koleksi",
+      "tentang",
+      "layanan",
+      "testimoni",
+      "faq",
+    ];
     const onScroll = () => {
       setTurun(window.scrollY > 8);
       setTampilKeAtas(window.scrollY > 480);
@@ -264,45 +292,64 @@ export default function LandingPage() {
     .slice(0, 6);
 
   return (
-    <div className="min-h-screen bg-[var(--background)]">
+    <div className="landing-page min-h-screen bg-[var(--background)]">
       {/* Navbar publik */}
       <header
-        className={`sticky top-0 z-40 transition-all duration-300 border-b ${
-          turun
-            ? "border-[var(--border)] bg-white/85 backdrop-blur-xl shadow-[var(--sh-2)]"
-            : "border-transparent bg-white/70 backdrop-blur-md"
+        className={`fixed top-3 inset-x-0 z-50 px-3 sm:px-5 transition-all duration-300 ${
+          turun ? "translate-y-0" : "translate-y-1"
         }`}
       >
-        <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-lg grad-brand text-white grid place-items-center shadow-sm">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <div
+          className={`relative mx-auto max-w-6xl flex h-16 items-center justify-between gap-3 rounded-full border px-4 sm:px-6 transition-all duration-300 ${
+            turun
+              ? "border-[var(--border)] bg-white/90 shadow-[var(--sh-3)] backdrop-blur-xl"
+              : "border-white/70 bg-white/75 shadow-[var(--sh-2)] backdrop-blur-lg"
+          }`}
+        >
+          {/* Logo */}
+          <Link href="/" className="flex shrink-0 items-center gap-2.5">
+            <div className="grid h-9 w-9 place-items-center rounded-xl grad-brand text-white shadow-sm">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
                 <path d={IKON_BUKU} />
               </svg>
             </div>
-            <span className="font-bold text-[15px]">{sistem.nama}</span>
+            <span className="text-[15px] font-bold tracking-tight">
+              {sistem.nama}
+            </span>
           </Link>
-          <nav className="hidden md:flex items-center gap-1 text-sm font-medium text-slate-600">
+
+          {/* Navigasi desktop: tetap horizontal pada layar besar */}
+          <nav className="hidden items-center gap-1 text-sm font-medium lg:flex">
             {NAVLINK.map((n) => {
-              // Link section (/#fitur, dst.) ikut scroll-spy; link rute
-              // (/katalog) tidak punya section — hanya hover biasa.
               const id = n.href.split("#")[1] ?? null;
               const aktif = id !== null && id === aktifSection;
+
               return (
                 <Link
                   key={n.label}
                   href={n.href}
                   aria-current={aktif ? "location" : undefined}
                   onClick={id ? (e) => keSection(e, id) : undefined}
-                  className={`relative rounded-lg px-3 py-1.5 transition-colors ${
-                    aktif ? "text-[var(--brand)]" : "hover:text-[var(--brand)]"
+                  className={`relative whitespace-nowrap rounded-full px-3 py-2 transition-all duration-300 ${
+                    aktif
+                      ? "bg-teal-50 text-[var(--brand)]"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-[var(--brand)]"
                   }`}
                 >
                   {n.label}
-                  {/* Garis penunjuk section aktif — melar halus saat berpindah. */}
                   <span
-                    aria-hidden
-                    className={`absolute inset-x-2.5 -bottom-1.5 h-0.5 rounded-full bg-[var(--brand)] transition-transform duration-300 ${
+                    aria-hidden="true"
+                    className={`absolute inset-x-3 bottom-1 h-0.5 origin-center rounded-full bg-[var(--brand)] transition-transform duration-300 ${
                       aktif ? "scale-x-100" : "scale-x-0"
                     }`}
                   />
@@ -310,156 +357,533 @@ export default function LandingPage() {
               );
             })}
           </nav>
-          <div className="flex items-center gap-2">
-            {/* Pencarian katalog — ikon bundar, sesuai rancangan. */}
+
+          {/* Tombol kanan */}
+          <div className="flex shrink-0 items-center gap-2">
             <Link
               href="/katalog"
               aria-label="Cari di katalog"
-              className="grid h-9 w-9 place-items-center rounded-full border border-[var(--border)] bg-white text-slate-600 transition-colors hover:border-[var(--brand)]/40 hover:text-[var(--brand)]"
+              className="hidden h-9 w-9 place-items-center rounded-full border border-[var(--border)] bg-white/80 text-slate-600 transition-all duration-200 hover:border-[var(--brand)]/40 hover:bg-teal-50 hover:text-[var(--brand)] sm:grid"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
                 <circle cx="11" cy="11" r="8" />
                 <path d="M21 21l-4.3-4.3" />
               </svg>
             </Link>
-            <Link href="/login" className="btn btn-primary !rounded-full !px-5">
+
+            <Link
+              href="/login"
+              className="btn btn-primary !rounded-full !px-4 sm:!px-5"
+            >
+              <span className="hidden sm:inline">
+                {bolehDaftar ? "Masuk / Daftar" : "Masuk"}
+              </span>
+              <span className="sm:hidden">Masuk</span>
+            </Link>
+
+            {/* Tombol hamburger hanya untuk tablet dan mobile */}
+            <button
+              type="button"
+              onClick={() => setMenuTerbuka((terbuka) => !terbuka)}
+              aria-label={
+                menuTerbuka ? "Tutup menu navigasi" : "Buka menu navigasi"
+              }
+              aria-expanded={menuTerbuka}
+              aria-controls="menu-mobile-pustakaku"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-teal-900/10 bg-teal-50 text-teal-800 transition hover:bg-teal-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 lg:hidden"
+            >
+              {menuTerbuka ? (
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  aria-hidden="true"
+                >
+                  <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  aria-hidden="true"
+                >
+                  <path d="M4 7h16M4 12h16M4 17h16" />
+                </svg>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Panel menu responsif — mengikuti referensi yang dikirim */}
+        <div
+          id="menu-mobile-pustakaku"
+          className={`absolute left-3 right-3 top-[calc(100%+0.65rem)] mx-auto max-w-6xl origin-top overflow-hidden rounded-3xl border border-slate-200/90 bg-white/95 p-4 shadow-[0_20px_55px_rgba(15,23,42,0.16)] backdrop-blur-xl transition-all duration-200 lg:hidden ${
+            menuTerbuka
+              ? "visible translate-y-0 scale-100 opacity-100"
+              : "invisible -translate-y-2 scale-[0.98] opacity-0 pointer-events-none"
+          }`}
+          aria-hidden={!menuTerbuka}
+        >
+          <form
+            action="/katalog"
+            method="get"
+            className="mb-3 flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="shrink-0 text-teal-800"
+              aria-hidden="true"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.3-4.3" />
+            </svg>
+            <label htmlFor="mobile-search" className="sr-only">
+              Cari buku
+            </label>
+            <input
+              id="mobile-search"
+              type="search"
+              name="q"
+              placeholder="Cari judul atau pengarang..."
+              className="min-w-0 flex-1 border-0 bg-transparent py-3 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:ring-0"
+            />
+            <button
+              type="submit"
+              aria-label="Cari buku"
+              className="shrink-0 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-600 transition hover:border-teal-200 hover:bg-teal-50 hover:text-teal-800"
+            >
+              Cari
+            </button>
+          </form>
+
+          <nav aria-label="Navigasi mobile" className="space-y-1">
+            {NAVLINK.map((n) => {
+              const id = n.href.split("#")[1] ?? null;
+              const aktif = id !== null && id === aktifSection;
+
+              return (
+                <Link
+                  key={n.label}
+                  href={n.href}
+                  aria-current={aktif ? "location" : undefined}
+                  onClick={(e) => {
+                    if (id) keSection(e, id);
+                    setMenuTerbuka(false);
+                  }}
+                  className={`flex min-h-11 items-center rounded-xl px-3.5 py-3 text-sm font-medium transition-colors ${
+                    aktif
+                      ? "bg-teal-50 text-teal-800"
+                      : "text-slate-700 hover:bg-slate-50 hover:text-teal-800"
+                  }`}
+                >
+                  {n.label === "Fitur"
+                    ? "Fitur Unggulan"
+                    : n.label === "Koleksi"
+                      ? "Koleksi Buku"
+                      : n.label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="mt-4 grid grid-cols-1 gap-2 border-t border-slate-100 pt-4 sm:grid-cols-2">
+            <Link
+              href="/katalog"
+              onClick={() => setMenuTerbuka(false)}
+              className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-teal-200 hover:bg-teal-50 hover:text-teal-800"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v17H6.5A2.5 2.5 0 0 1 4 17.5z" />
+                <path d="M4 6h16M8 3v17" />
+              </svg>
+              Koleksi Buku
+            </Link>
+            <Link
+              href="/login"
+              onClick={() => setMenuTerbuka(false)}
+              className="flex min-h-11 items-center justify-center rounded-xl bg-[var(--brand)] px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:brightness-110"
+            >
               {bolehDaftar ? "Masuk / Daftar" : "Masuk"}
             </Link>
           </div>
         </div>
       </header>
 
-      {/* Hero — setinggi layar laptop; blob lembut + komposisi "membaca"
-          (tumpukan sampul mengapung) menggantikan kartu preview lama. */}
-      <section id="beranda" className="relative overflow-hidden min-h-[100svh] flex flex-col justify-center grad-hero">
-        <div aria-hidden className="pointer-events-none absolute -top-32 right-[-12%] h-[36rem] w-[36rem] rounded-full grad-soft opacity-70 blur-3xl" />
-        <div aria-hidden className="pointer-events-none absolute -bottom-40 left-[-10%] h-96 w-96 rounded-full bg-[var(--brand-soft)] opacity-60 blur-3xl" />
-        <div aria-hidden className="pola-kisi pointer-events-none absolute left-3 bottom-8 h-40 w-36 opacity-60" />
-        <svg aria-hidden className="pointer-events-none absolute -top-8 right-1/3 h-36 w-36 rotate-12 text-[var(--brand)]/[0.07]" viewBox="0 0 24 24" fill="currentColor">
-          <path d={IKON_DAUN} />
-        </svg>
-        <div className="relative max-w-6xl mx-auto px-5 py-20 grid lg:grid-cols-2 gap-12 items-center">
-          {/* Kolom kiri: sapaan, ajakan, statistik */}
-          <div>
-            <span className="anim-naik inline-flex items-center gap-2 rounded-full border border-[var(--brand)]/25 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 shadow-[var(--sh-1)]">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="var(--brand)" aria-hidden>
-                <path d="M13 2L4.09 12.97c-.4.5-.16.05.4 1.05H11l-1 7.98 8.91-10.97c.4-.5.16-1.05-.4-1.05H13l1-7.98z" />
-              </svg>
-              Perpustakaan Digital Modern
-            </span>
-            <h1 className="anim-naik anim-naik-1 mt-5 text-4xl lg:text-[3.4rem] font-extrabold leading-[1.08] tracking-tight">
-              Selamat Datang di
-              <br />
-              <span className="text-[var(--brand)]">{sistem.nama}</span>
-            </h1>
-            <p className="anim-naik anim-naik-2 mt-5 text-lg text-slate-600 max-w-xl leading-relaxed">
-              Akses ribuan buku digital, kelola peminjaman, dan temukan
-              pengetahuan baru kapan saja, di mana saja.
-            </p>
+      {/* Hero - OSS style */}
 
-            <div className="anim-naik anim-naik-3 mt-8 flex flex-wrap gap-3">
-              <Link href="/katalog" className="btn btn-primary !rounded-xl !px-6 !py-3 gap-2 shadow-lg shadow-[var(--brand)]/25">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                  <path d={IKON_BUKU} />
+      {/* Hero — desain Modern Digital Library */}
+      <section
+        id="beranda"
+        className="landing-hero relative isolate overflow-hidden bg-white"
+      >
+        <div aria-hidden="true" className="landing-hero-glow" />
+
+        <div className="landing-hero-inner relative z-10 mx-auto grid w-full max-w-7xl items-center gap-12 px-5 pb-16 pt-32 sm:px-8 lg:min-h-[690px] lg:grid-cols-[1.08fr_.92fr] lg:gap-8 lg:px-10 lg:pb-20 lg:pt-36">
+          {/* Kolom kiri */}
+          <div className="landing-hero-copy min-w-0">
+            <div className="anim-naik inline-flex items-center gap-2 rounded-full border border-amber-200/70 bg-white/90 px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-[var(--sh-1)]">
+              <span className="grid h-7 w-7 place-items-center rounded-full bg-amber-50 text-amber-500">
+                <svg
+                  width="17"
+                  height="17"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 22c4.5-2 7-5.2 7-9a7 7 0 0 0-7-7c.5 3-1 4.5-3 6-1.5 1.2-2 2.7-2 4a5 5 0 0 0 5 6Z" />
+                  <path d="M10 17c0-2 1.2-3.2 3-4" />
                 </svg>
-                Mulai Membaca
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                  <path d="M5 12h14M13 5l7 7-7 7" />
-                </svg>
-              </Link>
-              <Link
-                href="/katalog"
-                className="btn !rounded-xl !px-6 !py-3 gap-2 border border-[var(--brand)]/30 bg-white text-[var(--brand)] hover:bg-[var(--brand-soft)]"
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                  <path d="M8 5.5v13l11-6.5-11-6.5z" />
-                </svg>
-                Pelajari Lebih Lanjut
-              </Link>
+              </span>
+              <span>Perpustakaan Digital Modern</span>
             </div>
 
-            {/* Statistik — angka nyata dari data seed, gaya ikon seperti rancangan. */}
-            <div className="anim-naik anim-naik-3 mt-9 flex flex-wrap items-center gap-x-8 gap-y-4">
+            <h1 className="anim-naik anim-naik-1 mt-7 max-w-3xl text-4xl font-extrabold leading-[1.08] tracking-[-0.045em] text-slate-950 sm:text-5xl lg:text-[66px]">
+              Akses Pengetahuan{" "}
+              <span className="landing-gradient-text">Tanpa Batas</span> di Era
+              Digital.
+            </h1>
+
+            <p className="anim-naik anim-naik-2 mt-6 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
+              Jelajahi koleksi buku {sistem.nama}, temukan bacaan yang sesuai
+              minatmu, dan kelola peminjaman dengan lebih mudah dari mana saja.
+            </p>
+
+            {/* Pencarian */}
+            <form
+              action="/katalog"
+              method="get"
+              className="landing-search anim-naik anim-naik-3 mt-8 flex w-full max-w-2xl items-center gap-3 rounded-2xl border border-teal-900/15 bg-white p-2 shadow-[0_12px_40px_rgba(15,118,110,0.08)] transition-all focus-within:border-teal-600/50 focus-within:shadow-[0_12px_40px_rgba(15,118,110,0.14)]"
+            >
+              <svg
+                className="ml-2 shrink-0 text-teal-800"
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+
+              <label htmlFor="hero-search" className="sr-only">
+                Cari buku
+              </label>
+              <input
+                id="hero-search"
+                type="search"
+                name="q"
+                placeholder="Cari judul buku atau nama pengarang..."
+                className="min-w-0 flex-1 border-0 bg-transparent px-1 py-3 text-sm text-slate-800 outline-none ring-0 placeholder:text-slate-400 focus:border-0 focus:outline-none focus:ring-0 sm:text-base"
+              />
+
+              <button
+                type="submit"
+                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--brand)] px-4 py-3 text-sm font-bold text-white shadow-md transition-all hover:-translate-y-0.5 hover:brightness-110 sm:px-5"
+              >
+                <span>Eksplorasi</span>
+                <svg
+                  width="17"
+                  height="17"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M5 12h14M13 5l7 7-7 7" />
+                </svg>
+              </button>
+            </form>
+
+            {/* Topik populer berdasarkan kategori buku yang tersedia */}
+            <div className="anim-naik anim-naik-3 mt-5 flex flex-wrap items-center gap-2">
+              <span className="mr-1 text-xs font-semibold text-slate-600">
+                Jelajahi:
+              </span>
+              {Array.from(
+                new Set(bukuPilihan.map((b) => b.kategori).filter(Boolean)),
+              )
+                .slice(0, 4)
+                .map((kategori) => (
+                  <Link
+                    key={kategori}
+                    href={`/katalog?kategori=${encodeURIComponent(kategori)}`}
+                    className="rounded-lg border border-slate-200 bg-white/90 px-3 py-1.5 text-xs font-medium text-slate-600 transition-all hover:border-teal-200 hover:bg-teal-50 hover:text-teal-800"
+                  >
+                    {kategori}
+                  </Link>
+                ))}
+            </div>
+
+            {/* Statistik dari seed yang saat ini dipakai halaman */}
+            <div className="mt-9 grid max-w-2xl grid-cols-3 gap-3 border-t border-slate-200/80 pt-6 sm:gap-6">
               {[
-                { v: totalJudul, l: "Koleksi Buku", ikon: "M4 19.5A2.5 2.5 0 016.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" },
-                { v: anggotaAktif, l: "Anggota Aktif", ikon: "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2 M9 3a4 4 0 100 8 4 4 0 000-8 M23 21v-2a4 4 0 00-3-3.87 M16 3.13a4 4 0 010 7.75" },
-                { v: totalEksemplar, l: "Eksemplar", ikon: "M12 2L2 7l10 5 10-5-10-5z M2 17l10 5 10-5 M2 12l10 5 10-5" },
-              ].map((s) => (
-                <div key={s.l} className="flex items-center gap-3">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--brand-soft)] text-[var(--brand)]">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                      <path d={s.ikon} />
-                    </svg>
-                  </span>
-                  <div className="leading-tight">
-                    <div className="text-xl font-extrabold">
-                      <Angka nilai={s.v} />
-                    </div>
-                    <div className="text-xs text-[var(--muted)]">{s.l}</div>
+                { v: totalJudul, l: "Judul Buku" },
+                { v: anggotaAktif, l: "Anggota Aktif" },
+                { v: totalEksemplar, l: "Eksemplar" },
+              ].map((stat) => (
+                <div key={stat.l} className="min-w-0">
+                  <div className="text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">
+                    <Angka nilai={stat.v} />
+                    <span className="ml-1 text-teal-600">+</span>
+                  </div>
+                  <div className="mt-1 text-xs text-slate-500 sm:text-sm">
+                    {stat.l}
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Kolom kanan: tumpukan sampul + ubin ikon mengapung */}
-          <div className="relative anim-naik anim-naik-2 min-h-[26rem]">
-            {/* Lataran blob gradien; di atasnya tumpukan tiga sampul nyata. */}
-            <div aria-hidden className="absolute inset-x-10 inset-y-6 rounded-[3rem] grad-soft opacity-70 blur-[2px]" />
-            <div className="relative ml-auto mr-6 mt-14 flex w-fit items-end gap-4">
-              <div className="-rotate-6 rounded-2xl shadow-[var(--sh-3)] ring-1 ring-black/5">
-                <SampulBuku buku={bukuPilihan[0]} className="h-40 w-28" rounded="rounded-2xl" />
-              </div>
-              <div className="translate-y-5 rotate-2 rounded-2xl shadow-[var(--sh-4)] ring-1 ring-black/5">
-                <SampulBuku buku={bukuPilihan[1]} className="h-48 w-32" rounded="rounded-2xl" />
-              </div>
-              <div className="rotate-6 rounded-2xl shadow-[var(--sh-3)] ring-1 ring-black/5">
-                <SampulBuku buku={bukuPilihan[2]} className="h-40 w-28" rounded="rounded-2xl" />
-              </div>
+          {/* Kolom kanan — komposisi sampul buku */}
+          <div className="landing-hero-art relative mx-auto w-full max-w-[530px]">
+            <div aria-hidden="true" className="landing-art-halo" />
 
-              {/* Ubin ikon mengapung (animasi .apung di globals.css). */}
-              <span className="apung absolute -left-8 -top-10 grid h-14 w-14 place-items-center rounded-2xl bg-white text-[var(--brand)] shadow-[var(--sh-3)]">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                  <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" />
+            {/* Label tren dekoratif */}
+            <div className="landing-trending absolute -top-3 left-0 z-20 flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white/95 px-4 py-3 shadow-[var(--sh-2)] sm:-left-3">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-amber-50 text-amber-500">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M8.5 14.5A4.5 4.5 0 0 0 13 19c2.5 0 4-2 4-4.5 0-1.7-.8-3.2-2.5-4.5-.3 2-1.5 2.5-2.5 3-.5-2.5-2-4-4-5C8 11 6 12.5 6 15a6 6 0 0 0 6 6" />
+                  <path d="M12 22a9 9 0 1 0 0-18 9 9 0 0 0-9 9" />
                 </svg>
               </span>
-              <span className="apung apung-1 absolute -right-10 top-8 grid h-14 w-14 place-items-center rounded-2xl bg-white text-[var(--brand)] shadow-[var(--sh-3)]">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                  <path d="M22 10L12 5 2 10l10 5 10-5z M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5" />
-                </svg>
-              </span>
-              <span className="apung apung-2 absolute -right-6 bottom-2 grid h-14 w-14 place-items-center rounded-2xl bg-white text-[var(--brand)] shadow-[var(--sh-3)]">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                  <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2 M15 2H9a1 1 0 00-1 1v2a1 1 0 001 1h6a1 1 0 001-1V3a1 1 0 00-1-1z M8 11h8 M8 15h5" />
-                </svg>
+              <span>
+                <span className="block text-xs font-bold text-slate-800">
+                  Koleksi Pilihan
+                </span>
+                <span className="mt-0.5 block text-[11px] text-slate-500">
+                  Temukan bacaan favoritmu
+                </span>
               </span>
             </div>
 
-            {/* Kalimat gaya tangan di jalur kiri, mengikuti rancangan. */}
-            <div className="pointer-events-none absolute left-0 top-24 hidden w-28 -rotate-6 text-sm italic font-semibold leading-snug text-[var(--brand)] xl:block">
-              Membaca adalah
-              <br />
-              investasi terbaik
+            {/* Sampul samping kiri */}
+            <div className="landing-book landing-book-left absolute left-[1%] top-[15%] z-0 w-[43%] overflow-hidden rounded-2xl border border-white/70 bg-white shadow-2xl">
+              {bukuPilihan[1] ? (
+                <SampulBuku
+                  buku={bukuPilihan[1]}
+                  className="h-64 w-full sm:h-80"
+                  rounded=""
+                />
+              ) : (
+                <div className="landing-book-fallback h-64 sm:h-80">
+                  <span>BACA</span>
+                  <strong>Jelajahi Pengetahuan</strong>
+                </div>
+              )}
+            </div>
+
+            {/* Sampul samping kanan */}
+            <div className="landing-book landing-book-right absolute right-[1%] top-[13%] z-0 w-[43%] overflow-hidden rounded-2xl border border-white/70 bg-white shadow-2xl">
+              {bukuPilihan[2] ? (
+                <SampulBuku
+                  buku={bukuPilihan[2]}
+                  className="h-64 w-full sm:h-80"
+                  rounded=""
+                />
+              ) : (
+                <div className="landing-book-fallback landing-book-fallback-dark h-64 sm:h-80">
+                  <span>ILMU</span>
+                  <strong>Ruang untuk Bertumbuh</strong>
+                </div>
+              )}
+            </div>
+
+            {/* Kartu buku utama */}
+            <div className="landing-reading-card relative z-10 mx-auto w-[58%] max-w-[300px] overflow-hidden rounded-[25px] border border-white bg-white p-3 shadow-[0_25px_70px_rgba(15,23,42,0.18)] sm:p-4">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-[0.13em] text-teal-800 sm:text-xs">
+                  Pilihan untukmu
+                </span>
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              </div>
+
+              {bukuPilihan[0] ? (
+                <div className="overflow-hidden rounded-2xl">
+                  <SampulBuku
+                    buku={bukuPilihan[0]}
+                    className="h-48 w-full sm:h-60"
+                    rounded=""
+                  />
+                </div>
+              ) : (
+                <div className="landing-book-fallback landing-book-featured h-48 sm:h-60">
+                  <span>PUSTAKAKU</span>
+                  <strong>Pengetahuan Dimulai dari Membaca</strong>
+                </div>
+              )}
+
+              <div className="mt-4">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-teal-700">
+                  Koleksi perpustakaan
+                </div>
+                <h2 className="mt-1 line-clamp-2 text-sm font-bold leading-snug text-slate-900 sm:text-base">
+                  {bukuPilihan[0]?.judul ?? "Temukan Buku Favoritmu"}
+                </h2>
+                <p className="mt-1 truncate text-xs text-slate-500">
+                  {bukuPilihan[0]?.penulis ?? sistem.nama}
+                </p>
+              </div>
+
+              <div className="mt-4 border-t border-slate-100 pt-3">
+                <div className="flex items-center justify-between gap-2 text-[10px] sm:text-xs">
+                  <span className="text-slate-500">Ketersediaan</span>
+                  <span className="font-bold text-teal-800">
+                    {bukuPilihan[0]?.stok > 0
+                      ? `${bukuPilihan[0].stok} eksemplar`
+                      : "Cek katalog"}
+                  </span>
+                </div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-teal-600 to-emerald-400"
+                    style={{
+                      width: `${
+                        bukuPilihan[0]?.stok > 0
+                          ? Math.min(100, bukuPilihan[0].stok * 10)
+                          : 12
+                      }%`,
+                    }}
+                  />
+                </div>
+                <Link
+                  href={
+                    bukuPilihan[0]
+                      ? `/katalog/${bukuPilihan[0].id}`
+                      : "/katalog"
+                  }
+                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-teal-50 px-3 py-2.5 text-xs font-bold text-teal-800 transition-colors hover:bg-teal-100"
+                >
+                  Lihat detail buku
+                  <span aria-hidden="true">→</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Label ketersediaan */}
+            <div className="landing-sync-badge absolute -bottom-5 right-0 z-20 flex items-center gap-3 rounded-2xl border border-teal-900/10 bg-slate-950 px-4 py-3 text-white shadow-[var(--sh-3)] sm:-right-2">
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-500/15 text-emerald-400">
+                <svg
+                  width="19"
+                  height="19"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M20 7v5h-5M4 17v-5h5" />
+                  <path d="M5.6 9A7 7 0 0 1 17.5 6L20 12M4 12l2.5 6A7 7 0 0 0 18.4 15" />
+                </svg>
+              </span>
+              <span>
+                <span className="block text-xs font-bold">
+                  Katalog Terorganisir
+                </span>
+                <span className="mt-0.5 block text-[10px] text-emerald-300">
+                  Buku mudah ditemukan
+                </span>
+              </span>
             </div>
           </div>
         </div>
       </section>
 
       {/* Fitur — setinggi layar laptop */}
-      <section id="fitur" className="max-w-6xl mx-auto px-5 py-20 min-h-[100svh] flex flex-col justify-center">
-        <Reveal className="max-w-2xl">
-          <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand)]">Fitur Unggulan</span>
-          <h2 className="mt-2 text-3xl lg:text-4xl font-bold tracking-tight">Kenapa memilih {sistem.nama}?</h2>
+      <section
+        id="fitur"
+        className="relative max-w-6xl mx-auto px-5 py-20 min-h-[100svh] flex flex-col justify-center"
+      >
+        <div className="absolute inset-0 bg-white" aria-hidden />
+        <Reveal className="relative z-10 max-w-2xl">
+          <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand)]">
+            Fitur Unggulan
+          </span>
+          <h2 className="mt-2 text-3xl lg:text-4xl font-bold tracking-tight">
+            Kenapa memilih {sistem.nama}?
+          </h2>
           <p className="mt-3 text-slate-600">
-            Dari penataan koleksi sampai penagihan denda — {sistem.nama} menutup seluruh alur kerja sirkulasi.
+            Dari penataan koleksi sampai penagihan denda — {sistem.nama} menutup
+            seluruh alur kerja sirkulasi.
           </p>
         </Reveal>
-        <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="relative z-10 mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {fiturRincian(sistem).map((f, i) => (
             <Reveal key={f.judul} delay={(i % 3) * 0.08}>
               <div className="group card card-raised h-full p-6">
-                <div className="h-11 w-11 rounded-xl text-white grid place-items-center shadow-sm transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3" style={grad(i)}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <div
+                  className="h-11 w-11 rounded-xl text-white grid place-items-center shadow-sm transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3"
+                  style={grad(i)}
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <path d={f.ikon} />
                   </svg>
                 </div>
@@ -472,149 +896,362 @@ export default function LandingPage() {
       </section>
 
       {/* Koleksi populer — setinggi layar laptop, tint memudar ke latar */}
-      <section id="koleksi" className="grad-koleksi">
-        <div className="min-h-[100svh] w-full max-w-6xl mx-auto px-5 py-20 flex flex-col justify-center">
-          <Reveal className="flex items-end justify-between gap-4">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand)]">Koleksi Populer</span>
-              <h2 className="mt-2 text-3xl lg:text-4xl font-bold tracking-tight">Buku paling banyak dipinjam</h2>
-              <p className="mt-1 text-sm text-[var(--muted)]">Berdasarkan aktivitas peminjaman terkini.</p>
-            </div>
-            <Link href="/katalog" className="group/link inline-flex items-center gap-1 text-sm font-semibold text-[var(--brand)] hover:gap-2 transition-all whitespace-nowrap">
-              Lihat Semua <span className="transition-transform group-hover/link:translate-x-0.5">→</span>
-            </Link>
+
+      {/* Koleksi Buku Terpopuler */}
+      <KoleksiPopuler />
+
+      {/* Cara kerja — setinggi layar laptop */}
+      <section
+        id="tentang"
+        className="relative overflow-hidden bg-white px-5 py-16 sm:px-8 lg:px-10 lg:py-20"
+      >
+        <div className="mx-auto max-w-6xl">
+          {/* Header */}
+          <Reveal className="text-center">
+            <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 text-xs font-bold uppercase tracking-wide text-teal-800">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M12 3v6" />
+                <path d="m8 5 4 4 4-4" />
+                <path d="M12 9 6 15" />
+                <path d="m4 13 2 2-2 2" />
+                <path d="M12 9l6 6" />
+                <path d="m20 13-2 2 2 2" />
+                <path d="M12 15v6" />
+              </svg>
+              Alur Praktis 3 Menit
+            </span>
+
+            <h2 className="mt-4 text-3xl font-extrabold leading-tight tracking-tight text-slate-950 sm:text-4xl lg:text-[44px]">
+              3 Langkah Mudah Memulai Baca
+            </h2>
+
+            <p className="mx-auto mt-3 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
+              Seluruh proses registrasi dan peminjaman dilakukan secara digital
+              tanpa berkas fisik.
+            </p>
           </Reveal>
-          {/* Deret kartu bergerak horizontal terus-menerus (marquee). Daftar
-              diduplikasi persis dua kali; jarak antarkartu ikut terhitung
-              dalam lebar track sehingga translateX(-50%) mulus tanpa lompat. */}
-          <div className="marquee-koleksi mt-8">
-            <div className="marquee-track">
-              {[0, 1].map((salinan) =>
-                bukuPilihan.map((b) => (
-                  <KartuKoleksi key={`${salinan}-${b.id}`} b={b} />
-                ))
-              )}
-            </div>
+
+          {/* Kartu langkah */}
+          <div className="relative mt-12 grid grid-cols-1 gap-5 md:mt-16 md:grid-cols-3 md:gap-6">
+            {/* Garis penghubung nomor */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute left-[16%] right-[16%] top-14 hidden h-[3px] bg-gradient-to-r from-teal-800 via-teal-600 to-emerald-400 md:block"
+            />
+
+            {[
+              {
+                no: "01",
+                judul: "Registrasi Akun Instan",
+                teks: "Cukup daftar dengan alamat email aktif atau hubungkan identitas pelajar/civitas untuk aktivasi akun.",
+                tombol: "Daftar Sekarang",
+                href: "/register",
+              },
+              {
+                no: "02",
+                judul: "Temukan Judul Impian",
+                teks: "Manfaatkan kurasi AI atau filter kategori. Baca sinopsis serta cuplikan bab sebelum menekan tombol Pinjam Cepat.",
+                tombol: "Jelajahi Katalog",
+                href: "/katalog",
+              },
+              {
+                no: "03",
+                judul: "Pinjam dan Kembalikan",
+                teks: "Pantau peminjaman melalui akun anggota dan kembalikan buku sesuai tanggal yang telah ditentukan.",
+                tombol: "Lihat Peminjaman",
+                href: "/anggota/peminjaman",
+              },
+            ].map((langkah, i) => (
+              <Reveal key={langkah.no} delay={i * 0.12} className="h-full">
+                <article className="group relative flex h-full min-h-[320px] flex-col items-center rounded-[28px] border border-slate-200/90 bg-[#f7f9f9] px-6 py-8 text-center transition-all duration-300 hover:-translate-y-1 hover:border-emerald-300 hover:bg-white hover:shadow-[0_15px_35px_rgba(15,23,42,0.08)] sm:px-7 sm:py-9">
+                  {/* Nomor langkah */}
+                  <div
+                    className={`relative z-10 grid h-[78px] w-[78px] shrink-0 place-items-center rounded-[20px] text-2xl font-extrabold text-white shadow-[0_10px_18px_rgba(0,105,92,0.18)] transition-transform duration-300 group-hover:-translate-y-1 ${
+                      i === 0
+                        ? "bg-teal-800"
+                        : i === 1
+                          ? "bg-teal-700"
+                          : "bg-emerald-500"
+                    }`}
+                  >
+                    {langkah.no}
+                  </div>
+
+                  {/* Judul */}
+                  <h3 className="mt-7 text-lg font-bold leading-snug tracking-tight text-slate-950 sm:text-xl">
+                    {langkah.judul}
+                  </h3>
+
+                  {/* Deskripsi */}
+                  <p className="mt-3 max-w-sm text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">
+                    {langkah.teks}
+                  </p>
+
+                  {/* Tombol */}
+                  <Link
+                    href={langkah.href}
+                    className="mt-auto inline-flex items-center gap-2 pt-5 text-sm font-bold text-teal-800 transition-colors hover:text-emerald-500"
+                  >
+                    {langkah.tombol}
+                    <svg
+                      width="17"
+                      height="17"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                      className="transition-transform duration-200 group-hover:translate-x-1"
+                    >
+                      <path d="M5 12h14" />
+                      <path d="m12 5 7 7-7 7" />
+                    </svg>
+                  </Link>
+                </article>
+              </Reveal>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Cara kerja — setinggi layar laptop */}
-      <section id="tentang" className="max-w-6xl mx-auto px-5 py-20 min-h-[100svh] flex flex-col justify-center">
-        <Reveal className="max-w-2xl">
-          <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand)]">Cara Kerja</span>
-          <h2 className="mt-2 text-3xl lg:text-4xl font-bold tracking-tight">Tiga langkah untuk mulai</h2>
-        </Reveal>
-        <div className="mt-10 grid md:grid-cols-3 gap-6 relative">
-          {/* Garis penghubung antar langkah (desktop). */}
-          <div aria-hidden className="hidden md:block absolute top-10 left-[16%] right-[16%] h-px bg-gradient-to-r from-transparent via-[var(--brand)]/30 to-transparent" />
-          {[
-            { no: "01", judul: "Daftar sebagai anggota", teks: "Kartu anggota digital terbuat otomatis dalam hitungan detik." },
-            { no: "02", judul: "Jelajahi katalog", teks: "Cari judul, filter kategori, dan lihat ketersediaan eksemplar." },
-            { no: "03", judul: "Ajukan peminjaman", teks: "Pilih tanggal pinjam, pantau jatuh tempo, dan perpanjang bila perlu." },
-          ].map((l, i) => (
-            <Reveal key={l.no} delay={i * 0.12}>
-              <div className="relative h-full overflow-hidden rounded-2xl border border-[var(--border)] bg-white p-6 card-raised">
-                <div className="absolute -right-4 -top-6 h-24 w-24 rounded-full opacity-10" style={grad(i)} />
-                <div className="relative h-12 w-12 rounded-full grad-brand text-white grid place-items-center font-extrabold text-sm shadow-[var(--sh-2)]">
-                  {l.no}
-                </div>
-                <h3 className="mt-3 font-bold">{l.judul}</h3>
-                <p className="mt-1.5 text-sm text-slate-600">{l.teks}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
+      {/* JAM LAYANAN & ATURAN PEMINJAMAN */}
+      <section
+        id="layanan"
+        className="relative overflow-hidden bg-white px-5 py-16 sm:px-8 lg:px-10 lg:py-20"
+      >
+        <div className="mx-auto max-w-6xl">
+          {/* Header section */}
+          <Reveal className="max-w-2xl">
+            <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 text-xs font-bold uppercase tracking-wide text-teal-800">
+              <svg
+                width="17"
+                height="17"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+              Informasi Perpustakaan
+            </span>
 
-        <Reveal className="mt-10">
-          {/* Panel demo akun — latar tinted + kartu putih agar terbaca jelas
-              di latar terang (gaya kartu kaca lama hanya cocok di latar berwarna). */}
-          <div className="rounded-2xl border border-[var(--brand)]/25 bg-[var(--brand-soft)]/60 p-6">
-            <div className="flex items-center gap-3">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl grad-brand text-white shadow-sm">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                  <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
-                </svg>
-              </span>
-              <div>
-                <div className="font-bold leading-tight">Coba langsung dengan akun demo</div>
-                <div className="text-xs text-[var(--muted)]">
-                  Tekan “Masuk Demo” untuk langsung masuk dengan salah satu akun di bawah.
-                </div>
-              </div>
-            </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {[
-                {
-                  peran: "Admin (Pustakawan)",
-                  email: "admin@perpus.id",
-                  sandi: "admin123",
-                  ikon: "M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2 M12 3a4 4 0 100 8 4 4 0 000-8",
-                },
-                {
-                  peran: "Anggota",
-                  email: "user@perpus.id",
-                  sandi: "user123",
-                  ikon: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
-                },
-              ].map((a) => (
-                <div
-                  key={a.email}
-                  className="rounded-xl border border-[var(--border)] bg-white p-4 shadow-[var(--sh-1)]"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex min-w-0 items-center gap-2.5">
-                      <span
-                        aria-hidden
-                        className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-white"
-                        style={grad(a.peran === "Anggota" ? 3 : 0)}
-                      >
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d={a.ikon} />
-                        </svg>
-                      </span>
-                      <span className="truncate text-sm font-semibold">{a.peran}</span>
-                    </div>
-                    <span className="shrink-0 rounded-full bg-[var(--brand-soft)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--brand)]">
-                      Demo
-                    </span>
+            <h2 className="mt-7 text-3xl font-extrabold leading-tight tracking-tight text-slate-950 sm:text-4xl lg:text-[44px]">
+              Jam Layanan & Aturan Peminjaman
+            </h2>
+
+            <p className="mt-5 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
+              Ketahui jadwal operasional dan ketentuan peminjaman agar
+              pengalaman menggunakan layanan perpustakaan menjadi lebih mudah
+              dan nyaman.
+            </p>
+          </Reveal>
+
+          {/* Konten dua kolom */}
+          <div className="mt-10 grid gap-6 lg:grid-cols-2">
+            {/* Jam layanan */}
+            <Reveal delay={0.1} className="h-full">
+              <article className="h-full rounded-[28px] border border-slate-200/90 bg-[#f7faf9] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-emerald-300 hover:bg-white hover:shadow-[0_15px_35px_rgba(15,23,42,0.07)] sm:p-8">
+                <div className="flex items-center gap-4">
+                  <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-teal-800 text-white shadow-[0_8px_18px_rgba(0,105,92,0.16)]">
+                    <svg
+                      width="26"
+                      height="26"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M12 6v6l4 2" />
+                    </svg>
                   </div>
-                  <dl className="mt-3 space-y-1 text-xs">
-                    <div className="flex items-center justify-between gap-2">
-                      <dt className="text-[var(--muted)]">Email</dt>
-                      <dd className="font-mono font-semibold">{a.email}</dd>
-                    </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <dt className="text-[var(--muted)]">Kata sandi</dt>
-                      <dd className="font-mono font-semibold">{a.sandi}</dd>
-                    </div>
-                  </dl>
+
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-950">
+                      Jam Operasional
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Jadwal layanan perpustakaan
+                    </p>
+                  </div>
                 </div>
-              ))}
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Link href="/login" className="btn btn-primary">
-                Masuk Demo
-              </Link>
-              {bolehDaftar && (
+
+                <div className="mt-8 space-y-3">
+                  {[
+                    { hari: "Senin – Jumat", waktu: "08.00 – 16.00 WIB" },
+                    { hari: "Sabtu", waktu: "08.00 – 12.00 WIB" },
+                    { hari: "Minggu", waktu: "Tutup" },
+                  ].map((jadwal) => (
+                    <div
+                      key={jadwal.hari}
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white px-5 py-4"
+                    >
+                      <span className="text-sm font-semibold text-slate-700">
+                        {jadwal.hari}
+                      </span>
+
+                      <span
+                        className={`rounded-full px-3 py-1.5 text-xs font-bold ${
+                          jadwal.waktu === "Tutup"
+                            ? "bg-slate-100 text-slate-500"
+                            : "bg-emerald-50 text-teal-800"
+                        }`}
+                      >
+                        {jadwal.waktu}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6 flex items-start gap-3 rounded-2xl border border-teal-800/10 bg-emerald-50/70 p-4">
+                  <svg
+                    className="mt-0.5 shrink-0 text-teal-800"
+                    width="19"
+                    height="19"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 16v-4M12 8h.01" />
+                  </svg>
+
+                  <p className="text-xs leading-6 text-slate-600">
+                    Jadwal dapat berubah mengikuti kebijakan dan kegiatan
+                    operasional perpustakaan.
+                  </p>
+                </div>
+              </article>
+            </Reveal>
+
+            {/* Aturan peminjaman */}
+            <Reveal delay={0.2} className="h-full">
+              <article className="h-full rounded-[28px] border border-slate-200/90 bg-[#f7faf9] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-emerald-300 hover:bg-white hover:shadow-[0_15px_35px_rgba(15,23,42,0.07)] sm:p-8">
+                <div className="flex items-center gap-4">
+                  <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-teal-800 text-white shadow-[0_8px_18px_rgba(0,105,92,0.16)]">
+                    <svg
+                      width="26"
+                      height="26"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
+                      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+                    </svg>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-950">
+                      Aturan Peminjaman
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Ketentuan penggunaan koleksi
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-8 space-y-5">
+                  {[
+                    {
+                      nomor: "01",
+                      judul: "Terdaftar sebagai anggota",
+                      deskripsi:
+                        "Pengguna harus memiliki akun anggota yang aktif untuk mengajukan peminjaman.",
+                    },
+                    {
+                      nomor: "02",
+                      judul: "Durasi peminjaman",
+                      deskripsi: `Masa peminjaman buku berlaku selama ${sistem.lamaPinjam} hari.`,
+                    },
+                    {
+                      nomor: "03",
+                      judul: "Pengembalian buku",
+                      deskripsi:
+                        "Buku harus dikembalikan sesuai tanggal jatuh tempo yang tercantum pada akun anggota.",
+                    },
+                    {
+                      nomor: "04",
+                      judul: "Denda keterlambatan",
+                      deskripsi: `${rupiahRb(sistem.dendaPerHari)} per hari untuk setiap keterlambatan pengembalian buku.`,
+                    },
+                  ].map((aturan) => (
+                    <div key={aturan.nomor} className="flex items-start gap-4">
+                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-50 text-xs font-extrabold text-teal-800">
+                        {aturan.nomor}
+                      </div>
+
+                      <div className="min-w-0 flex-1 border-b border-slate-200/80 pb-4">
+                        <h4 className="text-sm font-bold text-slate-900">
+                          {aturan.judul}
+                        </h4>
+                        <p className="mt-1.5 text-sm leading-6 text-slate-600">
+                          {aturan.deskripsi}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
                 <Link
-                  href="/register"
-                  className="btn border border-[var(--brand)]/40 text-[var(--brand)] hover:bg-[var(--brand)] hover:text-white hover:border-[var(--brand)]"
+                  href="/login"
+                  className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-teal-800 px-5 py-3.5 text-sm font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-teal-700 hover:shadow-lg"
                 >
-                  Daftar Baru
+                  Mulai Peminjaman
+                  <svg
+                    width="17"
+                    height="17"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M5 12h14" />
+                    <path d="m12 5 7 7-7 7" />
+                  </svg>
                 </Link>
-              )}
-            </div>
+              </article>
+            </Reveal>
           </div>
-        </Reveal>
+        </div>
       </section>
 
       {/* Testimoni — setinggi layar laptop, tint memudar ke latar */}
-      <section id="testimoni" className="grad-testimoni">
+      <section id="testimoni" className="relative bg-white">
         <div className="min-h-[100svh] w-full max-w-6xl mx-auto px-5 py-20 flex flex-col justify-center">
-          <Reveal className="max-w-2xl">
-            <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand)]">Testimoni</span>
-            <h2 className="mt-2 text-3xl lg:text-4xl font-bold tracking-tight">Kata mereka yang sudah memakai</h2>
+          <Reveal className="relative z-10 max-w-2xl">
+            <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand)]">
+              Testimoni
+            </span>
+            <h2 className="mt-2 text-3xl lg:text-4xl font-bold tracking-tight">
+              Kata mereka yang sudah memakai
+            </h2>
           </Reveal>
           {/* Deret ulasan; key + anim-naik membuat kartu fade-up ulang
               setiap grup berganti (rotasi berkala — lihat state halTestimoni). */}
@@ -624,30 +1261,54 @@ export default function LandingPage() {
             onMouseEnter={() => (testimoniDijeda.current = true)}
             onMouseLeave={() => (testimoniDijeda.current = false)}
           >
-            {TESTIMONI.slice(halTestimoni * 3, halTestimoni * 3 + 3).map((t, i) => (
-              <Reveal key={t.nama} delay={i * 0.1}>
-                <figure className={`card card-raised relative h-full p-6 pt-9 anim-naik anim-naik-${i + 1}`}>
-                  <svg aria-hidden className="absolute -top-3 left-6 h-10 w-10 rotate-6 text-[var(--brand)]/15" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M7.5 5C5 5 3 7 3 9.5S5 14 7.5 14c.4 0 .8 0 1.1-.1-.6 2-2.3 3.6-4.4 4.1l.7 1.5c3.9-1 6.6-4.6 6.6-9V9.5C11.5 7 9.5 5 7.5 5zm11 0C16 5 14 7 14 9.5s2 4.5 4.5 4.5c.4 0 .8 0 1.1-.1-.6 2-2.3 3.6-4.4 4.1l.7 1.5c3.9-1 6.6-4.6 6.6-9V9.5C22.5 7 20.5 5 18.5 5z" />
-                  </svg>
-                  <div className="flex gap-0.5 text-amber-400">
-                    {[0, 1, 2, 3, 4].map((s) => (
-                      <svg key={s} width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 6.5 7 .9-5 4.8 1.3 7L12 17.8 5.4 21.2 6.7 14.2 1.7 9.4l7-.9L12 2z" /></svg>
-                    ))}
-                  </div>
-                  <blockquote className="mt-3 text-sm text-slate-600">“{t.isi}”</blockquote>
-                  <figcaption className="mt-4 flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full text-white grid place-items-center font-bold" style={grad(i)}>
-                      {t.nama.charAt(0)}
+            {TESTIMONI.slice(halTestimoni * 3, halTestimoni * 3 + 3).map(
+              (t, i) => (
+                <Reveal key={t.nama} delay={i * 0.1}>
+                  <figure
+                    className={`card card-raised relative z-10 h-full p-6 pt-9 anim-naik anim-naik-${i + 1}`}
+                  >
+                    <svg
+                      aria-hidden
+                      className="absolute -top-3 left-6 h-10 w-10 rotate-6 text-[var(--brand)]/15"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M7.5 5C5 5 3 7 3 9.5S5 14 7.5 14c.4 0 .8 0 1.1-.1-.6 2-2.3 3.6-4.4 4.1l.7 1.5c3.9-1 6.6-4.6 6.6-9V9.5C11.5 7 9.5 5 7.5 5zm11 0C16 5 14 7 14 9.5s2 4.5 4.5 4.5c.4 0 .8 0 1.1-.1-.6 2-2.3 3.6-4.4 4.1l.7 1.5c3.9-1 6.6-4.6 6.6-9V9.5C22.5 7 20.5 5 18.5 5z" />
+                    </svg>
+                    <div className="flex gap-0.5 text-amber-400">
+                      {[0, 1, 2, 3, 4].map((s) => (
+                        <svg
+                          key={s}
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                        >
+                          <path d="M12 2l3 6.5 7 .9-5 4.8 1.3 7L12 17.8 5.4 21.2 6.7 14.2 1.7 9.4l7-.9L12 2z" />
+                        </svg>
+                      ))}
                     </div>
-                    <div>
-                      <div className="text-sm font-semibold">{t.nama}</div>
-                      <div className="text-xs text-[var(--muted)]">{t.peran}</div>
-                    </div>
-                  </figcaption>
-                </figure>
-              </Reveal>
-            ))}
+                    <blockquote className="mt-3 text-sm text-slate-600">
+                      “{t.isi}”
+                    </blockquote>
+                    <figcaption className="mt-4 flex items-center gap-3">
+                      <div
+                        className="h-10 w-10 rounded-full text-white grid place-items-center font-bold"
+                        style={grad(i)}
+                      >
+                        {t.nama.charAt(0)}
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold">{t.nama}</div>
+                        <div className="text-xs text-[var(--muted)]">
+                          {t.peran}
+                        </div>
+                      </div>
+                    </figcaption>
+                  </figure>
+                </Reveal>
+              ),
+            )}
           </div>
 
           {/* Titik penunjuk grup testimoni — klik untuk memilih langsung. */}
@@ -670,56 +1331,117 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* FAQ — dua kolom: intro + akordeon bernomor (setinggi layar laptop) */}
-      <section id="faq" className="relative max-w-6xl mx-auto px-5 py-20 min-h-[100svh] flex flex-col justify-center">
-        {/* Lataran blob gradien lembut di belakang kolom intro. */}
-        <div aria-hidden className="pointer-events-none absolute -left-28 top-10 h-72 w-72 rounded-full grad-soft opacity-50 blur-2xl" />
-        <div className="relative grid items-start gap-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-16">
+      {/* FAQ — Redesign dua kolom */}
+      <section
+        id="faq"
+        className="relative overflow-hidden landing-faq-section px-5 py-16 sm:px-8 lg:px-10 lg:py-20"
+      >
+        <div className="mx-auto grid max-w-6xl items-start gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.25fr)] lg:gap-14">
+          {/* Kolom kiri: informasi FAQ */}
           <Reveal>
-            <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand)]">FAQ</span>
-            <h2 className="mt-2 text-3xl lg:text-4xl font-bold tracking-tight">
-              Pertanyaan yang <span className="text-[var(--brand)]">sering diajukan</span>
+            <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 text-xs font-bold uppercase tracking-wide text-teal-800">
+              <svg
+                width="19"
+                height="19"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3" />
+                <path d="M12 17h.01" />
+              </svg>
+              Tanya Jawab
+            </span>
+
+            <h2 className="mt-7 max-w-lg text-3xl font-extrabold leading-tight tracking-tight text-slate-950 sm:text-4xl lg:text-[44px]">
+              Pertanyaan yang Sering Diajukan
             </h2>
-            <p className="mt-3 max-w-md text-sm leading-relaxed text-[var(--muted)]">
-              Jawaban paling umum sudah kami rangkum di sini. Masih ada yang ingin
-              ditanyakan? Langsung sapa pustakawan di meja layanan saat jam kerja.
+
+            <p className="mt-5 max-w-lg text-sm leading-7 text-slate-600 sm:text-base">
+              Temukan jawaban cepat seputar durasi pinjam, hak akses anggota,
+              serta petunjuk membaca buku secara offline tanpa koneksi internet.
             </p>
-            {/* Ubin ikon mengapung — mengikuti gaya ubin di section Tentang. */}
-            <div className="relative mt-9 hidden h-24 w-40 lg:block">
-              <span className="apung grid h-14 w-14 place-items-center rounded-2xl bg-white text-[var(--brand)] shadow-[var(--sh-3)]">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
-                  <path d="M12 17h.01" />
-                </svg>
-              </span>
-              <span className="apung apung-1 absolute left-14 top-9 grid h-12 w-12 place-items-center rounded-2xl grad-brand text-white shadow-[var(--sh-3)]">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                  <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
-                </svg>
-              </span>
+
+            {/* Kartu bantuan */}
+            <div className="mt-7 rounded-[28px] border border-teal-800/20 bg-[#f7faf9] p-5 sm:p-7">
+              <div className="flex items-center gap-3.5">
+                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-teal-800 text-white shadow-sm">
+                  <svg
+                    width="25"
+                    height="25"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M3 13v-2a9 9 0 0 1 18 0v2" />
+                    <path d="M5 12H3a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h3v-7H5z" />
+                    <path d="M19 12h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-3v-7h1z" />
+                    <path d="M9 19h6" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                </div>
+
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">
+                    Butuh Bantuan Lain?
+                  </h3>
+                  <p className="mt-0.5 text-sm leading-6 text-slate-500">
+                    Tim pustakawan kami siap membantu Anda.
+                  </p>
+                </div>
+              </div>
+
+              <Link
+                href="/kontak"
+                className="mt-5 flex min-h-12 w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 shadow-sm transition-all duration-200 hover:border-teal-700/30 hover:bg-emerald-50 hover:text-teal-800"
+              >
+                Hubungi Tim Layanan
+              </Link>
             </div>
           </Reveal>
-          <Reveal delay={0.1} className="space-y-3">
+
+          {/* Kolom kanan: daftar pertanyaan */}
+          <Reveal delay={0.1} className="w-full space-y-3">
             {faqRincian(sistem).map((f, i) => (
               <details
                 key={f.q}
-                className="group overflow-hidden rounded-2xl border border-[var(--border)] bg-white shadow-[var(--sh-1)] transition-shadow hover:shadow-[var(--sh-2)]"
+                open={i === 0}
+                className="group overflow-hidden rounded-[20px] border border-slate-200/90 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all duration-300 open:bg-[#fcfdfd] hover:border-slate-300 hover:shadow-md"
               >
-                <summary className="flex cursor-pointer list-none items-center gap-4 p-5 [&::-webkit-details-marker]:hidden">
-                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[var(--brand-soft)] text-sm font-bold text-[var(--brand)] transition-colors group-open:bg-[var(--brand)] group-open:text-white">
-                    {String(i + 1).padStart(2, "0")}
+                <summary className="flex cursor-pointer list-none items-center gap-4 px-5 py-5 sm:px-6 [&::-webkit-details-marker]:hidden">
+                  <span className="flex-1 text-sm font-bold leading-6 text-slate-900 sm:text-base">
+                    {f.q}
                   </span>
-                  <span className="flex-1 font-semibold">{f.q}</span>
-                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-[var(--muted)] transition-all group-open:rotate-45 group-open:bg-[var(--brand-soft)] group-open:text-[var(--brand)]">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
-                      <path d="M12 5v14M5 12h14" />
+
+                  <span className="grid h-7 w-7 shrink-0 place-items-center text-teal-800 transition-transform duration-300 group-open:rotate-180">
+                    <svg
+                      width="19"
+                      height="19"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="m7 10 5 5 5-5" />
                     </svg>
                   </span>
                 </summary>
-                <p className="border-t border-[var(--border)] px-5 py-4 pl-[4.25rem] text-sm leading-relaxed text-slate-600">
-                  {f.a}
-                </p>
+
+                <div className="border-t border-slate-100 px-5 py-4 sm:px-6">
+                  <p className="text-sm leading-7 text-slate-600">{f.a}</p>
+                </div>
               </details>
             ))}
           </Reveal>
@@ -728,56 +1450,83 @@ export default function LandingPage() {
 
       {/* Footer — hijau tua (grad-footer, turunan cta-1/cta-2) sesuai rancangan:
           brand, kolom Navigasi, Hubungi Kami, Newsletter + baris legal. */}
-      <footer className="relative overflow-hidden grad-footer text-white">
-        <div aria-hidden className="pola-grid pointer-events-none absolute inset-0 opacity-40" />
-        {/* Daun dekoratif di tepi kiri — senada panel halaman masuk. */}
-        <svg
-          aria-hidden
-          className="pointer-events-none absolute -top-8 -left-12 h-44 w-44 rotate-12 text-white/[0.07]"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <path d={IKON_DAUN} />
-        </svg>
-        <svg
-          aria-hidden
-          className="pointer-events-none absolute -bottom-10 left-8 h-40 w-40 -rotate-6 text-white/[0.06]"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <path d={IKON_DAUN} />
-        </svg>
 
-        <div className="relative max-w-6xl mx-auto px-5 py-12">
-          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+      {/* FOOTER PUSTAKAKU */}
+      <footer className="relative overflow-hidden bg-emerald-950 text-white">
+        {/* Dekorasi latar */}
+        <div
+          aria-hidden="true"
+          className="pola-grid pointer-events-none absolute inset-0 opacity-20"
+        />
+
+        <div className="pointer-events-none absolute -left-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 right-0 h-72 w-72 rounded-full bg-teal-400/10 blur-3xl" />
+
+        <div className="relative mx-auto max-w-7xl px-5 py-12 sm:px-8 lg:py-14">
+          {/* Konten utama */}
+          <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
             {/* Brand */}
             <div>
-              <div className="flex items-center gap-2.5">
-                <div className="h-10 w-10 rounded-xl bg-white/15 backdrop-blur text-white grid place-items-center">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <Link
+                href="/"
+                className="inline-flex items-center gap-3"
+                aria-label="PustakaKu - Beranda"
+              >
+                <div className="grid h-12 w-12 place-items-center rounded-2xl border border-white/15 bg-white/10 text-emerald-100 shadow-lg backdrop-blur">
+                  <svg
+                    width="25"
+                    height="25"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
                     <path d={IKON_BUKU} />
                   </svg>
                 </div>
-                <div className="leading-tight">
-                  <div className="font-bold text-white">{sistem.nama}</div>
-                  <div className="text-xs text-white/70">{sistem.tagline}</div>
+
+                <div>
+                  <div className="text-xl font-bold tracking-tight">
+                    {sistem.nama}
+                  </div>
+                  <div className="mt-0.5 text-xs text-emerald-100/70">
+                    {sistem.tagline}
+                  </div>
                 </div>
+              </Link>
+
+              <p className="mt-5 max-w-xs text-sm leading-7 text-emerald-50/70">
+                Temukan, jelajahi, dan nikmati berbagai koleksi bacaan dalam
+                satu tempat. Mulai perjalanan literasi kamu bersama PustakaKu.
+              </p>
+
+              <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-emerald-300/15 bg-white/5 px-3 py-2 text-xs text-emerald-100/80">
+                <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                Teman membaca setiap hari
               </div>
             </div>
 
             {/* Navigasi */}
             <div>
-              <div className="text-xs font-bold uppercase tracking-wider text-white/70">Navigasi</div>
-              <ul className="mt-4 space-y-2.5 text-sm">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-emerald-200">
+                Navigasi
+              </h3>
+
+              <ul className="mt-5 space-y-3">
                 {NAVLINK.map((n) => {
                   const id = n.href.split("#")[1] ?? null;
+
                   return (
                     <li key={n.label}>
                       <Link
                         href={n.href}
                         onClick={id ? (e) => keSection(e, id) : undefined}
-                        className="text-white/75 hover:text-white transition-colors"
+                        className="group inline-flex items-center gap-2 text-sm text-white/70 transition-colors hover:text-white"
                       >
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/50 transition-colors group-hover:bg-emerald-300" />
                         {n.label}
                       </Link>
                     </li>
@@ -788,46 +1537,119 @@ export default function LandingPage() {
 
             {/* Hubungi Kami */}
             <div>
-              <div className="text-xs font-bold uppercase tracking-wider text-white/70">Hubungi Kami</div>
-              <ul className="mt-4 space-y-3 text-sm text-white/75">
-                <li className="flex items-start gap-2.5">
-                  <svg aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                    <circle cx="12" cy="10" r="3" />
-                  </svg>
-                  Jl. Cihampelas No. 15, Bandung
+              <h3 className="text-sm font-bold uppercase tracking-widest text-emerald-200">
+                Hubungi Kami
+              </h3>
+
+              <ul className="mt-5 space-y-4 text-sm text-white/70">
+                <li className="flex items-start gap-3">
+                  <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/5 text-emerald-200">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" />
+                      <circle cx="12" cy="10" r="2.5" />
+                    </svg>
+                  </span>
+                  <div>
+                    <p className="font-medium text-white">Alamat</p>
+                    <p className="mt-1 leading-6">
+                      Jl. Cihampelas No. 15, Bandung
+                    </p>
+                  </div>
                 </li>
-                <li className="flex items-start gap-2.5">
-                  <svg aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                  </svg>
-                  Telepon: (022) 123-4567
+
+                <li className="flex items-start gap-3">
+                  <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/5 text-emerald-200">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.4 19.4 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 8.9a16 16 0 0 0 6 6l1.2-1.3a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.8 2.1Z" />
+                    </svg>
+                  </span>
+                  <div>
+                    <p className="font-medium text-white">Telepon</p>
+                    <a
+                      href="tel:+62221234567"
+                      className="mt-1 block transition-colors hover:text-emerald-300"
+                    >
+                      (022) 123-4567
+                    </a>
+                  </div>
                 </li>
-                <li className="flex items-start gap-2.5">
-                  <svg aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                    <polyline points="22,6 12,13 2,6" />
-                  </svg>
-                  Email: info@pustakaku.id
+
+                <li className="flex items-start gap-3">
+                  <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/5 text-emerald-200">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <rect x="3" y="5" width="18" height="14" rx="2" />
+                      <path d="m3 7 9 6 9-6" />
+                    </svg>
+                  </span>
+                  <div>
+                    <p className="font-medium text-white">Email</p>
+                    <a
+                      href="mailto:info@pustakaku.id"
+                      className="mt-1 block break-all transition-colors hover:text-emerald-300"
+                    >
+                      info@pustakaku.id
+                    </a>
+                  </div>
                 </li>
               </ul>
             </div>
 
-            {/* Newsletter */}
+            {/* Newsletter dan media sosial */}
             <div>
-              <div className="text-xs font-bold uppercase tracking-wider text-white/70">Berlangganan Newsletter</div>
+              <h3 className="text-sm font-bold uppercase tracking-widest text-emerald-200">
+                Newsletter
+              </h3>
+
+              <p className="mt-5 text-sm leading-6 text-white/70">
+                Dapatkan informasi terbaru seputar koleksi buku dan aktivitas
+                literasi PustakaKu.
+              </p>
+
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
+
                   if (!emailLangganan.includes("@")) return;
+
                   setLanggananTerkirim(true);
                   setEmailLangganan("");
                 }}
-                className="mt-4 flex items-center gap-2 rounded-xl bg-white p-1.5 shadow-[var(--sh-2)]"
+                className="mt-4 flex items-center gap-2 rounded-xl border border-white/10 bg-white p-1.5 shadow-lg"
               >
                 <label htmlFor="email-langganan" className="sr-only">
                   Alamat email
                 </label>
+
                 <input
                   id="email-langganan"
                   type="email"
@@ -838,49 +1660,102 @@ export default function LandingPage() {
                     setEmailLangganan(e.target.value);
                     setLanggananTerkirim(false);
                   }}
-                  className="min-w-0 flex-1 border-0 bg-transparent px-2 py-1 text-sm text-slate-800 outline-none placeholder:text-slate-400"
+                  className="min-w-0 flex-1 border-0 bg-transparent px-2 py-2 text-sm text-slate-800 outline-none placeholder:text-slate-400"
                 />
+
                 <button
                   type="submit"
-                  aria-label="Berlangganan"
-                  className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-emerald-500 text-white transition-colors hover:bg-emerald-600"
+                  aria-label="Daftar newsletter"
+                  className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-emerald-700 text-white transition-colors hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                    <path d="M5 12h14M13 5l7 7-7 7" />
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="m22 2-7 20-4-9-9-4Z" />
+                    <path d="M22 2 11 13" />
                   </svg>
                 </button>
               </form>
+
               {langgananTerkirim && (
-                <p className="mt-2 text-xs text-emerald-200">
-                  Terima kasih! Email Anda berhasil didaftarkan.
+                <p
+                  role="status"
+                  className="mt-3 text-xs leading-5 text-emerald-200"
+                >
+                  Terima kasih! Formulir newsletter berhasil dikirim.
                 </p>
               )}
 
-              {/* Media sosial */}
-              <div className="mt-4 flex items-center gap-2">
-                {SOSIAL.map((s) => (
-                  <button
-                    key={s.label}
-                    type="button"
-                    aria-label={s.label}
-                    className="grid h-9 w-9 place-items-center rounded-lg border border-white/20 bg-white/10 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                      <path d={s.d} />
-                    </svg>
-                  </button>
-                ))}
+              <h4 className="mt-6 text-xs font-semibold uppercase tracking-wider text-white/60">
+                Ikuti Kami
+              </h4>
+
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {SOSIAL.filter((s) => s.href).map((s) => {
+                  // Tautan eksternal dibuka di tab baru; mailto/tel tetap di tab yang sama.
+                  const eksternal = s.href!.startsWith("http");
+                  return (
+                    <a
+                      key={s.label}
+                      href={s.href!}
+                      {...(eksternal
+                        ? { target: "_blank", rel: "noreferrer noopener" }
+                        : {})}
+                      aria-label={s.label}
+                      title={s.label}
+                      className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/5 text-white/75 transition-all hover:-translate-y-0.5 hover:border-emerald-300/40 hover:bg-emerald-500/15 hover:text-white"
+                    >
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path d={s.d} />
+                      </svg>
+                    </a>
+                  );
+                })}
               </div>
             </div>
           </div>
 
-          {/* Baris legal */}
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-white/15 pt-5 text-xs text-white/70">
-            <div>© 2026 {sistem.nama}. Seluruh hak cipta dilindungi.</div>
-            <div className="flex items-center gap-3">
-              <span>Kebijakan Privasi</span>
-              <span aria-hidden>·</span>
-              <span>Syarat &amp; Ketentuan</span>
+          {/* Copyright */}
+          <div className="mt-12 border-t border-white/10 pt-6">
+            <div className="flex flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
+              <p className="text-xs leading-5 text-white/55">
+                © {new Date().getFullYear()} {sistem.nama}. Seluruh hak cipta
+                dilindungi.
+              </p>
+
+              <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-white/60">
+                <Link
+                  href="/kebijakan-privasi"
+                  className="transition-colors hover:text-emerald-200"
+                >
+                  Kebijakan Privasi
+                </Link>
+
+                <span aria-hidden="true" className="text-white/25">
+                  •
+                </span>
+
+                <Link
+                  href="/syarat-ketentuan"
+                  className="transition-colors hover:text-emerald-200"
+                >
+                  Syarat &amp; Ketentuan
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -899,7 +1774,10 @@ export default function LandingPage() {
               total <= 0 ||
               window.matchMedia("(prefers-reduced-motion: reduce)").matches
             ) {
-              document.documentElement.scrollTo({ top: 0, behavior: "instant" });
+              document.documentElement.scrollTo({
+                top: 0,
+                behavior: "instant",
+              });
               return;
             }
             const mulai = performance.now();
@@ -918,7 +1796,17 @@ export default function LandingPage() {
           aria-label="Kembali ke atas"
           className="fixed bottom-6 right-6 z-40 grid h-12 w-12 place-items-center rounded-full bg-emerald-500 text-white shadow-[0_10px_30px_rgba(2,6,23,0.35)] ring-4 ring-white/60 transition-transform hover:scale-105"
         >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
             <path d="M18 15l-6-6-6 6" />
           </svg>
         </button>

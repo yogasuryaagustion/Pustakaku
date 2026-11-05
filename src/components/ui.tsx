@@ -124,7 +124,7 @@ export function StatCard({
   ikon,
 }: {
   label: string;
-  value: string | number;
+  value: React.ReactNode;
   sub?: string;
   tone?: "brand" | "amber" | "rose" | "sky" | "slate";
   /** Path stroke SVG (viewBox 24) — ikon opsional di sudut kanan atas. */
@@ -161,10 +161,11 @@ export function StatCard({
   );
 }
 
-export type BadgeTone = "green" | "amber" | "rose" | "sky" | "slate";
+export type BadgeTone = "teal" | "green" | "amber" | "rose" | "sky" | "slate";
 
 export function Badge({ children, tone = "slate" }: { children: React.ReactNode; tone?: BadgeTone }) {
   const tones: Record<BadgeTone, string> = {
+    teal: "bg-teal-100 text-teal-700",
     green: "bg-emerald-100 text-emerald-700",
     amber: "bg-amber-100 text-amber-700",
     rose: "bg-rose-100 text-rose-700",

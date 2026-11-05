@@ -1,4 +1,6 @@
-// Kelola akun login (admin): daftar akun & daftar semua profil.
+// Kelola akun login (Super Admin): daftar akun & daftar semua profil.
+// Gerbang: izin `akun.kelola` — bawaan hanya SUPER ADMIN yang punya,
+// tetap bisa dibuka lewat Kelola Akses bila sengaja diberikan ke Admin.
 
 import {
   bacaBody,
@@ -16,7 +18,10 @@ import { catatJejakServer } from "@/lib/supabase/jejak";
 
 export async function GET() {
   return jalankan(async () => {
-    const k = await konteksRoute({ wajibMasuk: true, wajibAdmin: true });
+    const k = await konteksRoute({
+      wajibMasuk: true,
+      wajibIzin: "akun.kelola",
+    });
     const { data, error } = await k.supabase
       .from("profiles")
       .select("id, nama, email, peran, anggota_id, dibuat_pada")
@@ -28,14 +33,39 @@ export async function GET() {
 
 export async function POST(request: Request) {
   return jalankan(async () => {
-    const k = await konteksRoute({ wajibMasuk: true, wajibAdmin: true });
+    const k = await konteksRoute({
+      wajibMasuk: true,
+      wajibIzin: "akun.kelola",
+    });
 
     const body = (await bacaBody(request)) as Record<string, unknown> | null;
     const nama = typeof body?.nama === "string" ? body.nama.trim() : "";
     const email = emailSah(body?.email, { wajib: true });
     const sandi = sahkanSandi(body?.sandi);
-    const peran = body?.peran === "admin" ? "admin" : "user";
-    const anggotaId = typeof body?.anggotaId === "string" && body.anggotaId ? body.anggotaId : null;
+    const peranDiminta =
+      body?.peran === "superadmin"
+        ? "superadmin"
+        : body?.peran === "admin"
+          ? "admin"
+          : "user";
+
+    // Hanya Super Admin yang boleh membuat akun Admin
+    // maupun Super Admin.
+    if (
+      (peranDiminta === "admin" || peranDiminta === "superadmin") &&
+      k.peran !== "superadmin"
+    ) {
+      throw new GalatApi(
+        "Hanya Super Admin yang dapat membuat akun Admin atau Super Admin.",
+        403,
+      );
+    }
+
+    const peran = peranDiminta;
+    const anggotaId =
+      typeof body?.anggotaId === "string" && body.anggotaId
+        ? body.anggotaId
+        : null;
     if (nama.length < 3) throw new GalatApi("Nama minimal 3 karakter.");
 
     // 1) Buat akun Auth. Dengan kunci service role akun langsung terkonfirmasi;
@@ -52,7 +82,8 @@ export async function POST(request: Request) {
         user_metadata: { nama },
       });
       if (error) {
-        if (/already/i.test(error.message ?? "")) throw new GalatApi("Email sudah terdaftar.", 409);
+        if (/already/i.test(error.message ?? ""))
+          throw new GalatApi("Email sudah terdaftar.", 409);
         throw new GalatApi(error.message || "Akun gagal dibuat.");
       }
       uid = data.user?.id ?? null;
@@ -64,29 +95,51 @@ export async function POST(request: Request) {
         options: { data: { nama } },
       });
       if (error) {
-        if (/already/i.test(error.message ?? "")) throw new GalatApi("Email sudah terdaftar.", 409);
+        if (/already/i.test(error.message ?? ""))
+          throw new GalatApi("Email sudah terdaftar.", 409);
         throw new GalatApi(
-          `Akun gagal dibuat: ${error.message}. Tanpa SUPABASE_SERVICE_ROLE_KEY, matikan "Confirm email" pada Authentication → Providers → Email.`
+          `Akun gagal dibuat: ${error.message}. Tanpa SUPABASE_SERVICE_ROLE_KEY, matikan "Confirm email" pada Authentication → Providers → Email.`,
         );
       }
       uid = data.user?.id ?? null;
       if (!data.session) {
         throw new GalatApi(
-          "Akun dibuat tetapi belum terkonfirmasi. Matikan \"Confirm email\" atau isi SUPABASE_SERVICE_ROLE_KEY."
+          'Akun dibuat tetapi belum terkonfirmasi. Matikan "Confirm email" atau isi SUPABASE_SERVICE_ROLE_KEY.',
         );
       }
     }
-    if (!uid) throw new GalatApi("Akun gagal dibuat (id pengguna tidak ditemukan).");
+    if (!uid)
+      throw new GalatApi("Akun gagal dibuat (id pengguna tidak ditemukan).");
 
-    // 2) Tetapkan peran & tautan kartu (oleh sesi admin — pemicu mengizinkan).
+    // 2) Tetapkan peran dan tautan kartu.
     const { data: profil, error: errProfil } = await k.supabase
       .from("profiles")
       .update({ peran, anggota_id: anggotaId })
       .eq("id", uid)
       .select("id, nama, email, peran, anggota_id, dibuat_pada")
       .maybeSingle();
-    if (errProfil) throw dariSupabase(errProfil);
-    if (!profil) throw new GalatApi("Profil akun gagal dibuat.", 500);
+
+    // 3) Jika profil gagal diperbarui, bersihkan akun Auth yang baru dibuat.
+    if (errProfil || !profil) {
+      if (serviceKey) {
+        const { error: errHapus } =
+          await createSupabaseAdmin().auth.admin.deleteUser(uid);
+
+        if (errHapus) {
+          throw new GalatApi(
+            `Profil gagal disimpan dan akun Auth gagal dibersihkan: ${errHapus.message}`,
+            500,
+          );
+        }
+      }
+
+      if (errProfil) throw dariSupabase(errProfil);
+
+      throw new GalatApi(
+        "Profil akun gagal dibuat. Akun Auth yang baru dibuat sudah dibersihkan.",
+        500,
+      );
+    }
 
     await catatJejakServer(k, {
       jenis: "akun",
@@ -95,6 +148,9 @@ export async function POST(request: Request) {
       detail: `peran ${peran}`,
       anggotaId,
     });
-    return json({ akun: kePengguna(profil as BarisProfil), pesan: "Akun dibuat." }, 201);
+    return json(
+      { akun: kePengguna(profil as BarisProfil), pesan: "Akun dibuat." },
+      201,
+    );
   });
 }

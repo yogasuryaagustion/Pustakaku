@@ -5,6 +5,7 @@ import {
   dariSupabase,
   jalankan,
   json,
+  konteksPublik,
   konteksRoute,
 } from "@/lib/supabase/konteks";
 import { catatJejakServer } from "@/lib/supabase/jejak";
@@ -14,18 +15,25 @@ import { sahkanBukuBody } from "@/lib/supabase/validasi";
 export async function GET() {
   return jalankan(async () => {
     // Baris yang boleh dilihat sudah ditentukan RLS (matriks izin `katalog.lihat`),
-    // sehingga tamu, anggota, dan admin masing-masing menerima set yang benar.
-    const k = await konteksRoute();
-    const { data, error } = await k.supabase
-      .from("buku")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .order("ditambahkan_pada", { ascending: true });
+    // sehingga tamu, anggota, dan admin masing-masing menerima set yang benar —
+    // GET ini tidak membaca k.pengguna, jadi konteksPublik (tanpa validasi sesi)
+    // sudah cukup dan menghemat dua roundtrip per muat halaman.
+    const k = await konteksPublik();
+    // Daftar buku & agregat ketersediaan diambil PARALEL — dua roundtrip
+    // Supabase yang dulu berurutan kini tumpang tindih.
+    const [{ data, error }, hasilRpc] = await Promise.all([
+      k.supabase
+        .from("buku")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .order("ditambahkan_pada", { ascending: true }),
+      k.supabase.rpc("jumlah_dipinjam"),
+    ]);
     if (error) throw dariSupabase(error);
 
     // Jumlah peminjaman aktif per buku (agregat, tanpa identitas peminjam)
     // agar ketersediaan stok benar untuk semua peran — bukan hanya admin.
-    const { data: hitung, error: errHitung } = await k.supabase.rpc("jumlah_dipinjam");
+    const { data: hitung, error: errHitung } = hasilRpc;
     const dipinjam: Record<string, number> = {};
     if (!errHitung && Array.isArray(hitung)) {
       for (const baris of hitung as { buku_id: string; jumlah: number }[]) {

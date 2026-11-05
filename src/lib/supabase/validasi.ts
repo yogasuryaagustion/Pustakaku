@@ -98,7 +98,7 @@ export function sahkanAnggotaBody(body: Raw, { wajibSemua = false } = {}): Parti
   if (o.alamat !== undefined) out.alamat = teks(o.alamat, { nama: "Alamat", max: 500 });
   if (o.jenis !== undefined || wajibSemua) {
     const j = teks(o.jenis, { nama: "Jenis anggota", max: 20, kosong: "Umum" });
-    if (!["Pelajar", "Umum", "Staf"].includes(j)) throw new GalatApi("Jenis anggota tidak dikenal.");
+    if (!["Pelajar", "Mahasiswa", "Umum", "Staf"].includes(j)) throw new GalatApi("Jenis anggota tidak dikenal.");
     out.jenis = j as Anggota["jenis"];
   }
   if (o.aktif !== undefined) {
@@ -106,7 +106,13 @@ export function sahkanAnggotaBody(body: Raw, { wajibSemua = false } = {}): Parti
     out.aktif = o.aktif;
   }
   if (o.foto !== undefined) {
-    out.foto = o.foto === null || o.foto === "" ? null : teks(o.foto, { nama: "Foto", max: 400_000 });
+    if (o.foto === null || o.foto === "") {
+      out.foto = null;
+    } else {
+      const foto = teks(o.foto, { nama: "Foto", max: 400_000 });
+      if (!/^data:image\/(jpeg|png|webp);base64,/i.test(foto)) throw new GalatApi("Format foto tidak valid.");
+      out.foto = foto;
+    }
   }
   if (o.nomorAnggota !== undefined) out.nomorAnggota = teks(o.nomorAnggota, { nama: "Nomor anggota", max: 30 });
   if (o.bergabungPada !== undefined) out.bergabungPada = tanggal(o.bergabungPada, "Tanggal bergabung");
@@ -120,6 +126,103 @@ export function tanggal(v: unknown, nama: string): string {
     throw new GalatApi(`${nama} harus berformat YYYY-MM-DD.`);
   }
   return s;
+}
+
+/** Payload eksemplar fisik (tambah/ubah). */
+export interface RawEksemplar extends Partial<BarisEksemplar> {}
+
+export function sahkanEksemplarBody(body: Raw): Partial<BarisEksemplar> {
+  const o = objek(body);
+  const out: Partial<BarisEksemplar> = {};
+  if (o.buku_id !== undefined) out.buku_id = keString(o.buku_id);
+  if (o.nomor_inventaris !== undefined) out.nomor_inventaris = teks(o.nomor_inventaris, { nama: "Nomor inventaris", max: 120 });
+  if (o.status !== undefined) out.status = teks(o.status, { nama: "Status", max: 20 });
+  if (o.kondisi_fisik !== undefined) out.kondisi_fisik = teks(o.kondisi_fisik, { nama: "Kondisi fisik", max: 20 });
+  if (o.tanggal_pengadaan !== undefined) {
+    out.tanggal_pengadaan = tanggal(o.tanggal_pengadaan, "Tanggal pengadaan");
+  }
+  if (o.keterangan !== undefined) out.keterangan = teksOpsional(o.keterangan, 2000);
+  return out;
+}
+
+/** Validasi payload pemeriksaan nomor inventaris. */
+export interface RawPemeriksaanBaris extends Partial<BarisEksemplar> {
+  /** id eksemplar dari baris pemeriksaan */
+  id_eksemplar?: unknown;
+  status?: unknown;
+  kondisi_fisik?: unknown;
+  keterangan?: unknown;
+}
+
+export interface RawPemeriksaan {
+  pemeriksaan?: RawPemeriksaanBaris[];
+}
+
+export function sahkanPemeriksaanBody(body: Raw): RawPemeriksaan {
+  const o = objek(body);
+  const out: RawPemeriksaan = {};
+  const daftar = Array.isArray(o.pemeriksaan) ? o.pemeriksaan : [];
+  out.pemeriksaan = daftar.map((p) => {
+    if (!p || typeof p !== "object") {
+      throw new GalatApi("Baris pemeriksaan harus berupa objek.");
+    }
+    const baris: RawPemeriksaanBaris = {};
+    if (p.id_eksemplar !== undefined) baris.id_eksemplar = p.id_eksemplar;
+    if (p.nomor_inventaris !== undefined) baris.nomor_inventaris = teks(p.nomor_inventaris, { nama: "Nomor inventaris", max: 120 });
+    if (p.status !== undefined) baris.status = teks(p.status, { nama: "Status", max: 20 });
+    if (p.kondisi_fisik !== undefined) baris.kondisi_fisik = teks(p.kondisi_fisik, { nama: "Kondisi fisik", max: 20 });
+    if (p.keterangan !== undefined) baris.keterangan = teksOpsional(p.keterangan, 2000);
+    return baris;
+  });
+  return out;
+}
+
+/** Validasi payload stock opname. */
+export interface RawOpnameBaris extends Partial<BarisEksemplar> {
+  jumlah_fisik?: unknown;
+  ditemukan?: unknown;
+  tidak_ditemukan?: unknown;
+}
+
+export interface RawOpname {
+  komentar?: unknown;
+  baris?: RawOpnameBaris[];
+}
+
+export function sahkanOpnameBody(body: Raw): RawOpname {
+  const o = objek(body);
+  const out: RawOpname = {};
+  if (o.komentar !== undefined) out.komentar = teksOpsional(o.komentar, 2000);
+  const daftar = Array.isArray(o.baris) ? o.baris : [];
+  out.baris = daftar.map((b) => {
+    if (!b || typeof b !== "object") {
+      throw new GalatApi("Baris opname harus berupa objek.");
+    }
+    const baris: RawOpnameBaris = {};
+    if (b.id !== undefined && b.id !== null) baris.id = b.id;
+    if (b.buku_id !== undefined) baris.buku_id = keString(b.buku_id);
+    if (b.nomor_inventaris !== undefined) baris.nomor_inventaris = teks(b.nomor_inventaris, { nama: "Nomor inventaris", max: 120 });
+    if (b.status !== undefined) baris.status = teks(b.status, { nama: "Status", max: 20 });
+    if (b.kondisi_fisik !== undefined) baris.kondisi_fisik = teks(b.kondisi_fisik, { nama: "Kondisi fisik", max: 20 });
+    if (b.tanggal_pengadaan !== undefined) {
+      baris.tanggal_pengadaan = tanggal(b.tanggal_pengadaan, "Tanggal pengadaan");
+    }
+    if (b.keterangan !== undefined) baris.keterangan = teksOpsional(b.keterangan, 2000);
+    if (b.jumlah_fisik !== undefined) {
+      const n = bilangan(b.jumlah_fisik, { nama: "Jumlah fisik", min: 0, max: 100000 });
+      baris.jumlah_fisik = n;
+    }
+    if (b.ditemukan !== undefined) {
+      const n = bilangan(b.ditemukan, { nama: "Ditemukan", min: 0, max: 100000 });
+      baris.ditemukan = n;
+    }
+    if (b.tidak_ditemukan !== undefined) {
+      const n = bilangan(b.tidak_ditemukan, { nama: "Tidak ditemukan", min: 0, max: 100000 });
+      baris.tidak_ditemukan = n;
+    }
+    return baris;
+  });
+  return out;
 }
 
 /** Kata sandi: minimal 6 karakter (mengikuti aturan lama). */

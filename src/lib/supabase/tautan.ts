@@ -38,16 +38,17 @@ async function cariKartu(
 export async function tautkanKartuSaya(k: Konteks): Promise<HasilTautan> {
   if (!k.pengguna) return { anggotaId: null, kartu: null };
 
+  // Sudah tertaut → tidak ada yang perlu dicari/diperbaiki. Fungsi ini
+  // dipanggil pada SETIAP baca sesi (/api/auth/sesi), jadi tanpa jalan pintas
+  // ini ada satu roundtrip pencarian kartu yang sia-sia tiap halaman dibuka.
+  if (k.pengguna.anggotaId) {
+    return { anggotaId: k.pengguna.anggotaId, kartu: null };
+  }
+
   const baris = await cariKartu(k, k.pengguna.email);
   if (!baris) return { anggotaId: null, kartu: null };
 
   const kartu = keAnggota(baris);
-  if (k.pengguna.anggotaId) {
-    // Sudah tertaut — pastikan kartu yang ditemukan memang milik akun ini.
-    return k.pengguna.anggotaId === kartu.id
-      ? { anggotaId: kartu.id, kartu }
-      : { anggotaId: k.pengguna.anggotaId, kartu: null };
-  }
 
   const { error } = await k.supabase
     .from("profiles")

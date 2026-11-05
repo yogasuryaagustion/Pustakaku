@@ -46,13 +46,27 @@
   --color-brand-soft: var(--brand-soft);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-geist-sans);
+  --color-primary: var(--brand);
+  --color-primary-foreground: #fff;
+  --color-secondary: #f1f5f9;
+  --color-secondary-foreground: #1a2233;
+  --color-muted-foreground: var(--muted);
+  --color-accent: #f1f5f9;
+  --color-accent-foreground: #1a2233;
+  --color-destructive: #e11d48;
+  --color-input: var(--border);
+  --color-ring: var(--brand);
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.75rem;
 }
 
 body {
-  background: var(--background);
+  background: #ffffff;
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
-  /* Tipografi sistematis: heading sedikit lebih rapat, teks isi lega. */
   letter-spacing: -0.011em;
   text-rendering: optimizeLegibility;
 }
@@ -61,10 +75,20 @@ body {
    Dipakai via kelas Tailwind arbitrary (shadow-[var(--sh-2)]) atau langsung
    di CSS. Empat tingkat = hierarki kedalaman yang konsisten. */
 :root {
+  --background: #ffffff;
+  --foreground: #1e293b;
+
   --sh-1: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.04);
-  --sh-2: 0 4px 6px -1px rgb(15 23 42 / 0.06), 0 2px 4px -2px rgb(15 23 42 / 0.05);
-  --sh-3: 0 12px 24px -8px rgb(15 23 42 / 0.1), 0 4px 8px -6px rgb(15 23 42 / 0.06);
-  --sh-4: 0 32px 64px -16px rgb(15 23 42 / 0.18), 0 12px 24px -12px rgb(15 23 42 / 0.1);
+
+  --sh-2:
+    0 4px 6px -1px rgb(15 23 42 / 0.06), 0 2px 4px -2px rgb(15 23 42 / 0.05);
+
+  --sh-3:
+    0 12px 24px -8px rgb(15 23 42 / 0.1), 0 4px 8px -6px rgb(15 23 42 / 0.06);
+
+  --sh-4:
+    0 32px 64px -16px rgb(15 23 42 / 0.18),
+    0 12px 24px -12px rgb(15 23 42 / 0.1);
 }
 
 /* Pilihan teks & fokus keyboard yang rapi di seluruh aplikasi. */
@@ -103,7 +127,12 @@ body {
    mengganti warna dasar/gradien di /admin/pengaturan. Dipakai lewat kelas
    biasa (bukan class Tailwind) supaya nilainya selalu dari variable. */
 .grad-teks {
-  background-image: linear-gradient(to right, var(--brand), var(--teks-mid), var(--teks-end));
+  background-image: linear-gradient(
+    to right,
+    var(--brand),
+    var(--teks-mid),
+    var(--teks-end)
+  );
 }
 /* Gradien section landing: vertikal dan MEMUDAR ke --background di kedua
    ujung, sehingga antar-section tidak ada garis potong/"sambungan" yang
@@ -118,26 +147,45 @@ body {
     var(--background) 100%
   );
 }
-.grad-koleksi {
-  background-image: linear-gradient(
-    180deg,
-    var(--background) 0%,
-    var(--latar-1) 22%,
-    var(--latar-2) 55%,
-    var(--background) 100%
-  );
+/* FAQ adalah acuan warna latar semua section landing.
+   Warna FAQ diambil langsung dari elemen FAQ dan dipakai di CSS
+   sehingga fitur landing page konsisten visualnya. */
+@layer components {
+  .landing-faq-section {
+    background-color: #ffffff;
+  }
+
+  .grad-koleksi {
+    background-color: #ffffff;
+  }
+
+  .grad-testimoni {
+    background-color: #ffffff;
+  }
 }
-.grad-testimoni {
-  background-image: linear-gradient(
-    180deg,
-    var(--background) 0%,
-    var(--latar-3) 22%,
-    var(--latar-1) 55%,
-    var(--background) 100%
-  );
+
+/* Landing page: semua section pakai latar putih (#ffffff). */
+* {
+  color-scheme: light;
+}
+body {
+  background: #ffffff !important;
+}
+section[class*="landing"]:not([class*="landing-hero"]):not(
+    [class*="landing-gradient"]
+  ) {
+  background: #ffffff !important;
+}
+section:not([class*="landing"]):not([id]) {
+  background: #ffffff !important;
 }
 .grad-cta {
-  background-image: linear-gradient(120deg, var(--cta-1) 0%, var(--cta-2) 45%, var(--cta-3) 100%);
+  background-image: linear-gradient(
+    120deg,
+    var(--cta-1) 0%,
+    var(--cta-2) 45%,
+    var(--cta-3) 100%
+  );
 }
 /* Footer landing: turunan grad-cta yang digelapkan agar teks putih kontras
    dan tampil senada panel halaman masuk — tetap mengikuti warna tema admin. */
@@ -153,7 +201,11 @@ body {
   background-image: linear-gradient(to right, var(--brand), var(--brand-light));
 }
 .grad-soft {
-  background-image: linear-gradient(to bottom right, var(--brand-soft), color-mix(in srgb, var(--brand-soft) 40%, white));
+  background-image: linear-gradient(
+    to bottom right,
+    var(--brand-soft),
+    color-mix(in srgb, var(--brand-soft) 40%, white)
+  );
 }
 
 /* Scroll halus untuk tautan anchor (navbar landing).
@@ -186,7 +238,10 @@ html {
   /* Kartu interaktif: terangkat halus saat disorot (tetap tanpa motion
      bila pengguna meminta reduced-motion). */
   .card-raised {
-    transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+    transition:
+      box-shadow 0.2s ease,
+      transform 0.2s ease,
+      border-color 0.2s ease;
   }
   .card-raised:hover {
     box-shadow: var(--sh-3);
@@ -229,12 +284,14 @@ html {
   .btn-primary {
     background: var(--brand);
     color: #ffffff;
-    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.08),
+    box-shadow:
+      0 1px 2px 0 rgb(0 0 0 / 0.08),
       inset 0 1px 0 0 rgb(255 255 255 / 0.15);
   }
   .btn-primary:hover {
     background: var(--brand-hover);
-    box-shadow: 0 4px 12px -2px color-mix(in srgb, var(--brand) 45%, transparent);
+    box-shadow: 0 4px 12px -2px
+      color-mix(in srgb, var(--brand) 45%, transparent);
   }
 
   .btn-ghost {
@@ -272,7 +329,9 @@ html {
     background: #fff;
     color: var(--foreground);
     outline: none;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
   }
   .input::placeholder {
     color: #94a3b8;
@@ -341,11 +400,8 @@ html {
 
 /* Garis kisi besar (grid lines) untuk panel auth/CTA. */
 .pola-grid {
-  background-image: linear-gradient(
-      to right,
-      rgb(255 255 255 / 0.07) 1px,
-      transparent 1px
-    ),
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.07) 1px, transparent 1px),
     linear-gradient(to bottom, rgb(255 255 255 / 0.07) 1px, transparent 1px);
   background-size: 44px 44px;
 }
@@ -468,8 +524,20 @@ html {
    prefers-reduced-motion menjadikan deret statis. */
 .marquee-koleksi {
   overflow: hidden;
-  -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
-  mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 5%,
+    black 95%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 5%,
+    black 95%,
+    transparent
+  );
 }
 .marquee-track {
   display: flex;
@@ -484,8 +552,46 @@ html {
     transform: translateX(-50%);
   }
 }
+
+/* === Ticker vertikal (Koleksi) ==========================================
+   Deret kartu bergerak terus ke atas. */
+.ticker-vertikal {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    black 10%,
+    black 90%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    black 10%,
+    black 90%,
+    transparent
+  );
+}
+.ticker-track-vertikal {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  animation: ticker-geser-vertikal 28s linear infinite;
+}
+.ticker-vertikal:hover .ticker-track-vertikal {
+  animation-play-state: paused;
+}
+.ticker-track-vertikal .card {
+  margin-right: 0 !important;
+}
+@keyframes ticker-geser-vertikal {
+  to {
+    transform: translateY(-75%);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  .marquee-track {
+  .marquee-track,
+  .ticker-track-vertikal {
     animation: none;
   }
 }
@@ -523,6 +629,45 @@ html {
   }
 }
 
+/* === Curtains effect ==================================
+   Dekorasi tirai untuk section beranda. */
+.curtains {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.curtain {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 25%;
+  background: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--brand) 6%, transparent),
+    transparent
+  );
+}
+.curtain-left {
+  left: 0;
+  transform: skewX(-8deg) translateX(-10%);
+}
+.curtain-right {
+  right: 0;
+  transform: skewX(8deg) translateX(10%);
+  background: linear-gradient(
+    to left,
+    color-mix(in srgb, var(--brand) 6%, transparent),
+    transparent
+  );
+}
+.curtains\:scope {
+  position: relative;
+}
+
+[curtains\:scope] {
+  position: relative;
+}
+
 /* === Transisi antar-halaman (AppShell) ==================================
    Konten panel menyala halus saat rute berganti — key di <main> membuat
    animasi berjalan ulang tiap navigasi. */
@@ -545,6 +690,199 @@ html {
   }
 }
 
+/* Membership card preview and physical ID-1 print output (85.60 x 53.98 mm). */
+.membership-card {
+  box-sizing: border-box;
+  position: relative;
+  aspect-ratio: 85.6 / 53.98;
+  width: 100%;
+  overflow: hidden;
+  border: 1.4mm solid #0f766e;
+  border-radius: 3.4mm;
+  background: #fff;
+  padding: 4.5%;
+  color: #182233;
+  box-shadow: 0 16px 40px rgb(15 23 42 / 0.16);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-family: Arial, Helvetica, sans-serif;
+}
+.membership-card-inactive {
+  filter: grayscale(0.85);
+}
+.membership-inactive-banner {
+  position: absolute;
+  z-index: 2;
+  inset: 42% 0 auto;
+  padding: 1.5% 3%;
+  background: #be123c;
+  color: #fff;
+  font-size: clamp(9px, 2vw, 13px);
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-align: center;
+  transform: rotate(-8deg);
+}
+.membership-card-head {
+  display: flex;
+  align-items: center;
+  gap: 2.2%;
+  min-height: 15%;
+}
+.membership-logo {
+  width: 8%;
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 2mm;
+  background: #0f766e;
+  color: white;
+}
+.membership-logo svg {
+  width: 66%;
+  height: 66%;
+}
+.membership-library-name {
+  color: #0f766e;
+  font-size: clamp(10px, 2.8vw, 17px);
+  line-height: 1.05;
+  font-weight: 800;
+}
+.membership-caption,
+.membership-label {
+  margin-top: 1mm;
+  color: #64748b;
+  font-size: clamp(5px, 1.2vw, 7px);
+  letter-spacing: 0.14em;
+  font-weight: 700;
+}
+.membership-status {
+  margin-left: auto;
+  border-radius: 99px;
+  background: #dcfce7;
+  padding: 1.2% 3%;
+  color: #166534;
+  font-size: clamp(6px, 1.6vw, 9px);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.membership-status-inactive {
+  background: #ffe4e6;
+  color: #be123c;
+}
+.membership-card-body {
+  display: flex;
+  align-items: center;
+  gap: 3%;
+  min-height: 59%;
+}
+.membership-avatar {
+  width: 22%;
+  aspect-ratio: 1;
+  border-radius: 3mm;
+  object-fit: cover;
+}
+.membership-details {
+  min-width: 0;
+  flex: 1;
+}
+.membership-name {
+  overflow: hidden;
+  color: #182233;
+  font-size: clamp(10px, 2.8vw, 17px);
+  line-height: 1.15;
+  font-weight: 800;
+  text-overflow: ellipsis;
+}
+.membership-number {
+  margin-top: 0.5mm;
+  color: #0f766e;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: clamp(10px, 2.7vw, 16px);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+.membership-meta {
+  display: grid;
+  gap: 0.6mm;
+  margin-top: 1.5mm;
+  color: #475569;
+  font-size: clamp(6px, 1.5vw, 9px);
+}
+.membership-qr-wrap {
+  width: 24%;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5mm;
+}
+.membership-qr {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+}
+.membership-qr-placeholder {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 6px;
+  text-align: center;
+}
+.membership-qr-caption {
+  color: #64748b;
+  font-size: clamp(4px, 1vw, 6px);
+  text-align: center;
+}
+.membership-card-foot {
+  border-top: 0.25mm solid #e2e8f0;
+  padding-top: 1.2mm;
+  color: #64748b;
+  font-size: clamp(5px, 1.1vw, 7px);
+}
+
+@page {
+  size: 85.6mm 53.98mm;
+  margin: 0;
+}
+@media print {
+  html,
+  body {
+    width: 85.6mm !important;
+    height: 53.98mm !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+  body * {
+    visibility: hidden !important;
+  }
+  .membership-card,
+  .membership-card * {
+    visibility: visible !important;
+  }
+  .membership-card {
+    position: fixed !important;
+    inset: 0 auto auto 0 !important;
+    width: 85.6mm !important;
+    height: 53.98mm !important;
+    max-width: none !important;
+    aspect-ratio: auto !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
 /* Toast notifikasi (src/components/toast.tsx) */
 @keyframes toast-masuk {
   from {
@@ -562,5 +900,316 @@ html {
 @media (prefers-reduced-motion: reduce) {
   .toast-masuk {
     animation: none;
+  }
+}
+
+/* === Halaman landing (src/app/page.tsx) ==================================
+   Kelas `landing-*` melengkapi utility Tailwind yang sudah ada di markup:
+   latar hero, teks gradien, cahaya latar, komposisi sampul melayang, panel
+   cadangan bila seed kosong, dan label melayang di sekitarnya. */
+.landing-hero {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background:
+    radial-gradient(
+      900px 480px at 8% -8%,
+      rgb(15 118 110 / 0.1),
+      transparent 62%
+    ),
+    radial-gradient(
+      820px 460px at 96% -4%,
+      rgb(6 184 212 / 0.12),
+      transparent 60%
+    ),
+    linear-gradient(180deg, #ffffff 0%, #f8fdfc 60%, var(--background) 100%);
+}
+
+/* Lapisan cahaya lembut di belakang hero. */
+.landing-hero-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      600px 320px at 20% 40%,
+      rgb(45 212 191 / 0.16),
+      transparent 70%
+    ),
+    radial-gradient(
+      520px 300px at 78% 26%,
+      rgb(56 189 248 / 0.14),
+      transparent 70%
+    );
+}
+
+.landing-hero-inner {
+  position: relative;
+}
+
+.landing-hero-copy {
+  position: relative;
+  z-index: 2;
+}
+
+/* Judul utama dengan gradien brand (clip-text). */
+.landing-gradient-text {
+  padding-bottom: 0.06em; /* cegah garis dasar terpotong */
+  background-image: linear-gradient(
+    92deg,
+    var(--brand) 0%,
+    #14b8a6 48%,
+    #06b6d4 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.landing-hero-art {
+  position: relative;
+  z-index: 1;
+  min-height: 420px;
+}
+
+/* Halo gradien di belakang komposisi sampul. */
+.landing-art-halo {
+  position: absolute;
+  inset: 4% 2% 2%;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgb(45 212 191 / 0.28),
+    rgb(6 184 212 / 0.1) 55%,
+    transparent 78%
+  );
+  filter: blur(14px);
+}
+
+/* Kartu baca utama — angkat sedikit saat disorot. */
+.landing-reading-card {
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+.landing-reading-card:hover {
+  transform: translateY(-6px);
+}
+
+/* Sampul kiri/kanan: melayang halus dengan kemiringan tetap. */
+@keyframes landing-melayang {
+  0%,
+  100% {
+    transform: translateY(0) rotate(var(--rot, 0deg));
+  }
+  50% {
+    transform: translateY(-12px) rotate(var(--rot, 0deg));
+  }
+}
+.landing-book {
+  transform: translateY(0) rotate(var(--rot, 0deg));
+  animation: landing-melayang 7s ease-in-out infinite;
+}
+.landing-book-left {
+  --rot: -5deg;
+}
+.landing-book-right {
+  --rot: 5deg;
+  animation-delay: 1.6s;
+}
+
+/* Panel cadangan bila deret buku kosong. */
+.landing-book-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  text-align: center;
+  background: linear-gradient(160deg, #0f766e 0%, #14b8a6 60%, #0891b2 100%);
+  color: #fff;
+}
+.landing-book-fallback span {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  opacity: 0.85;
+}
+.landing-book-fallback strong {
+  max-width: 14ch;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+.landing-book-fallback-dark {
+  background: linear-gradient(160deg, #0f172a 0%, #134e4a 70%, #0f766e 100%);
+}
+.landing-book-featured {
+  background: linear-gradient(160deg, #134e4a 0%, #0f766e 55%, #0891b2 100%);
+}
+
+/* Label melayang di sekitar komposisi sampul. */
+.landing-trending {
+  animation: landing-melayang 6s ease-in-out infinite;
+}
+.landing-sync-badge {
+  animation: landing-melayang 7s ease-in-out infinite;
+  animation-delay: 2.4s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-book,
+  .landing-trending,
+  .landing-sync-badge {
+    animation: none;
+  }
+  .landing-reading-card:hover {
+    transform: none;
+  }
+}
+
+/* Cari di hero: rapikan kontrol bawaan browser pada input search. */
+.landing-search input[type="search"]::-webkit-search-decoration,
+.landing-search input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* =========================================================
+   PUSTAKAKU — RESPONSIVE LANDING PAGE REFINEMENT
+   Modern Digital Library · White & Teal
+   ========================================================= */
+
+/* Mencegah elemen melebar melebihi layar */
+.landing-page,
+.landing-page * {
+  box-sizing: border-box;
+}
+
+.landing-page {
+  width: 100%;
+  overflow-x: clip;
+}
+
+/* Hero: ruang yang lebih seimbang */
+.landing-hero {
+  min-height: 100svh;
+  padding-top: 6.5rem;
+  padding-bottom: 3rem;
+}
+
+.landing-hero-inner {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+}
+
+/* Area ilustrasi buku */
+.landing-hero-art {
+  width: 100%;
+  min-height: 390px;
+  isolation: isolate;
+}
+
+/* Transisi kartu lebih lembut */
+.landing-reading-card,
+.landing-hero-art .card,
+.landing-hero-art a {
+  transition:
+    transform 240ms ease,
+    box-shadow 240ms ease,
+    border-color 240ms ease;
+}
+
+.landing-reading-card:hover {
+  transform: translateY(-4px);
+}
+
+/* Tombol dengan area sentuh yang nyaman */
+.landing-page button,
+.landing-page a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.landing-page a:focus-visible,
+.landing-page button:focus-visible {
+  outline: 3px solid rgb(13 148 136 / 35%);
+  outline-offset: 3px;
+}
+
+/* Tablet */
+@media (max-width: 1023px) {
+  .landing-hero {
+    min-height: auto;
+    padding-top: 7rem;
+    padding-bottom: 4rem;
+  }
+
+  .landing-hero-art {
+    min-height: 360px;
+    max-width: 530px;
+    margin-inline: auto;
+  }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .landing-hero {
+    padding-top: 6.5rem;
+    padding-bottom: 2.5rem;
+  }
+
+  .landing-hero-art {
+    min-height: 300px;
+    max-width: 100%;
+  }
+
+  .landing-trending,
+  .landing-sync-badge {
+    transform: scale(0.86);
+  }
+
+  .landing-reading-card:hover {
+    transform: none;
+  }
+
+  .marquee-koleksi {
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+
+  .landing-page .btn {
+    min-height: 42px;
+  }
+}
+
+/* Layar sangat kecil */
+@media (max-width: 380px) {
+  .landing-hero-art {
+    min-height: 260px;
+  }
+
+  .landing-page h1 {
+    font-size: clamp(2rem, 10vw, 2.7rem);
+    line-height: 1.12;
+  }
+}
+
+/* Aksesibilitas: kurangi gerakan bila diminta pengguna */
+@media (prefers-reduced-motion: reduce) {
+  .landing-page *,
+  .landing-page *::before,
+  .landing-page *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .landing-page .reveal {
+    opacity: 1;
+    transform: none;
   }
 }

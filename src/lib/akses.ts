@@ -24,8 +24,10 @@ import {
 
 export * from "./izin";
 
-// === Store API ================================================================
+// === Store API (React) =======================================================
 // Snapshot untuk render server (referensi selalu sama → aman hydration).
+export { ambilKebijakan, useKebijakan } from "./izin";
+
 const SNAPSHOT_SERVER: Kebijakan = KEBIJAKAN_BAWAAN;
 
 let snapshot: Kebijakan = KEBIJAKAN_BAWAAN;
@@ -34,6 +36,18 @@ const pendengar = new Set<() => void>();
 
 function beritahu() {
   pendengar.forEach((fn) => fn());
+}
+
+function langganan(kembali: () => void): () => void {
+  pendengar.add(kembali);
+  void muatKebijakan();
+  return () => {
+    pendengar.delete(kembali);
+  };
+}
+
+function ambilSnapshot(): Kebijakan {
+  return snapshot;
 }
 
 async function muatKebijakan() {

@@ -5,6 +5,7 @@ import {
   dariSupabase,
   jalankan,
   json,
+  konteksPublik,
   konteksRoute,
 } from "@/lib/supabase/konteks";
 import { sahkanSistem, SISTEM_DEFAULT, type SistemPengaturan } from "@/lib/sistem-nilai";
@@ -31,22 +32,36 @@ function keSistem(r: BarisSistem | null): SistemPengaturan {
   });
 }
 
+// Pengaturan dibaca publik oleh SELURUH halaman (nama, denda, lama pinjam)
+// dan hanya berubah saat admin menyimpan. Di-cache sebentar di memori proses
+// agar membuka halaman tidak menunggu roundtrip Supabase — lihat invalidasi
+// di PUT bawah.
+const TTL_PENGATURAN_MS = 30_000;
+let cachePengaturan: { nilai: SistemPengaturan; kedaluwarsa: number } | null = null;
+
 export async function GET() {
   return jalankan(async () => {
-    const k = await konteksRoute();
+    const kini = Date.now();
+    if (cachePengaturan && cachePengaturan.kedaluwarsa > kini) {
+      return json({ pengaturan: cachePengaturan.nilai });
+    }
+    const k = await konteksPublik(); // baca publik tanpa validasi sesi
     const { data, error } = await k.supabase
       .from("pengaturan_sistem")
       .select("nama, tagline, lama_pinjam, denda_per_hari, maks_pinjaman, diubah_pada, diubah_oleh")
       .eq("id", true)
       .maybeSingle();
     if (error) throw dariSupabase(error);
-    return json({ pengaturan: keSistem((data as BarisSistem | null) ?? null) });
+    const nilai = keSistem((data as BarisSistem | null) ?? null);
+    cachePengaturan = { nilai, kedaluwarsa: kini + TTL_PENGATURAN_MS };
+    return json({ pengaturan: nilai });
   });
 }
 
 export async function PUT(request: Request) {
   return jalankan(async () => {
-    const k = await konteksRoute({ wajibMasuk: true, wajibAdmin: true });
+    // Gerbang: izin `pengaturan.kelola` — bawaan hanya SUPER ADMIN.
+    const k = await konteksRoute({ wajibMasuk: true, wajibIzin: "pengaturan.kelola" });
     const body = (await bacaBody(request)) as Record<string, unknown> | null;
     // Validasi identik dengan yang tampil di layar (modul murni sistem-nilai).
     const s = sahkanSistem(body?.pengaturan);
@@ -67,6 +82,8 @@ export async function PUT(request: Request) {
         { onConflict: "id" }
       );
     if (error) throw dariSupabase(error);
+    // Nilai tersimpan sudah berhasil ditulis — jadikan nilai segar untuk GET.
+    cachePengaturan = { nilai: s, kedaluwarsa: Date.now() + TTL_PENGATURAN_MS };
 
     await catatJejakServer(k, {
       jenis: "sistem",

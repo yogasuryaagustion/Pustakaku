@@ -6,6 +6,7 @@ import {
   GalatApi,
   jalankan,
   json,
+  konteksPublik,
   konteksRoute,
 } from "@/lib/supabase/konteks";
 import { keJejak, type BarisJejak } from "@/lib/supabase/peta";
@@ -25,7 +26,8 @@ const JENIS: JenisJejak[] = [
 export async function GET() {
   return jalankan(async () => {
     // RLS: admin melihat semua; anggota hanya jejak miliknya / kartunya.
-    const k = await konteksRoute();
+    // GET ini tidak membaca k.pengguna → konteksPublik tanpa validasi sesi.
+    const k = await konteksPublik();
     const { data, error } = await k.supabase
       .from("log_aktivitas")
       .select("id, waktu, aktor, peran, jenis, aksi, objek, detail")

@@ -1,4 +1,3 @@
-
 {
   "name": "2e7ed29a9662d3d1ef84934ef0e4a7b75c9d3e43ce4181c715b08c924760a9ca",
   "version": "0.1.0",
@@ -10,16 +9,27 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@animate-ui/react": "^2.4.2",
+    "@base-ui/react": "^1.9.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.118.0",
+    "class-variance-authority": "^0.7.1",
+    "cn": "^0.5.0",
+    "jspdf": "^4.2.1",
+    "lucide-react": "^1.68.0",
+    "motion": "^14.9.1",
     "next": "16.4.2",
+    "qrcode": "^1.5.4",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "shadcn": "^4.23.0",
+    "tw-animate-css": "^1.4.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

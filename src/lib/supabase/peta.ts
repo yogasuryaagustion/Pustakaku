@@ -1,6 +1,11 @@
 // Pemetaan baris database (snake_case) ⇄ tipe domain aplikasi (camelCase).
 // Satu-satunya tempat yang tahu bentuk kolom, sehingga perubahan skema tidak
 // merambat ke halaman.
+//
+// Menangkap: baris `eksemplar_buku` (sumber kebenaran inventaris fisik),
+// view `v_inventaris_per_buku`, dan helper arah baca/tulis.
+// Kolom `buku.stok` diatur oleh trigger fn_sinkronisasi_stok_buku (hitungan
+// baris) sehingga ikut sinkronisasi dari eksemplar.
 
 import type { Anggota, Buku, Peminjaman, StatusPinjam } from "../types";
 import type { JejakAksi, JenisJejak } from "../audit";
@@ -19,6 +24,42 @@ export interface BarisBuku {
   deskripsi: string;
   gambar: string | null;
   ditambahkan_pada: string;
+}
+
+export interface BarisEksemplar {
+  id: string;
+  buku_id: string;
+  nomor_inventaris: string;
+  status: string;
+  kondisi_fisik: string;
+  tanggal_pengadaan: string;
+  keterangan: string | null;
+  dibuat_pada: string;
+  diedit_pada: string;
+}
+
+export interface BarisInventarisPerBuku {
+  buku_id: string;
+  judul: string;
+  penulis: string;
+  penerbit: string;
+  tahun_terbit: number;
+  tempat_terbit: string | null;
+  bahasa: string | null;
+  kategori: string;
+  plat: string | null;
+  dewey: string | null;
+  cls: string | null;
+  sinopsis: string | null;
+  cover_url: string | null;
+  ditambahkan_pada: string;
+  diedit_pada: string;
+  dibuat_pada: string;
+  total_eksemplar: number;
+  tersedia: number;
+  dipinjam: number;
+  rusak: number;
+  hilang: number;
 }
 
 export interface BarisAnggota {
@@ -101,6 +142,36 @@ export function dariBuku(b: Partial<Buku>): Record<string, unknown> {
   return p;
 }
 
+// ---- Eksemplar ------------------------------------------------------------
+export function keEksemplar(r: BarisEksemplar): BarisEksemplar {
+  return { ...r };
+}
+
+export function dariEksemplar(e: Partial<BarisEksemplar>): Record<string, unknown> {
+  const p: Record<string, unknown> = {};
+  if (e.buku_id !== undefined) p.buku_id = e.buku_id;
+  if (e.nomor_inventaris !== undefined) p.nomor_inventaris = e.nomor_inventaris;
+  if (e.status !== undefined) p.status = e.status;
+  if (e.kondisi_fisik !== undefined) p.kondisi_fisik = e.kondisi_fisik;
+  if (e.tanggal_pengadaan !== undefined) p.tanggal_pengadaan = e.tanggal_pengadaan;
+  if (e.keterangan !== undefined) p.keterangan = e.keterangan;
+  if (e.dibuat_pada !== undefined) p.dibuat_pada = e.dibuat_pada;
+  if (e.diedit_pada !== undefined) p.diedit_pada = e.diedit_pada;
+  return p;
+}
+
+// ---- View ringkasan per judul (v_inventaris_per_buku) ---------------------
+export function keInventarisPerBuku(r: BarisInventarisPerBuku): BarisInventarisPerBuku {
+  return { ...r };
+}
+
+// ---- Arah baca/tulis eksemplar -------------------------------------------
+/** Kiri ke kanan: baris view → tipe domain (jika dibutuhkan halaman gambar). */
+export type DariEksemplar = BarisEksemplar;
+
+/** Kiri ke kanan: tipe domain → baris view. */
+export type KeEksemplar = BarisEksemplar;
+
 // ---- Anggota --------------------------------------------------------------
 export function keAnggota(r: BarisAnggota): Anggota {
   return {
@@ -125,7 +196,6 @@ export function dariAnggota(a: Partial<Anggota>): Record<string, unknown> {
   if (a.telepon !== undefined) p.telepon = a.telepon;
   if (a.alamat !== undefined) p.alamat = a.alamat;
   if (a.jenis !== undefined) p.jenis = a.jenis;
-  if (a.bergabungPada !== undefined) p.bergabung_pada = a.bergabungPada;
   if (a.aktif !== undefined) p.aktif = a.aktif;
   if (a.foto !== undefined) p.foto = a.foto;
   return p;
@@ -168,7 +238,7 @@ export function kePengguna(p: BarisProfil): Pengguna {
     nama: p.nama,
     email: p.email,
     sandiHash: "", // tidak pernah disimpan/dikirim — Supabase Auth yang mengelola
-    peran: p.peran === "admin" ? "admin" : "user",
+    peran: p.peran === "admin" ? "admin" : p.peran === "superadmin" ? "superadmin" : "user",
     anggotaId: p.anggota_id ?? undefined,
     dibuatPada: p.dibuat_pada,
   };

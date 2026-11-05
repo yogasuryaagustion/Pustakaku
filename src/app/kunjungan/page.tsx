@@ -1,226 +1,711 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import { apiFetch } from "@/lib/api";
-import { useAuth } from "@/lib/auth";
-import { useSistem } from "@/lib/sistem";
+import { useBoleh } from "@/lib/auth";
+import { useToast } from "@/components/toast";
+import {
+  Badge,
+  Modal,
+  StatCard,
+  tanggalPanjang,
+} from "@/components/ui";
 
-// === Kios Check-in Kunjungan ================================================
-// Halaman untuk KOMPUTER PERPUSTAKAAN (tablet di pintu masuk dsb.):
-//   * Tanpa sesi login — siapa pun bisa mencatat kunjungan dengan nomor
-//     anggota (keputusan desain kios publik). Batas keamanan ada di server:
-//     tabel kunjungan default-deny (RLS) dan hanya bisa DITULIS lewat fungsi
-//     `catat_kunjungan` yang menolak nomor tak dikenal/nonaktif.
-//   * TANPA AKSES ADMIN: halaman ini masuk daftar "polos" di AppShell — tanpa
-//     sidebar, tanpa menu, tanpa tautan ke /admin/*.
-//   * TIDAK MENINGGALKAN DATA: hasil membersihkan dirinya sendiri setelah
-//     beberapa detik, bisa ditutup dengan Esc/tombol Selesai, input tidak
-//     menyimpan riwayat (autoComplete off), dan tidak ada penyimpanan lokal.
+// === Monitoring Kunjungan ==================================================
+// Halaman presensi/buku tamu di DALAM panel admin (src/components/AppShell.tsx):
+// sidebar, header, menu mobile, dan kontrol akun dipakai BERSAMA halaman admin
+// lainnya — halaman ini hanya menyediakan isinya, tanpa kerangka sendiri.
 //
-// Rekap kunjungan hanya bisa dibaca admin lewat /laporan (izin laporan.lihat).
+// Semua baris & angka dibaca dari GET /api/kunjungan (izin laporan.lihat) sesuai
+// model data sebenarnya (migrasi 202610270003): satu baris = satu check-in
+// anggota per hari (tanggal_kunjungan + waktu_masuk, zona Asia/Jakarta). Tabel
+// tidak punya kolom keluar/keperluan/area, jadi yang ditampilkan hanyalah data
+// yang benar-benar ada — tanpa placeholder yang menyesatkan.
+//
+// Check-in baru lewat POST /api/kunjungan (RPC `catat_kunjungan`) — bisa dari
+// panel ini atau dari kios perpustakaan; fungsi database menolak nomor yang
+// tidak terdaftar/nonaktif dan mencegah check-in ganda dalam sehari.
 
-const DETIK_BERSIH = 8; // layar otomatis bersih setelah ini
+const PER_HAL = 10;
 
-interface Hasil {
-  sukses: boolean;
-  judul: string;
-  rincian?: string;
-  waktu?: string;
+/** Rentang yang didukung server: maksimal 90 hari (BATAS_HARI di API). */
+type RentangId = "hari" | "7" | "14" | "30";
+
+const RENTANG: { id: RentangId; label: string; hari: number }[] = [
+  { id: "hari", label: "Hari Ini", hari: 0 },
+  { id: "7", label: "7 Hari", hari: 6 },
+  { id: "14", label: "14 Hari", hari: 13 },
+  { id: "30", label: "30 Hari", hari: 29 },
+];
+
+interface BarisKunjungan {
+  id: string;
+  anggotaId: string;
+  nama: string;
+  nomorAnggota: string;
+  /** Jenis keanggotaan (Pelajar/Mahasiswa/Umum/Staf) dari relasi `anggota`. */
+  kategori?: string | null;
+  tanggal: string; // YYYY-MM-DD
+  waktuMasuk: string; // ISO timestamptz
+}
+
+interface ResponRekap {
+  dari: string;
+  sampai: string;
+  q: string;
+  hal: number;
+  per: number;
+  total: number;
+  halTerakhir: number;
+  pengunjungUnik: number;
+  hariIni: number;
+  terpotong: boolean;
+  ringkasan: { tanggal: string; jumlah: number }[];
+  kunjungan: BarisKunjungan[];
+}
+
+/** Tanggal YYYY-MM-DD (zona Asia/Jakarta) untuk offset hari dari hari ini. */
+function tanggalOffset(hari: number): string {
+  return new Date(Date.now() + hari * 86_400_000).toLocaleDateString(
+    "sv-SE",
+    { timeZone: "Asia/Jakarta" },
+  );
+}
+
+function jamWIB(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleTimeString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Jakarta",
+  });
 }
 
 function pesanApi(e: unknown): string {
-  if (e && typeof e === "object" && "message" in e && typeof (e as Error).message === "string") {
+  if (
+    e &&
+    typeof e === "object" &&
+    "message" in e &&
+    typeof (e as Error).message === "string"
+  ) {
     return (e as Error).message;
   }
-  return "Tidak bisa terhubung ke server. Periksa koneksi Anda.";
+  return "Permintaan gagal diproses.";
 }
 
-export default function KiosKunjunganPage() {
-  const router = useRouter();
-  const { keluar } = useAuth();
-  const sistem = useSistem();
+function ikon(path: string, size = 16) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d={path} />
+    </svg>
+  );
+}
 
+function inisial(nama: string): string {
+  return (
+    nama
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((v) => v.charAt(0))
+      .join("")
+      .toUpperCase() || "?"
+  );
+}
+
+const IKON_CARI =
+  "M11 19a8 8 0 100-16 8 8 0 000 16zM21 21l-4.35-4.35";
+
+function unduhCSV(baris: BarisKunjungan[]) {
+  const kolom = [
+    "Tanggal",
+    "Waktu Masuk",
+    "Nomor Anggota",
+    "Nama",
+    "Kategori",
+  ];
+  const escapeCSV = (value: unknown) =>
+    `"${String(value ?? "").replace(/"/g, '""')}"`;
+
+  const rows = baris.map((b) => [
+    b.tanggal,
+    `${jamWIB(b.waktuMasuk)} WIB`,
+    b.nomorAnggota,
+    b.nama,
+    b.kategori || "-",
+  ]);
+
+  const csv = [kolom, ...rows]
+    .map((row) => row.map(escapeCSV).join(","))
+    .join("\r\n");
+
+  const blob = new Blob(["\uFEFF" + csv], {
+    type: "text/csv;charset=utf-8;",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `presensi-kunjungan-${tanggalOffset(0)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+export default function MonitoringKunjunganPage() {
+  const toast = useToast();
+  const bolehEkspor = useBoleh("laporan.ekspor");
+
+  const [rentang, setRentang] = useState<RentangId>("hari");
+  const [qInput, setQInput] = useState("");
+  const [q, setQ] = useState("");
+  const [hal, setHal] = useState(1);
+  // Penanda muat ulang (setelah check-in) tanpa mengubah kueri.
+  const [segar, setSegar] = useState(0);
+
+  const [modal, setModal] = useState(false);
   const [nomor, setNomor] = useState("");
-  const [hasil, setHasil] = useState<Hasil | null>(null);
   const [proses, setProses] = useState(false);
+  const [galatModal, setGalatModal] = useState("");
+  const [prosesEkspor, setProsesEkspor] = useState(false);
 
-  function bersihkan() {
-    setNomor("");
-    setHasil(null);
-  }
+  const hari =
+    RENTANG.find((r) => r.id === rentang)?.hari ?? 0;
+  const dari = tanggalOffset(-hari);
+  const sampai = tanggalOffset(0);
 
-  // Layar otomatis bersih — tidak menyisakan nama/jejak anggota sebelumnya.
+  const kunci = useMemo(() => {
+    const p = new URLSearchParams({
+      dari,
+      sampai,
+      hal: String(hal),
+      per: String(PER_HAL),
+    });
+    if (q) p.set("q", q);
+    return p.toString();
+  }, [dari, sampai, hal, q]);
+
+  const [simpanan, setSimpanan] = useState<{
+    kunci: string;
+    segar: number;
+    respon: ResponRekap;
+  } | null>(null);
+  const [galat, setGalat] = useState<{
+    kunci: string;
+    segar: number;
+    pesan: string;
+  } | null>(null);
+
   useEffect(() => {
-    if (!hasil) return;
-    const t = window.setTimeout(bersihkan, DETIK_BERSIH * 1000);
-    return () => window.clearTimeout(t);
-  }, [hasil]);
-
-  // Esc = tombol Selesai fisik di kios.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") bersihkan();
+    let batal = false;
+    apiFetch<ResponRekap>(`/api/kunjungan?${kunci}`)
+      .then((r) => {
+        if (!batal) setSimpanan({ kunci, segar, respon: r });
+      })
+      .catch((e) => {
+        if (!batal) setGalat({ kunci, segar, pesan: pesanApi(e) });
+      });
+    return () => {
+      batal = true;
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [kunci, segar]);
 
-  async function submit(e: React.FormEvent) {
+  // Pencarian diberi jeda supaya tidak memanggil server tiap ketikan.
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      setQ(qInput.trim());
+      setHal(1);
+    }, 350);
+    return () => window.clearTimeout(t);
+  }, [qInput]);
+
+  const cocok =
+    simpanan !== null &&
+    simpanan.kunci === kunci &&
+    simpanan.segar === segar;
+  const respon = cocok ? simpanan.respon : null;
+  const sedangGalat =
+    galat && galat.kunci === kunci && galat.segar === segar
+      ? galat.pesan
+      : null;
+  const memuat = !respon && !sedangGalat;
+
+  const puncak = useMemo(() => {
+    const ringkas = respon?.ringkasan ?? [];
+    return ringkas.reduce(
+      (tertinggi, x) =>
+        x.jumlah > tertinggi.jumlah ? x : tertinggi,
+      { tanggal: "", jumlah: 0 },
+    );
+  }, [respon]);
+
+  async function catatKunjungan(
+    e: React.FormEvent<HTMLFormElement>,
+  ) {
     e.preventDefault();
-    if (proses) return;
-    const isi = nomor.trim();
-    if (!isi) {
-      setHasil({ sukses: false, judul: "Nomor anggota wajib diisi." });
-      return;
-    }
-    setProses(true);
-    try {
-      const res = await apiFetch<{
-        kunjungan: { status: string; nama: string; nomorAnggota: string; waktuMasuk: string };
-        pesan: string;
-      }>("/api/kunjungan", { method: "POST", body: { nomorAnggota: isi } });
+    const nilai = nomor.trim();
+    if (!nilai || proses) return;
 
-      const waktu = new Date(res.kunjungan.waktuMasuk).toLocaleTimeString("id-ID", {
-        hour: "2-digit",
-        minute: "2-digit",
-        timeZone: "Asia/Jakarta",
+    setProses(true);
+    setGalatModal("");
+
+    try {
+      const r = await apiFetch<{
+        kunjungan?: { status?: string; nama?: string };
+        pesan?: string;
+      }>("/api/kunjungan", {
+        method: "POST",
+        body: { nomorAnggota: nilai },
       });
-      setHasil({
-        sukses: true,
-        judul: res.pesan,
-        rincian:
-          res.kunjungan.status === "baru"
-            ? "Kunjungan hari ini tercatat."
-            : "Kunjungan hari ini sudah tercatat sebelumnya.",
-        waktu,
-      });
+
+      const pesan = r.pesan ?? "Kunjungan tercatat.";
+      setNomor("");
+      setModal(false);
+      setHal(1);
+      setSegar((s) => s + 1);
+
+      if (r.kunjungan?.status === "baru") toast.sukses(pesan);
+      else toast.info(pesan);
     } catch (err) {
-      setHasil({ sukses: false, judul: pesanApi(err) });
+      // Galat form tetap inline (konvensi aplikasi), bukan toast.
+      setGalatModal(pesanApi(err));
     } finally {
       setProses(false);
-      setNomor(""); // input tidak pernah menyimpan nomor setelah diproses
     }
   }
 
-  function keluarDariKios() {
-    bersihkan();
-    keluar();
-    router.replace("/login");
+  async function eksporCSV() {
+    setProsesEkspor(true);
+    try {
+      const p = new URLSearchParams({
+        dari,
+        sampai,
+        semua: "true",
+      });
+      if (q) p.set("q", q);
+      const r = await apiFetch<ResponRekap>(
+        `/api/kunjungan?${p.toString()}`,
+      );
+      if (r.kunjungan.length === 0) {
+        toast.info("Tidak ada baris pada filter aktif.");
+        return;
+      }
+      unduhCSV(r.kunjungan);
+      toast.sukses(
+        r.total > r.kunjungan.length
+          ? `Ekspor ${r.kunjungan.length} baris pertama dari ${r.total} baris filter aktif.`
+          : `Ekspor berhasil — ${r.kunjungan.length} baris sesuai filter aktif.`,
+      );
+    } catch (err) {
+      toast.gagal(pesanApi(err));
+    } finally {
+      setProsesEkspor(false);
+    }
   }
 
+  function resetFilter() {
+    setRentang("hari");
+    setQInput("");
+    setQ("");
+    setHal(1);
+  }
+
+  const adaFilter = rentang !== "hari" || q !== "";
+
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Kepala: identitas perpustakaan + tombol keluar untuk petugas */}
-      <header className="border-b border-[var(--border)] bg-white">
-        <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-4 px-5 py-4">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl grad-brand text-white grid place-items-center">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 19.5A2.5 2.5 0 016.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
-              </svg>
-            </div>
-            <div className="leading-tight">
-              <div className="font-bold">{sistem.nama}</div>
-              <div className="text-xs text-[var(--muted)]">Check-in Kunjungan</div>
-            </div>
+    <main className="min-w-0 space-y-6 pb-8">
+      {/* JUDUL + AKSI */}
+      <section className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+              Buku Kunjungan &amp; Presensi
+            </h1>
+            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              Check-in langsung
+            </span>
           </div>
-          <button className="btn btn-ghost" onClick={keluarDariKios} title="Akhiri sesi petugas pada komputer ini">
-            Keluar
-          </button>
-        </div>
-      </header>
 
-      <main className="flex flex-1 items-center justify-center p-6">
-        <div className="w-full max-w-3xl space-y-5">
-          {/* Form check-in */}
-          <form onSubmit={submit} className="card p-6 sm:p-8">
-            <label htmlFor="nomor-anggota" className="label">
-              Scan atau ketik nomor anggota
-            </label>
-            <input
-              id="nomor-anggota"
-              className="input mt-2 w-full text-2xl sm:text-3xl tracking-wider"
-              placeholder="AGT-0001"
-              value={nomor}
-              onChange={(e) => setNomor(e.target.value)}
-              autoComplete="off"
-              autoCapitalize="characters"
-              autoCorrect="off"
-              spellCheck={false}
-              autoFocus
-              disabled={proses}
-            />
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-              <span className="text-xs text-[var(--muted)]">
-                Tekan Enter setelah memindai kartu.
-              </span>
-              <div className="flex gap-2">
-                <button type="button" className="btn btn-ghost" onClick={bersihkan}>
-                  Selesai (Esc)
-                </button>
-                <button type="submit" className="btn btn-primary" disabled={proses}>
-                  {proses ? "Memeriksa…" : "Check-in"}
-                </button>
-              </div>
-            </div>
-          </form>
-
-          {/* Hasil check-in */}
-          {hasil && (
-            <div
-              role="status"
-              aria-live="polite"
-              className={`card p-6 sm:p-8 ${
-                hasil.sukses
-                  ? "border-emerald-200 bg-emerald-50"
-                  : "border-rose-200 bg-rose-50"
-              }`}
-            >
-              <div className="flex items-start gap-4">
-                <span
-                  className={`grid h-12 w-12 shrink-0 place-items-center rounded-full ${
-                    hasil.sukses ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
-                  }`}
-                >
-                  {hasil.sukses ? (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M5 13l4 4L19 7" />
-                    </svg>
-                  ) : (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 8v5M12 17h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" />
-                    </svg>
-                  )}
-                </span>
-                <div className="min-w-0">
-                  <div
-                    className={`text-xl font-bold tracking-tight ${
-                      hasil.sukses ? "text-emerald-900" : "text-rose-900"
-                    }`}
-                  >
-                    {hasil.judul}
-                  </div>
-                  {(hasil.rincian || hasil.waktu) && (
-                    <div className="mt-1 text-sm text-slate-700">
-                      {hasil.rincian}
-                      {hasil.waktu && <> · pukul {hasil.waktu} WIB</>}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <p className="mt-4 text-xs text-[var(--muted)]">
-                Layar membersihkan diri otomatis dalam beberapa detik — tidak perlu menekan apa pun.
-              </p>
-            </div>
-          )}
-
-          <p className="text-center text-xs text-[var(--muted)]">
-            Bila kartu tidak bisa dipindai atau berstatus tidak aktif, silakan hubungi petugas
-            perpustakaan.
+          <p className="mt-1 text-sm leading-6 text-slate-500">
+            Log pengunjung perpustakaan — satu anggota tercatat sekali per
+            hari lengkap dengan waktu check-in (WIB).
           </p>
         </div>
-      </main>
-    </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => {
+              setGalatModal("");
+              setModal(true);
+            }}
+          >
+            Catat Kunjungan
+          </button>
+
+          {bolehEkspor && (
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => void eksporCSV()}
+              disabled={prosesEkspor || memuat}
+            >
+              {prosesEkspor ? "Menyiapkan…" : "Ekspor CSV"}
+            </button>
+          )}
+        </div>
+      </section>
+
+      {!bolehEkspor && (
+        <p className="text-xs text-[var(--muted)]">
+          Ekspor dinonaktifkan oleh kebijakan akses (izin laporan.ekspor).
+        </p>
+      )}
+
+      {sedangGalat && (
+        <div
+          role="alert"
+          className="flex flex-col justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 sm:flex-row sm:items-center"
+        >
+          <span>{sedangGalat}</span>
+          <button
+            type="button"
+            className="shrink-0 font-semibold underline"
+            onClick={() => setSegar((s) => s + 1)}
+          >
+            Coba muat ulang
+          </button>
+        </div>
+      )}
+
+      {/* STATISTIK — hanya dihitung bila respons tersedia (hindari angka dari data kosong). */}
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          label="Kunjungan Hari Ini"
+          value={respon ? respon.hariIni : "—"}
+          sub="check-in hari ini (WIB)"
+          tone="brand"
+          ikon="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z"
+        />
+        <StatCard
+          label="Total Kunjungan"
+          value={respon ? respon.total : "—"}
+          sub={`rentang ${tanggalPanjang(dari)} – ${tanggalPanjang(sampai)}`}
+          tone="sky"
+          ikon="M3 12h4l3 8 4-16 3 8h4"
+        />
+        <StatCard
+          label="Anggota Unik"
+          value={respon ? respon.pengunjungUnik : "—"}
+          sub="kartu berbeda pada rentang ini"
+          tone="amber"
+          ikon="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"
+        />
+        <StatCard
+          label="Hari Terpadat"
+          value={puncak.jumlah === 0 ? "—" : puncak.jumlah}
+          sub={
+            puncak.tanggal
+              ? `kunjungan pada ${tanggalPanjang(puncak.tanggal)}`
+              : "belum ada kunjungan pada rentang ini"
+          }
+          tone="rose"
+          ikon="M3 3v18h18M7 15l4-5 4 3 5-7"
+        />
+      </section>
+
+      {/* FILTER */}
+      <section className="card p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <span className="label">Rentang tanggal</span>
+            <div className="mt-1 flex flex-wrap gap-2">
+              {RENTANG.map((r) => (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => {
+                    setRentang(r.id);
+                    setHal(1);
+                  }}
+                  className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                    rentang === r.id
+                      ? "bg-[var(--brand)] text-white shadow-[var(--sh-1)]"
+                      : "border border-[var(--border)] bg-white text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-1 flex-wrap items-end gap-3">
+            <div className="min-w-[14rem] flex-1">
+              <label className="label" htmlFor="kunjungan-cari">
+                Cari nomor / nama anggota
+              </label>
+              <div className="mt-1 flex overflow-hidden rounded-lg border border-[var(--border)] bg-white shadow-sm">
+                <span
+                  className="shrink-0 border-r border-[var(--border)] bg-slate-50 text-[var(--muted)]"
+                  aria-hidden
+                >
+                  <span className="block px-3 py-2.5">
+                    {ikon(IKON_CARI, 15)}
+                  </span>
+                </span>
+                <input
+                  id="kunjungan-cari"
+                  className="input min-w-0 border-0 p-2.5 pl-2"
+                  placeholder="Nomor anggota / nama…"
+                  value={qInput}
+                  onChange={(e) => setQInput(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={resetFilter}
+              disabled={!adaFilter && hal === 1}
+            >
+              Atur ulang filter
+            </button>
+          </div>
+        </div>
+
+        {respon?.terpotong && (
+          <p className="mt-3 text-xs text-amber-600">
+            Jumlah unik &amp; rekap harian dihitung dari 5.000 kunjungan
+            terakhir pada rentang ini — persempit rentang tanggal untuk angka
+            yang lebih teliti.
+          </p>
+        )}
+      </section>
+
+      {/* TABEL */}
+      <section className="card overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] px-5 py-4">
+          <div>
+            <h3 className="font-bold">Daftar Presensi Kunjungan</h3>
+            <p className="mt-0.5 text-xs text-[var(--muted)]">
+              {memuat
+                ? "Memuat…"
+                : sedangGalat
+                  ? "Gagal memuat data kunjungan."
+                  : `${respon?.total ?? 0} baris${
+                      q ? ` untuk pencarian “${q}”` : ""
+                    } · halaman ${respon?.hal ?? 1} dari ${
+                      respon?.halTerakhir ?? 1
+                    }`}
+            </p>
+          </div>
+        </div>
+
+        {sedangGalat ? (
+          <div className="p-10 text-center">
+            <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-rose-50 text-rose-500">
+              {ikon("M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z", 22)}
+            </div>
+            <h4 className="font-semibold">Data kunjungan gagal dimuat</h4>
+            <p className="mt-1 text-sm text-[var(--muted)]">{sedangGalat}</p>
+            <button
+              type="button"
+              className="btn btn-ghost mt-4"
+              onClick={() => setSegar((s) => s + 1)}
+            >
+              Coba muat ulang
+            </button>
+          </div>
+        ) : memuat ? (
+          <div className="p-10 text-center text-sm text-[var(--muted)]">
+            <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-[var(--brand)]" />
+            Memuat data presensi…
+          </div>
+        ) : respon!.kunjungan.length === 0 ? (
+          <div className="p-10 text-center">
+            <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-slate-100 text-[var(--muted)]">
+              {ikon("M11 19a8 8 0 100-16 8 8 0 000 16zM21 21l-4.35-4.35", 22)}
+            </div>
+            <h4 className="font-semibold">Belum ada kunjungan tercatat</h4>
+            <p className="mt-1 text-sm text-[var(--muted)]">
+              Ubah rentang tanggal, periksa kata kunci, atau catat kunjungan
+              baru.
+            </p>
+            <button
+              type="button"
+              className="btn btn-ghost mt-4"
+              onClick={resetFilter}
+            >
+              Atur ulang filter
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="table-base">
+                <thead>
+                  <tr>
+                    <th className="w-14">No.</th>
+                    <th>Pengunjung</th>
+                    <th>Kategori</th>
+                    <th>Tanggal Kunjungan</th>
+                    <th>Waktu Masuk</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {respon!.kunjungan.map((b, i) => {
+                    const hariIni = b.tanggal === tanggalOffset(0);
+                    return (
+                      <tr key={b.id}>
+                        <td className="text-[var(--muted)]">
+                          {(respon!.hal - 1) * respon!.per + i + 1}
+                        </td>
+                        <td>
+                          <div className="flex items-center gap-3">
+                            <span
+                              className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg text-xs font-bold text-white ${
+                                i % 2 === 0 ? "grad-brand" : "bg-emerald-600"
+                              }`}
+                              aria-hidden
+                            >
+                              {inisial(b.nama)}
+                            </span>
+                            <span className="min-w-0">
+                              <span className="block font-medium text-slate-900">
+                                {b.nama}
+                              </span>
+                              <span className="block font-mono text-xs text-[var(--muted)]">
+                                {b.nomorAnggota}
+                              </span>
+                            </span>
+                          </div>
+                        </td>
+                        <td>
+                          <Badge tone="sky">
+                            {b.kategori || "Umum"}
+                          </Badge>
+                        </td>
+                        <td className="whitespace-nowrap">
+                          {tanggalPanjang(b.tanggal)}
+                        </td>
+                        <td className="whitespace-nowrap">
+                          {jamWIB(b.waktuMasuk)}{" "}
+                          <span className="text-xs text-[var(--muted)]">
+                            WIB
+                          </span>
+                        </td>
+                        <td>
+                          <Badge tone={hariIni ? "green" : "slate"}>
+                            {hariIni ? "Hari Ini" : "Riwayat"}
+                          </Badge>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] px-5 py-3">
+              <span className="text-xs text-[var(--muted)]">
+                Menampilkan {respon!.kunjungan.length} dari{" "}
+                {respon!.total} baris
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  disabled={respon!.hal <= 1}
+                  onClick={() => setHal((h) => Math.max(1, h - 1))}
+                >
+                  Sebelumnya
+                </button>
+                <span className="text-xs text-[var(--muted)]">
+                  Hal. {respon!.hal} / {respon!.halTerakhir}
+                </span>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  disabled={respon!.hal >= respon!.halTerakhir}
+                  onClick={() => setHal((h) => h + 1)}
+                >
+                  Berikutnya
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* MODAL CHECK-IN */}
+      <Modal
+        open={modal}
+        onClose={() => setModal(false)}
+        title="Catat Kunjungan Baru"
+      >
+        <form onSubmit={catatKunjungan}>
+          <label className="label" htmlFor="nomor-anggota">
+            Nomor Anggota
+          </label>
+          <input
+            id="nomor-anggota"
+            className="input mt-1"
+            value={nomor}
+            onChange={(e) => setNomor(e.target.value)}
+            autoFocus
+            required
+            autoComplete="off"
+            placeholder="Contoh: AGT-0001"
+          />
+
+          <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+            Nomor harus terdaftar dan masih aktif. Sistem menolak nomor yang
+            tidak dikenal, dan satu anggota hanya tercatat sekali per hari.
+          </p>
+
+          {galatModal && (
+            <p
+              role="alert"
+              className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700"
+            >
+              {galatModal}
+            </p>
+          )}
+
+          <div className="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => setModal(false)}
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={proses}
+            >
+              {proses ? "Menyimpan…" : "Catat Kunjungan"}
+            </button>
+          </div>
+        </form>
+      </Modal>
+    </main>
   );
 }

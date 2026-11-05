@@ -26,7 +26,7 @@ export interface Anggota {
   email: string;
   telepon: string;
   alamat: string;
-  jenis: "Pelajar" | "Umum" | "Staf";
+  jenis: "Pelajar" | "Mahasiswa" | "Umum" | "Staf";
   bergabungPada: string; // ISO date
   aktif: boolean;
   /** Foto profil anggota (data URL hasil unggahan, sudah dikecilkan).

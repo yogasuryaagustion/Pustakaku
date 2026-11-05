@@ -5,6 +5,7 @@ import {
   dariSupabase,
   jalankan,
   json,
+  konteksPublik,
   konteksRoute,
 } from "@/lib/supabase/konteks";
 import { catatJejakServer } from "@/lib/supabase/jejak";
@@ -15,7 +16,8 @@ export async function GET() {
   return jalankan(async () => {
     // RLS: admin melihat semua kartu; anggota biasa hanya kartu miliknya
     // (dibutuhkan panel & halaman profil); tamu tidak melihat apa pun.
-    const k = await konteksRoute();
+    // GET ini tidak membaca k.pengguna → konteksPublik tanpa validasi sesi.
+    const k = await konteksPublik();
     const { data, error } = await k.supabase
       .from("anggota")
       .select("*")

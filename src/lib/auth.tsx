@@ -8,7 +8,8 @@ import {
   useSyncExternalStore,
 } from "react";
 import { apiFetch } from "./api";
-import { ambilKebijakan, cekIzin, peranEfektif, useKebijakan } from "./akses";
+import { cekIzin, peranEfektif } from "./akses";
+import { ambilKebijakan, useKebijakan } from "./kebijakan";
 
 // === Autentikasi: Supabase Auth =============================================
 // Kata sandi dikelola sepenuhnya oleh Supabase Auth (bcrypt di server mereka).
@@ -18,7 +19,9 @@ import { ambilKebijakan, cekIzin, peranEfektif, useKebijakan } from "./akses";
 // Sesi disimpan sebagai cookie oleh @supabase/ssr; klien di sini hanya membaca
 // hasil /api/auth/* sehingga tidak ada token yang disimpan di JavaScript.
 
-export type Peran = "admin" | "user";
+// Peran aplikasi (nilainya identik dengan kolom profiles.peran di database).
+// Super Admin = pengelola sistem; Admin = petugas operasional; user = anggota.
+export type Peran = "admin" | "user" | "superadmin";
 
 export interface Pengguna {
   id: string;
@@ -70,7 +73,8 @@ async function muatSesi(): Promise<void> {
   try {
     const { pengguna } = await apiFetch<{ pengguna: Pengguna | null }>("/api/auth/sesi");
     snapshot = { ...snapshot, pengguna: pengguna ?? null, siap: true };
-    if (pengguna?.peran === "admin") await muatDaftar();
+    // Daftar akun hanya untuk Super Admin — /api/akun menolak peran lain.
+    if (pengguna?.peran === "superadmin") await muatDaftar();
     else snapshot = { ...snapshot, daftar: [] };
   } catch (e) {
     snapshot = { ...snapshot, pengguna: null, siap: true };
@@ -105,7 +109,11 @@ function ambilSnapshot(): Snapshot {
 }
 
 function setPengguna(p: Pengguna | null, daftar?: Pengguna[]) {
-  snapshot = { pengguna: p, daftar: daftar ?? (p?.peran === "admin" ? snapshot.daftar : []), siap: true };
+  snapshot = {
+    pengguna: p,
+    daftar: daftar ?? (p?.peran === "superadmin" ? snapshot.daftar : []),
+    siap: true,
+  };
   beritahu();
 }
 
@@ -126,6 +134,7 @@ interface AuthState {
     email: string;
     sandi: string;
     anggota?: InputKartu;
+    setuju?: boolean;
   }) => Promise<HasilAuth & { pengguna?: Pengguna | null }>;
   masuk: (email: string, sandi: string) => Promise<HasilAuth & { pengguna?: Pengguna }>;
   keluar: () => void;
@@ -141,6 +150,8 @@ interface AuthState {
     anggotaId?: string;
   }) => Promise<HasilAuth>;
   resetSandi: (id: string, sandiBaru: string) => Promise<HasilAuth>;
+  /** Ganti peran akun yang sudah ada (Super Admin / Admin / Anggota). */
+  ubahPeran: (id: string, peran: Peran) => Promise<HasilAuth>;
   hapusAkun: (id: string) => Promise<HasilAuth>;
 }
 
@@ -173,7 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         body: { email, sandi },
       });
       setPengguna(res.pengguna);
-      if (res.pengguna.peran === "admin") void muatDaftar();
+      if (res.pengguna.peran === "superadmin") void muatDaftar();
       return {
         ok: true,
         pesan: res.pesan || `Selamat datang, ${res.pengguna.nama}.`,
@@ -198,7 +209,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         method: "PATCH",
         body: patch,
       });
-      setPengguna(res.pengguna, res.pengguna.peran === "admin" ? snapshot.daftar : []);
+      setPengguna(res.pengguna, res.pengguna.peran === "superadmin" ? snapshot.daftar : []);
       return { ok: true, pesan: res.pesan || "Profil diperbarui." };
     } catch (e) {
       return { ok: false, pesan: pesanApi(e) };
@@ -242,6 +253,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const ubahPeran = useCallback<AuthState["ubahPeran"]>(async (id, peran) => {
+    try {
+      const res = await apiFetch<{ ok: boolean; pesan: string }>(`/api/akun/${id}`, {
+        method: "PATCH",
+        body: { peran },
+      });
+      // Muat ulang daftar akun supaya tabel, hitungan peran, dan filter
+      // langsung mencerminkan peran baru.
+      await muatDaftar();
+      return { ok: true, pesan: res.pesan || "Peran akun diperbarui." };
+    } catch (e) {
+      return { ok: false, pesan: pesanApi(e) };
+    }
+  }, []);
+
   const hapusAkun = useCallback<AuthState["hapusAkun"]>(async (id) => {
     try {
       const res = await apiFetch<{ ok: boolean; pesan: string }>(`/api/akun/${id}`, {
@@ -267,9 +293,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       gantiSandi,
       buatAkun,
       resetSandi,
+      ubahPeran,
       hapusAkun,
     }),
-    [s, daftar, masuk, keluar, ubahProfil, gantiSandi, buatAkun, resetSandi, hapusAkun]
+    [s, daftar, masuk, keluar, ubahProfil, gantiSandi, buatAkun, resetSandi, ubahPeran, hapusAkun]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

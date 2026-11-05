@@ -35,7 +35,7 @@ export async function POST(request: Request) {
 
     // Perbarui konteks agar tautan kartu & jejak memakai sesi yang baru.
     k.pengguna = kePengguna(profil as BarisProfil);
-    k.peran = profil.peran === "admin" ? "admin" : "user";
+    k.peran = profil.peran === "superadmin" ? "superadmin" : profil.peran === "admin" ? "admin" : "user";
     await tautkanKartuSaya(k);
 
     await k.supabase.from("log_aktivitas").insert({
@@ -54,7 +54,12 @@ export async function POST(request: Request) {
         nama: profil.nama,
         email: profil.email,
         sandiHash: "",
-        peran: profil.peran === "admin" ? "admin" : "user",
+        peran:
+          profil.peran === "superadmin"
+            ? "superadmin"
+            : profil.peran === "admin"
+              ? "admin"
+              : "user",
         anggotaId: profil.anggota_id ?? undefined,
         dibuatPada: profil.dibuat_pada,
       },

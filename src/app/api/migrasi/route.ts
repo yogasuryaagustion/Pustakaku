@@ -51,7 +51,8 @@ function teks(v: unknown): string {
 
 export async function POST(request: Request) {
   return jalankan(async () => {
-    const k = await konteksRoute({ wajibMasuk: true, wajibAdmin: true });
+    // Gerbang peran: /admin/migrasi khusus SUPER ADMIN (RUTE_PERAN).
+    const k = await konteksRoute({ wajibMasuk: true, wajibSuperAdmin: true });
     const body = (await bacaBody(request)) as Record<string, unknown> | null;
     if (!body) throw new GalatApi("Payload migrasi tidak valid.");
     const pratinjau = body.pratinjau === true;

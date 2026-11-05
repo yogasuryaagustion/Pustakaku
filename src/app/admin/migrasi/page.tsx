@@ -678,7 +678,7 @@ function KepalaMigrasi({ jumlahKunci }: { jumlahKunci: number }) {
       </p>
       <div className="mt-3 flex flex-wrap gap-2 text-xs">
         <span className="rounded-full bg-[var(--brand-soft)] px-2.5 py-1 font-semibold text-[var(--brand)]">
-          Halaman khusus admin (gerbang peran)
+          Halaman khusus Super Admin (gerbang peran)
         </span>
         <span className="rounded-full bg-slate-100 px-2.5 py-1 font-semibold text-slate-600">
           Pratinjau dulu, impor belakangan

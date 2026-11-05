@@ -12,15 +12,16 @@ import {
   cariIzinRute,
   cariPeranRute,
   peranEfektif,
+  petugas,
   RUTE_TERBUKA,
   tujuanRumah,
-  useKebijakan,
   type PeranAkses,
 } from "@/lib/akses";
 import { useSistem } from "@/lib/sistem";
 import { ToastProvider } from "@/components/toast";
 import { Avatar } from "@/components/ui";
-
+import { PanelLeftClose } from "@/components/animate-ui/icons/panel-left-close";
+import { useKebijakan } from "@/lib/kebijakan";
 // Pemetaan rute → izin, matriks peran, dan tujuan rumah semuanya mengikuti
 // kebijakan di src/lib/akses.ts — mengubahnya lewat /admin/akses langsung
 // menutup/membuka halaman, tombol, dan mutasi tanpa menyentuh kode.
@@ -62,9 +63,20 @@ const NAV: {
   {
     grup: "MENU UTAMA",
     href: "/panel/pinjaman",
-    label: "Pinjaman Saya",
+    label: "Peminjaman Saya",
     icon: "M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01",
     izin: "panel.pinjaman",
+  },
+  // Riwayat peminjaman anggota — tab "Riwayat" dari halaman pinjaman yang
+  // dijadikan halaman sendiri sesuai menu panel anggota.
+
+  {
+    grup: "MENU UTAMA",
+    href: "/anggota/kartu",
+    label: "Kartu Anggota",
+    icon: "M2 7h20M4 5h16a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V7a2 2 0 012-2z M6 15h4",
+    izin: "kartu.lihat",
+    hanyaPeran: ["user"],
   },
   {
     grup: "Utama",
@@ -76,12 +88,19 @@ const NAV: {
   {
     grup: "Utama",
     href: "/anggota",
-    label: "Data Anggota",
-    icon: "M16 20v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2 M9 10a4 4 0 100-8 4 4 0 000 8 M22 20v-2a4 4 0 00-3-3.87",
+    label: "Manajemen Pengguna",
+    icon: "M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2 M9 11a4 4 0 100-8 4 4 0 000 8 M22 21v-2a4 4 0 00-3-3.87 M16 3.13a4 4 0 010 7.75",
     izin: "anggota.lihat",
   },
   // Analitik: statistik kunjungan (halaman sendiri) & laporan — keduanya
   // membaca sumber data kunjungan yang sama lewat /api/kunjungan.
+  {
+    grup: "Analitik",
+    href: "/kunjungan",
+    label: "Statistik Kunjungan",
+    icon: "M22 11v1a10 10 0 11-20 0v-1M1 11h20M9 8l-1 4-2-3-4-1",
+    izin: "laporan.lihat",
+  },
   {
     grup: "Analitik",
     href: "/laporan",
@@ -89,21 +108,14 @@ const NAV: {
     icon: "M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8",
     izin: "laporan.lihat",
   },
-  {
-    grup: "Sistem",
-    href: "/admin/akun",
-    label: "Kelola Akun",
-    icon: "M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2 M9 11a4 4 0 100-8 4 4 0 000 8z M19 16m-2 0a2 2 0 104 0a2 2 0 10-4 0 M19 12.5v1 M19 18.5v1 M15.5 16h1 M21.5 16h1",
-    izin: "akun.kelola",
-  },
-  // Kontrol Akses: dijaga gerbang peran admin (RUTE_PERAN di lib/akses.ts),
+  // Kontrol Akses: dijaga gerbang peran Super Admin (RUTE_PERAN di lib/akses.ts),
   // bukan izin matriks — karena itu tanpa prop `izin`, cukup hanyaPeran.
   {
     grup: "Sistem",
     href: "/admin/akses",
     label: "Kelola Akses",
     icon: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z M9 12l2 2 4-4",
-    hanyaPeran: ["admin"],
+    hanyaPeran: ["superadmin"],
   },
   {
     grup: "Sistem",
@@ -112,17 +124,17 @@ const NAV: {
     icon: "M12 15a3 3 0 100-6 3 3 0 000 6z M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51h.01a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z",
     izin: "pengaturan.kelola",
   },
-  // CATATAN: "Migrasi Data" (/admin/migrasi) dan "Kios Kunjungan" (/kunjungan)
-  // sengaja TIDAK dimasukkan ke NAV — disembunyikan dari sidebar & navigasi
-  // mobile atas permintaan, tetapi keduanya tetap bisa dibuka lewat URL:
-  //   * /admin/migrasi dijaga gerbang peran admin (RUTE_PERAN);
-  //   * /kunjungan tetap rute terbuka (RUTE_TERBUKA) dan tampil POLOS
-  //     (lihat daftar pathname di bawah) sehingga layar kios tidak membuka
-  //     sidebar/menu admin.
+  // CATATAN: "Migrasi Data" (/admin/migrasi) sengaja TIDAK dimasukkan ke NAV —
+  // disembunyikan dari sidebar & navigasi mobile, tetapi tetap bisa dibuka lewat URL:
+  //   * /admin/migrasi dijaga gerbang peran Super Admin (RUTE_PERAN);
+  //
+  // Monitoring Kunjungan (/kunjungan) ikut NAV di atas sebagai halaman panel:
+  // rutenya dijaga izin laporan.lihat (RUTE_IZIN di src/lib/akses.ts) dan tampil
+  // dengan sidebar yang sama seperti halaman admin lainnya.
   {
     grup: "MENU UTAMA",
     href: "/panel/profil",
-    label: "Profil",
+    label: "Profil Saya",
     icon: "M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2 M9 11a4 4 0 100-8 4 4 0 000 8z M19 16m-2 0a2 2 0 104 0a2 2 0 10-4 0 M19 12.5v1 M19 18.5v1 M15.5 16h1 M21.5 16h1",
     izin: "panel.profil",
     hanyaPeran: ["user"],
@@ -139,26 +151,55 @@ const NAV: {
 
 function Logo() {
   const sistem = useSistem();
+
   return (
-    <div className="flex items-center gap-2.5 px-5 py-5 border-b border-[var(--border)]">
-      <div className="h-10 w-10 rounded-xl grad-brand text-white grid place-items-center shadow-[var(--sh-2)]">
+    <div className="flex min-w-0 items-center gap-3">
+      <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#087F72] shadow-sm">
         <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
+          width="29"
+          height="29"
+          viewBox="0 0 32 32"
           fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
         >
-          <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+          {/* Bentuk buku */}
+          <path
+            d="M4 8.5C8.5 7 12.5 8 16 11V26C12.5 23 8.5 22 4 23.5V8.5Z"
+            fill="white"
+            fillOpacity="0.96"
+          />
+          <path
+            d="M28 8.5C23.5 7 19.5 8 16 11V26C19.5 23 23.5 22 28 23.5V8.5Z"
+            fill="#D7F3EC"
+          />
+
+          {/* Simbol P */}
+          <path
+            d="M11 20V12.5H17.5C20 12.5 21.5 14 21.5 16C21.5 18 20 19.5 17.5 19.5H13"
+            stroke="#087F72"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+
+          {/* Garis tengah buku */}
+          <path
+            d="M16 11V26"
+            stroke="#087F72"
+            strokeWidth="1.2"
+            strokeOpacity="0.65"
+          />
         </svg>
       </div>
-      <div className="leading-tight">
-        <div className="font-bold text-[15px]">{sistem.nama}</div>
-        <div className="text-[11px] text-[var(--muted)]">{sistem.tagline}</div>
+
+      <div className="min-w-0 leading-tight">
+        <div className="truncate text-[15px] font-bold text-[var(--navy)]">
+          {sistem.nama}
+        </div>
+        <div className="mt-1 truncate text-[11px] text-[var(--text-secondary)]">
+          {sistem.tagline}
+        </div>
       </div>
     </div>
   );
@@ -169,129 +210,251 @@ function NavItem({
   label,
   icon,
   active,
+  collapsed = false,
 }: {
   href: string;
   label: string;
   icon: string;
   active: boolean;
+  collapsed?: boolean;
 }) {
   return (
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
-      className={`relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-        active
-          ? "bg-[var(--brand-soft)] text-[var(--brand)] shadow-[inset_3px_0_0_0_var(--brand)]"
-          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-      }`}
+      title={collapsed ? label : undefined}
+      className={`
+        group relative flex min-h-[46px] items-center rounded-xl
+        transition-all duration-200 ease-out
+        ${collapsed ? "justify-center px-2" : "gap-3 px-3"}
+        ${
+          active
+            ? "bg-[#E7F5F2] text-[#087F72]"
+            : "text-slate-500 hover:bg-slate-50 hover:text-[#087F72]"
+        }
+      `}
     >
-      <svg
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+      {/* Indikator menu aktif */}
+      {active && (
+        <span className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r-full bg-[#087F72]" />
+      )}
+
+      {/* Area ikon */}
+      <span
+        className={`
+          grid h-9 w-9 shrink-0 place-items-center rounded-lg
+          transition-all duration-200
+          ${
+            active
+              ? "bg-white text-[#087F72] shadow-sm"
+              : "text-current group-hover:bg-white"
+          }
+        `}
       >
-        <path d={icon} />
-      </svg>
-      {label}
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d={icon} />
+        </svg>
+      </span>
+
+      {/* Label menu */}
+      {!collapsed && (
+        <span className="min-w-0 truncate text-[13px] font-semibold">
+          {label}
+        </span>
+      )}
+
+      {/* Penanda menu aktif */}
+      {!collapsed && active && (
+        <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#087F72]" />
+      )}
     </Link>
   );
 }
 
-function Sidebar({ peran }: { peran: Peran }) {
+function Sidebar({
+  peran,
+  collapsed,
+  onToggle,
+}: {
+  peran: PeranAkses;
+  collapsed: boolean;
+  onToggle: () => void;
+}) {
   const pathname = usePathname();
   const kebijakan = useKebijakan();
   const { sedangMasuk } = useAuth();
   const { anggota } = useLibrary();
-  // Kartu anggota sesi ini (untuk foto profil pada kartu sapaan).
+
   const kartu = sedangMasuk
     ? (anggota.find((a) => a.id === sedangMasuk.anggotaId) ??
       anggota.find(
         (a) => a.email.toLowerCase() === sedangMasuk.email.toLowerCase(),
       ))
     : undefined;
-  // Menu mengikuti kebijakan izin — bukan daftar peran statis.
+
   const items = NAV.filter(
     (n) =>
       (!n.izin || cekIzin(kebijakan, peran, n.izin)) &&
       (!n.hanyaPeran || n.hanyaPeran.includes(peran)),
   );
-  // Label grup mengikuti peran: anggota memakai struktur MENU UTAMA / LAYANAN.
+  console.log("[DEBUG SIDEBAR]", {
+    peran,
+    izinAnggota: cekIzin(kebijakan, peran, "anggota.lihat"),
+    nilaiMatriks: kebijakan.izin?.[peran]?.["anggota.lihat"],
+    menuManajemenPengguna: NAV.some(
+      (n) => n.href === "/anggota" && n.izin === "anggota.lihat",
+    ),
+    hasilFilter: items.map((n) => ({
+      href: n.href,
+      label: n.label,
+    })),
+  });
+
   const labelGrup = (n: (typeof NAV)[number]) =>
     peran === "user" && n.grupUser ? n.grupUser : n.grup;
+
   const grupTampil = Array.from(new Set(items.map(labelGrup)));
+
   return (
-    <aside className="w-64 shrink-0 bg-[var(--card)] border-r border-[var(--border)] flex flex-col">
-      <Logo />
-      <div className="flex-1 overflow-y-auto px-3 pt-4 pb-2 space-y-5">
+    <aside
+      className={`sticky top-4 flex h-[calc(100vh-2rem)] shrink-0 flex-col overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--sh-3)] transition-[width] duration-300 ${
+        collapsed ? "w-[88px]" : "w-[260px]"
+      }`}
+    >
+      {/* HEADER LOGO DAN TOGGLE SIDEBAR */}
+      <div
+        className={`flex h-[84px] shrink-0 items-center border-b border-[var(--border)] ${
+          collapsed ? "justify-center gap-1 px-2" : "justify-between gap-2 px-5"
+        }`}
+      >
+        <div className="min-w-0 flex-1">
+          <Logo />
+        </div>
+
+        <button
+          type="button"
+          onClick={onToggle}
+          title={collapsed ? "Perluas sidebar" : "Ciutkan sidebar"}
+          aria-label={collapsed ? "Perluas sidebar" : "Ciutkan sidebar"}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-soft)] hover:text-[#087F72]"
+        >
+          <PanelLeftClose
+            size={21}
+            className={`transition-transform duration-300 ${
+              collapsed ? "rotate-180" : ""
+            }`}
+          />
+        </button>
+      </div>
+
+      {/* MENU NAVIGASI */}
+      <div className="flex-1 space-y-6 overflow-y-auto px-3 py-5">
         {grupTampil.map((g) => (
           <div key={g}>
-            <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
-              {g}
-            </div>
-            <nav className="space-y-1">
+            {!collapsed && (
+              <div className="px-3 pb-2.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                {g}
+              </div>
+            )}
+
+            <nav aria-label={g} className="space-y-1">
               {items
                 .filter((n) => labelGrup(n) === g)
                 .map((n) => (
-                  <NavItem
-                    key={n.href}
-                    href={n.href}
-                    label={n.label}
-                    icon={n.icon}
-                    active={pathname === n.href}
-                  />
+                  <div key={n.href} title={collapsed ? n.label : undefined}>
+                    <NavItem
+                      href={n.href}
+                      label={n.label}
+                      icon={n.icon}
+                      collapsed={collapsed}
+                      active={
+                        pathname === n.href ||
+                        (n.href !== "/panel" &&
+                          n.href !== "/dashboard" &&
+                          pathname.startsWith(n.href + "/"))
+                      }
+                    />
+                  </div>
                 ))}
             </nav>
           </div>
         ))}
-        {items.length === 0 && (
-          <p className="px-3 py-2 text-xs text-[var(--muted)]">
+
+        {items.length === 0 && !collapsed && (
+          <p className="px-3 py-2 text-xs text-[var(--text-secondary)]">
             Tidak ada menu yang diizinkan untuk peran Anda.
           </p>
         )}
       </div>
+
+      {/* FOOTER SIDEBAR */}
       {peran === "user" ? (
-        <div className="m-3 flex items-center gap-3 rounded-xl border border-[var(--brand)]/25 bg-[var(--brand-soft)] p-3.5">
+        <div
+          className={`m-3 flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--brand-soft)] p-3 ${
+            collapsed ? "justify-center" : ""
+          }`}
+          title={collapsed ? (sedangMasuk?.nama ?? "Anggota") : undefined}
+        >
           <Avatar
             nama={sedangMasuk?.nama ?? "Anggota"}
             foto={kartu?.foto}
-            className="h-9 w-9 rounded-full text-sm"
+            className="h-10 w-10 shrink-0 rounded-xl text-sm"
           />
-          <div className="min-w-0 leading-tight">
-            <div className="text-[11px] text-[var(--muted)]">
-              Selamat datang,
+
+          {!collapsed && (
+            <div className="min-w-0 leading-tight">
+              <div className="text-[10px] text-[var(--text-secondary)]">
+                Selamat datang,
+              </div>
+              <div className="truncate text-sm font-bold text-[var(--navy)]">
+                {sedangMasuk?.nama ?? "Anggota"}
+              </div>
+              <div className="mt-1 text-[10px] font-medium text-[var(--brand-dark)]">
+                Anggota
+              </div>
             </div>
-            <div className="truncate text-sm font-bold">
-              {sedangMasuk?.nama ?? "Anggota"}
-            </div>
-            <div className="text-[11px] text-[var(--muted)]">Anggota</div>
-          </div>
+          )}
         </div>
       ) : (
-        <div className="m-3 rounded-xl border border-[var(--border)] bg-slate-50 p-3.5 text-[11px] leading-relaxed text-[var(--muted)]">
-          <div className="flex items-center gap-1.5 font-semibold text-slate-600">
+        <div
+          className={`m-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-3.5 ${
+            collapsed ? "flex justify-center" : ""
+          }`}
+          title={collapsed ? "Basis Data" : undefined}
+        >
+          <div className="flex items-center gap-2 text-xs font-bold text-[var(--navy)]">
             <svg
-              width="12"
-              height="12"
+              width="15"
+              height="15"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-hidden
             >
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
-            Basis data
+
+            {!collapsed && "Basis Data"}
           </div>
-          <p className="mt-1">
-            Katalog & transaksi dibaca langsung dari Supabase (PostgreSQL) —
-            bukan dari browser ini.
-          </p>
+
+          {!collapsed && (
+            <p className="mt-2 text-[11px] leading-relaxed text-[var(--text-secondary)]">
+              Katalog dan transaksi dikelola melalui database aplikasi.
+            </p>
+          )}
         </div>
       )}
     </aside>
@@ -431,18 +594,18 @@ function AkunMenu({ peran }: { peran: Peran }) {
     <div className="flex items-center gap-3">
       <div className="hidden sm:flex items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--background)] py-1.5 pl-1.5 pr-3 transition-shadow hover:shadow-[var(--sh-1)]">
         <div
-          className={`h-8 w-8 rounded-lg grid place-items-center text-sm font-bold text-white ${
-            peran === "admin"
-              ? "bg-gradient-to-br from-amber-400 to-orange-500"
-              : "grad-brand"
-          }`}
+          className={`h-8 w-8 rounded-lg grid place-items-center text-sm font-bold text-white grad-brand`}
         >
           {inisial}
         </div>
         <div className="leading-tight">
           <div className="text-[13px] font-semibold">{sedangMasuk.nama}</div>
           <div className="text-[10px] uppercase tracking-wide text-[var(--muted)]">
-            {peran === "admin" ? "Pustakawan" : "Anggota"}
+            {peran === "superadmin"
+              ? "Super Admin"
+              : peran === "admin"
+                ? "Admin"
+                : "Anggota"}
           </div>
         </div>
       </div>
@@ -543,15 +706,17 @@ function Shell({ children }: { children: React.ReactNode }) {
   const { sedangMasuk } = useAuth();
   const sistem = useSistem();
   const kebijakan = useKebijakan();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   // Peran efektif — tidak ada sesi berarti tamu; semua pengecekan izin di
   // bawah mengikuti kebijakan, bukan daftar rute statis.
   const peran: PeranAkses = peranEfektif(sedangMasuk?.peran);
   const izinRute = cariIzinRute(pathname);
   const ruteSelaluBuka = RUTE_TERBUKA.includes(pathname);
-  // Pintasan peran di luar matriks izin: /admin/akses khusus admin.
+  // Pintasan peran di luar matriks izin: /admin/akses khusus Super Admin.
   // (Permintaan: hapus kendali "Kontrol akses" dari matriks — halaman jadi
   // gerbang peran; salah peran dialihkan, tanpa layar "Akses Ditolak".)
   const peranWajib = cariPeranRute(pathname);
+
   const peranCocok = peranWajib === undefined || peran === peranWajib;
   const diizinkan =
     (izinRute === undefined || cekIzin(kebijakan, peran, izinRute)) &&
@@ -577,6 +742,10 @@ function Shell({ children }: { children: React.ReactNode }) {
   );
 
   useEffect(() => {
+    // Halaman check-in merupakan halaman publik.
+    // Tidak memerlukan sesi login atau izin panel admin.
+    if (pathname === "/kunjungan/checkin") return;
+
     // Tunggu sesi terbaca dulu supaya tidak ada redirect yang salah sasaran.
     if (!sesiSiap) return;
     // Tamu di rute yang butuh izin (katalog dsb.): ke halaman masuk dulu —
@@ -653,15 +822,21 @@ function Shell({ children }: { children: React.ReactNode }) {
     return () => obs.disconnect();
   }, [pathname, sistem.nama, sistem.tagline]);
 
-  // Halaman landing / masuk / daftar / kios kunjungan: tampil polos (tanpa
-  // sidebar & menu admin — kios check-in di komputer perpustakaan sengaja
-  // terpisah dari panel agar tidak membuka akses ke dashboard admin).
-  if (
-    pathname === "/" ||
-    pathname === "/login" ||
-    pathname === "/register" ||
-    pathname === "/kunjungan"
-  ) {
+  // Halaman landing / masuk / daftar tampil polos (tanpa sidebar & menu admin).
+  // Daftar yang sama dipakai halaman publik hasil tautan landing (kontak,
+  // kebijakan privasi, syarat-ketentuan) — lihat src/app/(publik)/layout.tsx.
+  const RUTE_POLOS = [
+    "/",
+    "/login",
+    "/register",
+    "/kontak",
+    "/kebijakan-privasi",
+    "/syarat-ketentuan",
+
+    // Halaman check-in publik, tanpa sidebar dan header admin.
+    "/kunjungan/checkin",
+  ];
+  if (RUTE_POLOS.includes(pathname)) {
     return <>{children}</>;
   }
 
@@ -757,50 +932,67 @@ function Shell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen">
-      <div className="hidden md:flex">
-        <Sidebar peran={sedangMasuk.peran} />
+      <div
+        className={`hidden shrink-0 p-4 transition-[width] duration-300 md:block ${
+          sidebarCollapsed ? "w-[120px]" : "w-[292px]"
+        }`}
+      >
+        <Sidebar
+          peran={peran}
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed((prev) => !prev)}
+        />
       </div>
+
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="sticky top-0 z-30 h-16 shrink-0 bg-[var(--card)]/90 backdrop-blur-md border-b border-[var(--border)] flex items-center justify-between px-6 gap-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <h1 className="text-lg font-bold truncate tracking-tight">
-              {judul}
-            </h1>
-            <span
-              aria-hidden
-              className="hidden sm:block h-4 w-px bg-[var(--border)]"
-            />
-            <span className="hidden sm:block text-xs text-[var(--muted)] truncate">
-              {peran === "admin" ? "Operasional perpustakaan" : "Panel Anggota"}
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            {peran === "admin" ? (
-              <div className="hidden lg:block">
-                <StatusPill />
-              </div>
-            ) : (
-              <span className="hidden md:flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 text-xs text-[var(--muted)]">
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden
-                >
-                  <rect x="3" y="4" width="18" height="18" rx="2" />
-                  <path d="M16 2v4M8 2v4M3 10h18" />
-                </svg>
-                {hariIni}
+        <header className="sticky top-0 z-30 shrink-0 px-4 pt-4 sm:px-6">
+          <div className="flex min-h-[72px] items-center justify-between gap-4 rounded-2xl border border-[var(--border)] bg-white px-4 shadow-[var(--sh-2)] sm:px-6">
+            {/* Judul halaman */}
+            <div className="flex min-w-0 items-center gap-3">
+              <h1 className="truncate text-lg font-bold tracking-tight">
+                {judul}
+              </h1>
+
+              <span
+                aria-hidden
+                className="hidden h-4 w-px bg-[var(--border)] sm:block"
+              />
+
+              <span className="hidden truncate text-xs text-[var(--muted)] sm:block">
+                {petugas(peran) ? "Operasional perpustakaan" : "Panel Anggota"}
               </span>
-            )}
-            <AkunMenu peran={sedangMasuk.peran} />
+            </div>
+
+            {/* Informasi dan akun */}
+            <div className="flex shrink-0 items-center gap-3 sm:gap-4">
+              {petugas(peran) ? (
+                <div className="hidden lg:block">
+                  <StatusPill />
+                </div>
+              ) : (
+                <span className="hidden items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 text-xs text-[var(--muted)] md:flex">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                  >
+                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                    <path d="M16 2v4M8 2v4M3 10h18" />
+                  </svg>
+                  {hariIni}
+                </span>
+              )}
+
+              <AkunMenu peran={sedangMasuk.peran} />
+            </div>
           </div>
-        </header>{" "}
+        </header>
         {/* Navigasi versi mobile */}
         <div className="md:hidden sticky top-16 z-20 bg-[var(--card)]/95 backdrop-blur-md border-b border-[var(--border)] px-3 py-2 flex gap-1.5 overflow-x-auto">
           {nav.map((n) => (
@@ -818,7 +1010,10 @@ function Shell({ children }: { children: React.ReactNode }) {
             </Link>
           ))}
         </div>
-        <main key={pathname} className="anim-halaman flex-1 p-6">
+        <main
+          key={pathname}
+          className="anim-halaman w-full flex-1 p-4 sm:p-6 lg:p-7"
+        >
           {children}
         </main>
       </div>

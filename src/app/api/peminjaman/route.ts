@@ -6,6 +6,7 @@ import {
   GalatApi,
   jalankan,
   json,
+  konteksPublik,
   konteksRoute,
 } from "@/lib/supabase/konteks";
 import { kePeminjaman, type BarisPeminjaman } from "@/lib/supabase/peta";
@@ -15,7 +16,8 @@ export async function GET() {
   return jalankan(async () => {
     // RLS: admin/petugas melihat semua (sirkulasi.lihat), anggota hanya
     // miliknya sendiri (panel.pinjaman), tamu tidak melihat apa pun.
-    const k = await konteksRoute();
+    // GET ini tidak membaca k.pengguna → konteksPublik tanpa validasi sesi.
+    const k = await konteksPublik();
     const { data, error } = await k.supabase
       .from("peminjaman")
       .select("*")
