@@ -79,6 +79,10 @@ export interface BarisPeminjaman {
   status: string;
   denda: number;
   catatan: string;
+  eksemplar_id?: string | null;
+  /** Diisi fungsi RPC pinjam/kembali, atau hasil embed `eksemplar_buku`. */
+  nomor_inventaris?: string | null;
+  eksemplar_buku?: { nomor_inventaris: string } | null;
 }
 
 export interface BarisJejak {
@@ -207,6 +211,8 @@ export function kePeminjaman(r: BarisPeminjaman): Peminjaman {
     status: r.status as StatusPinjam,
     denda: r.denda,
     catatan: r.catatan,
+    eksemplarId: r.eksemplar_id ?? null,
+    nomorInventaris: r.nomor_inventaris ?? r.eksemplar_buku?.nomor_inventaris ?? null,
   };
 }
 

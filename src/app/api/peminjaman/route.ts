@@ -20,7 +20,8 @@ export async function GET() {
     const k = await konteksPublik();
     const { data, error } = await k.supabase
       .from("peminjaman")
-      .select("*")
+      // Sertakan nomor inventaris salinan fisik yang dipinjam (bila ada).
+      .select("*,eksemplar_buku(nomor_inventaris)")
       .order("created_at", { ascending: false })
       .order("kode_pinjam", { ascending: true });
     if (error) throw dariSupabase(error);

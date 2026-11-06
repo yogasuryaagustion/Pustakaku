@@ -41,11 +41,10 @@ CREATE INDEX IF NOT EXISTS idx_eksemplar_buku_buku_id
 CREATE INDEX IF NOT EXISTS idx_eksemplar_buku_status
   ON public.eksemplar_buku (status);
 
--- Satu judul hanya boleh punya satu eksemplar berstatus 'dipinjam' pada satu
--- waktu (sirkulasi menandai eksemplar yang benar-benar keluar).
-CREATE UNIQUE INDEX IF NOT EXISTS idx_eksemplar_buku_status_dipinjam
-  ON public.eksemplar_buku (buku_id)
-  WHERE status = 'dipinjam';
+-- Catatan: TIDAK ada indeks unik per (buku_id) untuk status 'dipinjam'.
+-- Satu judul boleh punya beberapa salinan yang dipinjam sekaligus; yang unik
+-- adalah satu eksemplar hanya boleh terpakai satu pinjaman aktif
+-- (lihat peminjaman_eksemplar_aktif_uniq di migrasi peminjaman eksemplar).
 
 -- ---------------------------------------------------------------------
 -- 2. View ringkasan inventaris per judul

@@ -442,6 +442,11 @@ export default function SirkulasiPage() {
                           >
                             {b?.judul ?? "-"}
                           </p>
+                          {p.nomorInventaris && (
+                            <p className="mt-1 font-mono text-xs text-slate-500">
+                              Inv. {p.nomorInventaris}
+                            </p>
+                          )}
                           {p.denda > 0 && (
                             <p className="mt-1 text-xs font-medium text-rose-600">
                               Denda {rupiah(p.denda)}

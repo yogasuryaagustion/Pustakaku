@@ -47,6 +47,9 @@ export interface Peminjaman {
   status: StatusPinjam;
   denda: number; // rupiah
   catatan: string;
+  /** Eksemplar fisik yang dipinjam (null bila judul belum didata fisiknya). */
+  eksemplarId?: string | null;
+  nomorInventaris?: string | null;
 }
 
 export const KATEGORI_LIST: Kategori[] = [
