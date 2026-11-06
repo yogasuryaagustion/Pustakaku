@@ -24,6 +24,7 @@ type Tab = "Aktif" | "Riwayat" | "Semua";
 type KonfirmasiPinjaman = {
   id: string;
   judul: string;
+  nomorInventaris: string | null;
 };
 
 // Menghitung sisa hari sampai tanggal jatuh tempo.
@@ -534,8 +535,16 @@ export function PinjamanSaya({
                           {b?.judul ?? "-"}
                         </h3>
 
-                        <p className="mt-1 text-xs leading-relaxed text-slate-500">
-                          Kode: {p.kodePinjam}
+                        <p className="mt-1 flex flex-wrap items-center gap-x-2 text-xs leading-relaxed text-slate-500">
+                          <span>Kode: {p.kodePinjam}</span>
+                          {p.nomorInventaris && (
+                            <span>
+                              No. inventaris:{" "}
+                              <span className="font-mono font-semibold text-slate-700">
+                                {p.nomorInventaris}
+                              </span>
+                            </span>
+                          )}
                         </p>
 
                         <p className="mt-2 text-xs leading-relaxed text-slate-500">
@@ -593,6 +602,7 @@ export function PinjamanSaya({
                               setKonfirmasi({
                                 id: p.id,
                                 judul: b?.judul ?? p.kodePinjam,
+                                nomorInventaris: p.nomorInventaris ?? null,
                               })
                             }
                             disabled={!!sedangProsesId}
@@ -609,6 +619,7 @@ export function PinjamanSaya({
                               setKonfirmasiKembali({
                                 id: p.id,
                                 judul: b?.judul ?? p.kodePinjam,
+                                nomorInventaris: p.nomorInventaris ?? null,
                               })
                             }
                             disabled={!!sedangProsesId}
@@ -799,6 +810,15 @@ export function PinjamanSaya({
             <span className="font-bold text-slate-900">
               {konfirmasiKembali?.judul}
             </span>
+            {konfirmasiKembali?.nomorInventaris && (
+              <>
+                {" "}(No. inventaris{" "}
+                <span className="font-mono font-semibold text-slate-800">
+                  {konfirmasiKembali.nomorInventaris}
+                </span>
+                )
+              </>
+            )}
             ?
           </p>
 
