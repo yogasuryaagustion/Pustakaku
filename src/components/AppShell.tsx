@@ -772,7 +772,10 @@ function Shell({ children }: { children: React.ReactNode }) {
     // Tamu di rute yang butuh izin (katalog dsb.): ke halaman masuk dulu —
     // setelah masuk, izin perannya yang menentukan.
     if (!sedangMasuk && !ruteSelaluBuka && !diizinkan) {
-      router.replace("/login?dari=" + encodeURIComponent(pathname));
+      // Sertakan query (mis. ?status=rusak) agar tautan tersaring kembali ke
+      // halaman yang sama setelah masuk, bukan ke versi tanpa filter.
+      const tujuan = pathname + window.location.search;
+      router.replace("/login?dari=" + encodeURIComponent(tujuan));
       return;
     }
     if (!sedangMasuk) return;

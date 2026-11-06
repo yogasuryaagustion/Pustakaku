@@ -292,19 +292,31 @@ export default function HalamanInventaris() {
                     <td className="text-right font-semibold">{r.total}</td>
                     <td className="text-right">{Number(r.tersedia) || 0}</td>
                     <td className="text-right">{Number(r.dipinjam) || 0}</td>
-                    <td
-                      className={`text-right ${
-                        Number(r.rusak) ? "font-semibold text-amber-700" : "text-slate-400"
-                      }`}
-                    >
-                      {Number(r.rusak) || 0}
+                    <td className="text-right">
+                      {Number(r.rusak) ? (
+                        <Link
+                          href={`/inventaris/eksemplar?buku=${r.buku_id}&status=rusak`}
+                          className="font-semibold text-amber-700 hover:underline"
+                          title="Lihat eksemplar rusak judul ini"
+                        >
+                          {Number(r.rusak)}
+                        </Link>
+                      ) : (
+                        <span className="text-slate-400">0</span>
+                      )}
                     </td>
-                    <td
-                      className={`text-right ${
-                        Number(r.hilang) ? "font-semibold text-rose-600" : "text-slate-400"
-                      }`}
-                    >
-                      {Number(r.hilang) || 0}
+                    <td className="text-right">
+                      {Number(r.hilang) ? (
+                        <Link
+                          href={`/inventaris/eksemplar?buku=${r.buku_id}&status=hilang`}
+                          className="font-semibold text-rose-600 hover:underline"
+                          title="Lihat eksemplar hilang judul ini"
+                        >
+                          {Number(r.hilang)}
+                        </Link>
+                      ) : (
+                        <span className="text-slate-400">0</span>
+                      )}
                     </td>
                     <td>
                       {r.total === 0 ? (

@@ -16,7 +16,12 @@ import {
   tanggalSingkat,
   useMuatApi,
 } from "@/components/inventaris-ui";
-import { KONDISI_EKSEMPLAR, STATUS_EKSEMPLAR } from "@/lib/supabase/inventaris";
+import {
+  KONDISI_EKSEMPLAR,
+  LABEL_STATUS,
+  STATUS_EKSEMPLAR,
+  statusDikenal,
+} from "@/lib/supabase/inventaris";
 import { useSistem } from "@/lib/sistem";
 import { nomorInventarisContoh } from "@/lib/sistem-nilai";
 
@@ -82,10 +87,13 @@ export default function HalamanDataEksemplar() {
   const bolehKelola = useBoleh("katalog.kelola");
   const params = useSearchParams();
   const bukuAwal = params.get("buku") ?? "";
+  // ?status=rusak/hilang dipakai tautan dari halaman Inventaris agar daftar
+  // langsung tersaring pada salinan bermasalah.
+  const statusAwal = params.get("status") ?? "";
 
   const [q, setQ] = useState("");
   const [buku, setBuku] = useState(bukuAwal);
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState(statusDikenal(statusAwal) ? statusAwal : "");
   const [segar, setSegar] = useState(0);
 
   const [modal, setModal] = useState(false);
@@ -340,7 +348,7 @@ export default function HalamanDataEksemplar() {
             <option value="">Semua status</option>
             {STATUS_EKSEMPLAR.map((s) => (
               <option key={s} value={s}>
-                {s}
+                {LABEL_STATUS[s] ?? s}
               </option>
             ))}
           </select>
