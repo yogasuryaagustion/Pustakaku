@@ -44,11 +44,16 @@ export interface RingkasanInventaris extends BarisInventarisPerBuku {
 /**
  * Bandingkan stok tercatat (buku.stok) dengan jumlah eksemplar fisik.
  * selisih > 0 berarti stok tercatat lebih banyak daripada barang fisik.
+ *
+ * Judul yang belum punya eksemplar sama sekali sengaja TIDAK dihitung
+ * menyimpang: stoknya masih angka katalog yang diisi manual, dan menghitungnya
+ * sebagai selisih membuat seluruh katalog tampak perlu diperbaiki (stoknya akan
+ * jadi 0 bila rekonsiliasi dijalankan).
  */
 export function ringkasInventaris(r: BarisInventarisPerBuku): RingkasanInventaris {
   const total = Number(r.total_eksemplar) || 0;
   const stok = Number(r.stok) || 0;
-  const selisih = stok - total;
+  const selisih = total === 0 ? 0 : stok - total;
 
   let status: StatusSistem = "sesuai";
   if (total === 0) status = "tanpa-eksemplar";
