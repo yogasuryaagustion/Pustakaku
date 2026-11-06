@@ -92,6 +92,14 @@ export default function HalamanInventaris() {
       });
   }, [data, q, filter]);
 
+  // Judul tanpa rak menyulitkan penelusuran fisik dan pelabelan, jadi
+  // ditampilkan sebagai peringatan — dihitung dari seluruh katalog, bukan
+  // hanya baris yang lolos filter.
+  const tanpaRak = useMemo(
+    () => (data?.ringkasan ?? []).filter((r) => !(r.rak ?? "").trim()),
+    [data],
+  );
+
   const statistik = useMemo(() => {
     const daftar = data?.ringkasan ?? [];
     const totalEksemplar = daftar.reduce((a, r) => a + (Number(r.total_eksemplar) || 0), 0);
@@ -164,6 +172,49 @@ export default function HalamanInventaris() {
         />
       </section>
 
+      {!memuat && tanpaRak.length > 0 && (
+        <section
+          className="flex flex-wrap items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+          role="status"
+        >
+          <svg
+            className="mt-0.5 shrink-0"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M12 9v4M12 17h.01" />
+            <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" />
+          </svg>
+
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">
+              {tanpaRak.length} judul belum punya kode rak
+            </p>
+            <p className="mt-0.5 leading-6 text-amber-800/90">
+              Eksemplarnya sulit dicari di rak dan label QR tercetak tanpa
+              keterangan rak. Lengkapi lewat halaman Katalog.
+            </p>
+            <p className="mt-1 line-clamp-2 text-xs leading-5 text-amber-800/80">
+              {tanpaRak.map((r) => r.judul).join(" · ")}
+            </p>
+          </div>
+
+          <Link
+            href="/katalog"
+            className="shrink-0 rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-900 transition hover:border-amber-400"
+          >
+            Buka Katalog
+          </Link>
+        </section>
+      )}
+
       <section className="card overflow-hidden">
         <div className="flex flex-wrap items-center gap-3 border-b border-[var(--border)] px-5 py-4">
           <div className="min-w-[220px] flex-1">
@@ -230,7 +281,13 @@ export default function HalamanInventaris() {
                       </div>
                     </td>
                     <td>{r.kategori || "—"}</td>
-                    <td>{r.rak || "—"}</td>
+                    <td>
+                      {r.rak || (
+                        <span className="inline-flex whitespace-nowrap rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+                          Tanpa rak
+                        </span>
+                      )}
+                    </td>
                     <td className="text-right font-semibold">{r.stok}</td>
                     <td className="text-right font-semibold">{r.total}</td>
                     <td className="text-right">{Number(r.tersedia) || 0}</td>
