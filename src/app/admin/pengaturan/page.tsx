@@ -12,6 +12,7 @@ import {
   simpanSistem,
   type SistemPengaturan,
 } from "@/lib/sistem";
+import { formatInventarisSah, nomorInventarisContoh } from "@/lib/sistem-nilai";
 
 function FieldAngka({
   label,
@@ -85,6 +86,68 @@ function FieldAngka({
       <p className="text-xs text-slate-400">
         Nilai antara {min.toLocaleString("id-ID")} dan{" "}
         {max.toLocaleString("id-ID")} {satuan}.
+      </p>
+    </div>
+  );
+}
+
+function FieldFormatInventaris({
+  nilai,
+  onUbah,
+}: {
+  nilai: string;
+  onUbah: (nilai: string) => void;
+}) {
+  const [draft, setDraft] = useState(nilai);
+  const [nilaiTerakhir, setNilaiTerakhir] = useState(nilai);
+
+  if (nilaiTerakhir !== nilai) {
+    setNilaiTerakhir(nilai);
+    setDraft(nilai);
+  }
+
+  const bersih = draft.trim();
+  const sah = formatInventarisSah(bersih);
+  const contoh = sah ? nomorInventarisContoh(bersih, 1) : null;
+
+  const commit = () => {
+    if (formatInventarisSah(draft.trim())) onUbah(draft.trim());
+    else setDraft(nilai);
+  };
+
+  return (
+    <div className="space-y-2">
+      <label
+        className="block text-sm font-semibold text-slate-800"
+        htmlFor="format-inventaris"
+      >
+        Format Nomor Inventaris Otomatis
+      </label>
+
+      <input
+        id="format-inventaris"
+        type="text"
+        value={draft}
+        maxLength={40}
+        onChange={(event) => setDraft(event.target.value)}
+        onBlur={commit}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") event.currentTarget.blur();
+        }}
+        placeholder="INV-{tahun}-{urut}"
+        className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 font-mono text-sm text-slate-800 outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-teal-700 focus:ring-4 focus:ring-teal-700/10"
+      />
+
+      <p className={`text-xs ${sah ? "text-slate-400" : "text-rose-600"}`}>
+        {sah ? (
+          <>
+            Token: <code>{"{tahun}"}</code>, <code>{"{bulan}"}</code>,{" "}
+            <code>{"{urut}"}</code> atau <code>{"{urut:3}"}</code>. Contoh hasil:{" "}
+            <strong className="font-mono text-slate-600">{contoh}</strong>.
+          </>
+        ) : (
+          "Pola wajib memuat {urut} dan hanya boleh berisi huruf, angka, - _ . / { } :"
+        )}
       </p>
     </div>
   );
@@ -202,6 +265,11 @@ export default function PengaturanTemaPage() {
                 onUbah={(nilai) => ubahSistem({ dendaPerHari: nilai })}
               />
             </div>
+
+            <FieldFormatInventaris
+              nilai={sistem.formatInventaris}
+              onUbah={(nilai) => ubahSistem({ formatInventaris: nilai })}
+            />
 
             {/* Ringkasan aturan */}
             <div className="rounded-xl border border-teal-100 bg-teal-50/70 p-4 sm:p-5">

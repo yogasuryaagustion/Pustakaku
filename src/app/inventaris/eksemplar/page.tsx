@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import { useBoleh } from "@/lib/auth";
@@ -16,6 +17,8 @@ import {
   useMuatApi,
 } from "@/components/inventaris-ui";
 import { KONDISI_EKSEMPLAR, STATUS_EKSEMPLAR } from "@/lib/supabase/inventaris";
+import { useSistem } from "@/lib/sistem";
+import { nomorInventarisContoh } from "@/lib/sistem-nilai";
 
 // Data Eksemplar — daftar seluruh buku fisik dengan nomor inventarisnya.
 // Petugas dapat menambah, mengubah, dan menghapus eksemplar; perubahan stok
@@ -75,6 +78,7 @@ const FORM_KOSONG: FormEksemplar = {
 
 export default function HalamanDataEksemplar() {
   const toast = useToast();
+  const sistem = useSistem();
   const bolehKelola = useBoleh("katalog.kelola");
   const params = useSearchParams();
   const bukuAwal = params.get("buku") ?? "";
@@ -116,6 +120,12 @@ export default function HalamanDataEksemplar() {
     for (const b of data?.ringkasan ?? []) peta.set(b.buku_id, b.judul);
     return peta;
   }, [data]);
+
+  // Pratinjau nomor berikutnya menurut pola Pengaturan.
+  const contohNomor = useMemo(
+    () => nomorInventarisContoh(sistem.formatInventaris, (data?.eksemplar.length ?? 0) + 1),
+    [sistem.formatInventaris, data],
+  );
 
   const baris = useMemo(() => {
     const cari = q.trim().toLowerCase();
@@ -163,11 +173,11 @@ export default function HalamanDataEksemplar() {
 
   const kirim = async () => {
     if (!form.buku_id) return setGalatForm("Pilih judul buku terlebih dahulu.");
-    if (!form.nomor_inventaris.trim()) return setGalatForm("Nomor inventaris wajib diisi.");
 
     const isi = {
       buku_id: form.buku_id,
-      nomor_inventaris: form.nomor_inventaris.trim(),
+      // Kosong → server membuat nomor berikutnya sesuai pola Pengaturan.
+      nomor_inventaris: form.nomor_inventaris.trim() || undefined,
       status: form.status,
       kondisi_fisik: form.kondisi_fisik,
       tanggal_pengadaan: form.tanggal_pengadaan || undefined,
@@ -255,6 +265,9 @@ export default function HalamanDataEksemplar() {
         aksi={
           bolehKelola ? (
             <div className="flex flex-wrap gap-2">
+              <Link href="/inventaris/label" className="btn btn-ghost">
+                Label QR
+              </Link>
               <button type="button" className="btn btn-ghost" onClick={bukaImpor}>
                 Impor CSV
               </button>
@@ -445,11 +458,18 @@ export default function HalamanDataEksemplar() {
             </label>
             <input
               id="f-nomor"
-              className="input"
-              placeholder="mis. INV-2026-0001"
+              className="input font-mono"
+              placeholder={
+                form.id ? "Ubah nomor inventaris" : `Otomatis: ${contohNomor}`
+              }
               value={form.nomor_inventaris}
               onChange={(e) => setForm((f) => ({ ...f, nomor_inventaris: e.target.value }))}
             />
+            <p className="mt-1 text-xs text-[var(--muted)]">
+              {form.id
+                ? "Biarkan sesuai atau ganti manual."
+                : `Kosongkan agar dibuat otomatis dari pola Pengaturan (${sistem.formatInventaris}).`}
+            </p>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

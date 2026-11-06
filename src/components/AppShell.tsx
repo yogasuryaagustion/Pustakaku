@@ -811,7 +811,9 @@ function Shell({ children }: { children: React.ReactNode }) {
               ? "Masuk"
               : pathname === "/register"
                 ? "Daftar"
-                : null);
+                : pathname === "/inventaris/label"
+                  ? "Label QR Inventaris"
+                  : null);
       return halaman
         ? `${halaman} — ${sistem.nama}`
         : `${sistem.nama} — ${sistem.tagline}`;
@@ -843,6 +845,10 @@ function Shell({ children }: { children: React.ReactNode }) {
 
     // Halaman check-in publik, tanpa sidebar dan header admin.
     "/kunjungan/checkin",
+
+    // Lembar label QR inventaris: halaman cetak, tanpa sidebar agar hasil
+    // cetaknya bersih. Tetap dijaga izin katalog.kelola lewat efek di atas.
+    "/inventaris/label",
   ];
   if (RUTE_POLOS.includes(pathname)) {
     return <>{children}</>;

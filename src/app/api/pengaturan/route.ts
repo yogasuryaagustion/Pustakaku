@@ -17,6 +17,7 @@ interface BarisSistem {
   lama_pinjam: number;
   denda_per_hari: number;
   maks_pinjaman: number;
+  format_inventaris: string | null;
   diubah_pada: string | null;
   diubah_oleh: string | null;
 }
@@ -29,6 +30,7 @@ function keSistem(r: BarisSistem | null): SistemPengaturan {
     lamaPinjam: r.lama_pinjam,
     dendaPerHari: r.denda_per_hari,
     maksPinjaman: r.maks_pinjaman,
+    formatInventaris: r.format_inventaris ?? SISTEM_DEFAULT.formatInventaris,
   });
 }
 
@@ -48,7 +50,9 @@ export async function GET() {
     const k = await konteksPublik(); // baca publik tanpa validasi sesi
     const { data, error } = await k.supabase
       .from("pengaturan_sistem")
-      .select("nama, tagline, lama_pinjam, denda_per_hari, maks_pinjaman, diubah_pada, diubah_oleh")
+      .select(
+        "nama, tagline, lama_pinjam, denda_per_hari, maks_pinjaman, format_inventaris, diubah_pada, diubah_oleh",
+      )
       .eq("id", true)
       .maybeSingle();
     if (error) throw dariSupabase(error);
@@ -76,6 +80,7 @@ export async function PUT(request: Request) {
           lama_pinjam: s.lamaPinjam,
           denda_per_hari: s.dendaPerHari,
           maks_pinjaman: s.maksPinjaman,
+          format_inventaris: s.formatInventaris,
           diubah_pada: new Date().toISOString(),
           diubah_oleh: k.pengguna?.nama ?? null,
         },
@@ -89,7 +94,7 @@ export async function PUT(request: Request) {
       jenis: "sistem",
       aksi: "Pengaturan disimpan",
       objek: s.nama,
-      detail: `lama ${s.lamaPinjam} hr · denda Rp${s.dendaPerHari.toLocaleString("id-ID")}/hari`,
+      detail: `lama ${s.lamaPinjam} hr · denda Rp${s.dendaPerHari.toLocaleString("id-ID")}/hari · nomor ${s.formatInventaris}`,
     });
     return json({ pengaturan: s });
   });

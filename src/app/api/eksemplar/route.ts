@@ -61,25 +61,22 @@ export async function POST(request: Request) {
     const isi = sahkanEksemplarBody(await bacaBody(request));
 
     if (!isi.buku_id) throw new GalatApi("Buku wajib dipilih.", 400);
-    if (!isi.nomor_inventaris) throw new GalatApi("Nomor inventaris wajib diisi.", 400);
 
     const status = isi.status ?? "tersedia";
     const kondisi = isi.kondisi_fisik ?? "layak";
     if (!statusDikenal(status)) throw new GalatApi("Status eksemplar tidak dikenal.", 400);
     if (!kondisiDikenal(kondisi)) throw new GalatApi("Kondisi fisik tidak dikenal.", 400);
 
-    const { data, error } = await k.supabase
-      .from("eksemplar_buku")
-      .insert({
-        buku_id: isi.buku_id,
-        nomor_inventaris: isi.nomor_inventaris,
-        status,
-        kondisi_fisik: kondisi,
-        tanggal_pengadaan: isi.tanggal_pengadaan ?? new Date().toISOString().slice(0, 10),
-        keterangan: isi.keterangan ?? null,
-      })
-      .select(KOLOM_EKSEMPLAR)
-      .single();
+    // Nomor kosong → database membuat nomor berikutnya sesuai pola di
+    // Pengaturan, di dalam transaksi yang sama dengan penyisipan.
+    const { data, error } = await k.supabase.rpc("tambah_eksemplar", {
+      p_buku_id: isi.buku_id,
+      p_nomor: isi.nomor_inventaris || null,
+      p_status: status,
+      p_kondisi: kondisi,
+      p_tanggal: isi.tanggal_pengadaan ?? null,
+      p_keterangan: isi.keterangan ?? null,
+    });
     if (error) throw dariSupabase(error);
 
     const eksemplar = keEksemplar(data as BarisEksemplar);
