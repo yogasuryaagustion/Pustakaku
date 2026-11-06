@@ -163,6 +163,23 @@ export async function POST(request: Request) {
 // GET — rekap kunjungan (khusus pihak berwenang)
 // =====================================================================
 
+/** Baris `kunjungan` hasil gabungan tamu & anggota (relasi anggota opsional). */
+interface AnggotaKunjungan {
+  nama?: string | null;
+  nomor_anggota?: string | null;
+  jenis?: string | null;
+}
+
+interface BarisKunjunganGabungan {
+  id: string;
+  anggota_id: string | null;
+  jenis_pengunjung: string;
+  nama_tamu: string | null;
+  tanggal_kunjungan: string;
+  waktu_masuk: string;
+  anggota?: AnggotaKunjungan | AnggotaKunjungan[] | null;
+}
+
 export async function GET(request: Request) {
   return jalankan(async () => {
     const k = await konteksRoute({
@@ -301,7 +318,7 @@ export async function GET(request: Request) {
     }
 
     // Gabungkan hasil tamu dan anggota berdasarkan ID.
-    const gabungan = new Map<string, any>();
+    const gabungan = new Map<string, BarisKunjunganGabungan>();
 
     for (const b of hasilSemua.data ?? []) {
       if (b.jenis_pengunjung === "tamu") {
@@ -378,7 +395,7 @@ export async function GET(request: Request) {
       : baris.slice(mulai, mulai + per);
 
     // Agregat statistik.
-    let kueriAgregat = k.supabase
+    const kueriAgregat = k.supabase
       .from("kunjungan")
       .select(
         "tanggal_kunjungan, anggota_id, jenis_pengunjung, nama_tamu"

@@ -4,6 +4,7 @@
 
 import { KATEGORI_LIST, type Anggota, type Buku } from "../types";
 import { GalatApi } from "./konteks";
+import type { BarisEksemplar } from "./peta";
 
 type Raw = Record<string, unknown> | null;
 
@@ -128,8 +129,15 @@ export function tanggal(v: unknown, nama: string): string {
   return s;
 }
 
+/** Ubah nilai apa pun menjadi string pendek (id/kunci asing). */
+function keString(v: unknown): string {
+  if (typeof v === "string") return v.trim();
+  if (typeof v === "number" && Number.isFinite(v)) return String(v);
+  return "";
+}
+
 /** Payload eksemplar fisik (tambah/ubah). */
-export interface RawEksemplar extends Partial<BarisEksemplar> {}
+export type RawEksemplar = Partial<BarisEksemplar>;
 
 export function sahkanEksemplarBody(body: Raw): Partial<BarisEksemplar> {
   const o = objek(body);
@@ -146,9 +154,10 @@ export function sahkanEksemplarBody(body: Raw): Partial<BarisEksemplar> {
 }
 
 /** Validasi payload pemeriksaan nomor inventaris. */
-export interface RawPemeriksaanBaris extends Partial<BarisEksemplar> {
+export interface RawPemeriksaanBaris {
   /** id eksemplar dari baris pemeriksaan */
   id_eksemplar?: unknown;
+  nomor_inventaris?: unknown;
   status?: unknown;
   kondisi_fisik?: unknown;
   keterangan?: unknown;
@@ -178,7 +187,14 @@ export function sahkanPemeriksaanBody(body: Raw): RawPemeriksaan {
 }
 
 /** Validasi payload stock opname. */
-export interface RawOpnameBaris extends Partial<BarisEksemplar> {
+export interface RawOpnameBaris {
+  id?: unknown;
+  buku_id?: unknown;
+  nomor_inventaris?: unknown;
+  status?: unknown;
+  kondisi_fisik?: unknown;
+  tanggal_pengadaan?: unknown;
+  keterangan?: unknown;
   jumlah_fisik?: unknown;
   ditemukan?: unknown;
   tidak_ditemukan?: unknown;

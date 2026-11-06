@@ -87,6 +87,14 @@ const NAV: {
   },
   {
     grup: "Utama",
+    href: "/inventaris",
+    label: "Inventaris Buku",
+    icon: "M20 7l-8-4-8 4v10l8 4 8-4V7z M4 7l8 4 8-4 M12 21V11",
+    izin: "katalog.kelola",
+    hanyaPeran: ["admin", "superadmin"],
+  },
+  {
+    grup: "Utama",
     href: "/anggota",
     label: "Manajemen Pengguna",
     icon: "M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2 M9 11a4 4 0 100-8 4 4 0 000 8 M22 21v-2a4 4 0 00-3-3.87 M16 3.13a4 4 0 010 7.75",
