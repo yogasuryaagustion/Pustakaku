@@ -47,6 +47,13 @@ interface ResponInventaris {
   ringkasan: BarisRingkas[];
 }
 
+interface HasilImpor {
+  ditambahkan: number;
+  dilewati: number;
+  galat: Array<{ baris: number; pesan: string }>;
+  total_galat: number;
+}
+
 interface FormEksemplar {
   id?: string;
   buku_id: string;
@@ -79,6 +86,14 @@ export default function HalamanDataEksemplar() {
 
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState<FormEksemplar>(FORM_KOSONG);
+
+  // Impor CSV massal.
+  const [imporBuka, setImporBuka] = useState(false);
+  const [csvTeks, setCsvTeks] = useState("");
+  const [namaBerkas, setNamaBerkas] = useState("");
+  const [mengimpor, setMengimpor] = useState(false);
+  const [galatImpor, setGalatImpor] = useState("");
+  const [hasilImpor, setHasilImpor] = useState<HasilImpor | null>(null);
   const [simpan, setSimpan] = useState(false);
   const [galatForm, setGalatForm] = useState("");
   const [hapus, setHapus] = useState<BarisEksemplar | null>(null);
@@ -178,6 +193,49 @@ export default function HalamanDataEksemplar() {
     }
   };
 
+  const bukaImpor = () => {
+    setCsvTeks("");
+    setNamaBerkas("");
+    setGalatImpor("");
+    setHasilImpor(null);
+    setImporBuka(true);
+  };
+
+  const pilihBerkas = async (berkas: File | null | undefined) => {
+    if (!berkas) return;
+    setGalatImpor("");
+    setHasilImpor(null);
+    try {
+      setCsvTeks(await berkas.text());
+      setNamaBerkas(berkas.name);
+    } catch {
+      setGalatImpor("Berkas tidak bisa dibaca.");
+    }
+  };
+
+  const jalankanImpor = async () => {
+    if (!csvTeks.trim()) return setGalatImpor("Pilih berkas CSV terlebih dahulu.");
+    setMengimpor(true);
+    setGalatImpor("");
+    try {
+      const res = await apiFetch<HasilImpor>("/api/eksemplar/impor", {
+        method: "POST",
+        body: { csv: csvTeks },
+      });
+      setHasilImpor(res);
+      setSegar((s) => s + 1);
+      if (res.ditambahkan > 0) {
+        toast.sukses(`${res.ditambahkan} eksemplar berhasil diimpor.`);
+      } else {
+        toast.info("Tidak ada eksemplar baru yang ditambahkan.");
+      }
+    } catch (e) {
+      setGalatImpor(pesanGalat(e));
+    } finally {
+      setMengimpor(false);
+    }
+  };
+
   const konfirmasiHapus = async () => {
     if (!hapus) return;
     try {
@@ -196,9 +254,14 @@ export default function HalamanDataEksemplar() {
         sub="Setiap buku fisik punya satu nomor inventaris unik. Status dan kondisi di sini menjadi acuan ketersediaan di katalog."
         aksi={
           bolehKelola ? (
-            <button type="button" className="btn btn-primary" onClick={bukaTambah}>
-              Tambah Eksemplar
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" className="btn btn-ghost" onClick={bukaImpor}>
+                Impor CSV
+              </button>
+              <button type="button" className="btn btn-primary" onClick={bukaTambah}>
+                Tambah Eksemplar
+              </button>
+            </div>
           ) : null
         }
       />
@@ -464,6 +527,82 @@ export default function HalamanDataEksemplar() {
             </button>
             <button type="button" className="btn btn-primary" onClick={() => void kirim()} disabled={simpan}>
               {simpan ? "Menyimpan…" : "Simpan"}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={imporBuka}
+        onClose={() => setImporBuka(false)}
+        title="Impor Eksemplar dari CSV"
+        width="max-w-lg"
+      >
+        <div className="space-y-4 text-sm">
+          <p className="leading-6 text-slate-600">
+            Setiap baris mewakili satu salinan fisik. Unduh template berisi semua
+            judul (satu baris per salinan sesuai stok), isi kolom{" "}
+            <code className="rounded bg-slate-100 px-1">nomor_inventaris</code>, lalu
+            unggah kembali. Baris yang nomornya sudah terdaftar akan dilewati.
+          </p>
+
+          <a className="btn btn-ghost w-fit" href="/api/eksemplar/impor" download>
+            Unduh Template CSV
+          </a>
+
+          <div>
+            <label className="label" htmlFor="f-berkas">
+              Berkas CSV
+            </label>
+            <input
+              id="f-berkas"
+              type="file"
+              accept=".csv,text/csv"
+              className="input file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-xs file:font-semibold"
+              onChange={(e) => void pilihBerkas(e.target.files?.[0])}
+            />
+            {namaBerkas && (
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                {namaBerkas} · {csvTeks.split(/\r?\n/).filter((b) => b.trim()).length - 1} baris data
+              </p>
+            )}
+          </div>
+
+          {galatImpor && (
+            <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-rose-700">
+              {galatImpor}
+            </p>
+          )}
+
+          {hasilImpor && (
+            <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+              <p className="font-semibold text-slate-800">
+                {hasilImpor.ditambahkan} eksemplar ditambahkan · {hasilImpor.dilewati} dilewati
+                {hasilImpor.total_galat > 0 ? ` · ${hasilImpor.total_galat} baris bermasalah` : ""}
+              </p>
+              {hasilImpor.galat.length > 0 && (
+                <ul className="max-h-32 space-y-1 overflow-y-auto text-xs text-rose-700">
+                  {hasilImpor.galat.map((g) => (
+                    <li key={`${g.baris}-${g.pesan}`}>
+                      Baris {g.baris}: {g.pesan}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 pt-1">
+            <button type="button" className="btn btn-ghost" onClick={() => setImporBuka(false)}>
+              Tutup
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => void jalankanImpor()}
+              disabled={mengimpor || !csvTeks.trim()}
+            >
+              {mengimpor ? "Mengimpor…" : "Impor Sekarang"}
             </button>
           </div>
         </div>
