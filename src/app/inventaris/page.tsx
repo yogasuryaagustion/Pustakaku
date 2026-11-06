@@ -214,6 +214,8 @@ export default function HalamanInventaris() {
                   <th className="text-right">Fisik</th>
                   <th className="text-right">Tersedia</th>
                   <th className="text-right">Dipinjam</th>
+                  <th className="text-right">Rusak</th>
+                  <th className="text-right">Hilang</th>
                   <th>Status</th>
                   <th>Aksi</th>
                 </tr>
@@ -233,6 +235,20 @@ export default function HalamanInventaris() {
                     <td className="text-right font-semibold">{r.total}</td>
                     <td className="text-right">{Number(r.tersedia) || 0}</td>
                     <td className="text-right">{Number(r.dipinjam) || 0}</td>
+                    <td
+                      className={`text-right ${
+                        Number(r.rusak) ? "font-semibold text-amber-700" : "text-slate-400"
+                      }`}
+                    >
+                      {Number(r.rusak) || 0}
+                    </td>
+                    <td
+                      className={`text-right ${
+                        Number(r.hilang) ? "font-semibold text-rose-600" : "text-slate-400"
+                      }`}
+                    >
+                      {Number(r.hilang) || 0}
+                    </td>
                     <td>
                       {r.total === 0 ? (
                         <Badge tone="slate">Belum ada eksemplar</Badge>
@@ -242,11 +258,6 @@ export default function HalamanInventaris() {
                         <Badge tone="amber">Stok lebih {r.selisih}</Badge>
                       ) : (
                         <Badge tone="rose">Stok kurang {Math.abs(r.selisih)}</Badge>
-                      )}
-                      {(Number(r.rusak) || 0) + (Number(r.hilang) || 0) > 0 && (
-                        <span className="ml-2 text-xs text-[var(--muted)]">
-                          {Number(r.rusak) || 0} rusak · {Number(r.hilang) || 0} hilang
-                        </span>
                       )}
                     </td>
                     <td>
