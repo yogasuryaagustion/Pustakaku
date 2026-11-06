@@ -19,6 +19,9 @@ export type Hasil = { ok: boolean; pesan: string };
 
 export type KunciData = "buku" | "anggota" | "peminjaman";
 
+/** Kondisi fisik yang boleh dicatat petugas saat menerima pengembalian. */
+export type KondisiKembali = "layak" | "rusak_ringan";
+
 const SEMUA_KUNCI: KunciData[] = ["buku", "anggota", "peminjaman"];
 
 // Halaman yang tidak perlu memuat semua data perpustakaan secara otomatis.
@@ -273,7 +276,11 @@ interface LibraryState {
     tanggalPinjam?: string,
   ) => Promise<Hasil>;
 
-  kembalikanBuku: (peminjamanId: string) => Promise<Hasil>;
+  kembalikanBuku: (
+    peminjamanId: string,
+    /** Kondisi salinan saat diterima; kosong = kondisi lama dipertahankan. */
+    kondisi?: KondisiKembali,
+  ) => Promise<Hasil>;
 
   perpanjangPinjam: (
     peminjamanId: string,
@@ -424,13 +431,14 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
   );
 
   const kembalikanBuku = useCallback(
-    (peminjamanId: string) =>
+    (peminjamanId: string, kondisi?: KondisiKembali) =>
       jalankan(
         () =>
           apiFetch<{ peminjaman: Peminjaman }>(
             `/api/peminjaman/${peminjamanId}/kembali`,
             {
               method: "POST",
+              body: kondisi ? { kondisi_fisik: kondisi } : undefined,
             },
           ),
         "Pengembalian dicatat.",

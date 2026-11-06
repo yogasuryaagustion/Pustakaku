@@ -6,6 +6,7 @@ import {
   useLibrary,
   useHelper,
   hariTerlambat,
+  type KondisiKembali,
 } from "@/lib/library-context";
 import { useBoleh } from "@/lib/auth";
 import type { Peminjaman } from "@/lib/types";
@@ -41,6 +42,24 @@ function statusBadge(
   return { label: "Sedang Dipinjam", tone: "green" };
 }
 
+/** Pilihan kondisi saat pengembalian — server hanya menerima dua nilai ini. */
+const PILIHAN_KONDISI: Array<{
+  nilai: KondisiKembali;
+  judul: string;
+  ket: string;
+}> = [
+  {
+    nilai: "layak",
+    judul: "Layak",
+    ket: "Kembali ke rak dan bisa dipinjam lagi.",
+  },
+  {
+    nilai: "rusak_ringan",
+    judul: "Rusak ringan",
+    ket: "Disimpan sebagai rusak dan tidak ditawarkan untuk dipinjam.",
+  },
+];
+
 export default function SirkulasiPage() {
   const {
     buku,
@@ -66,6 +85,8 @@ export default function SirkulasiPage() {
   });
   const [konfirmasiKembali, setKonfirmasiKembali] =
     useState<Peminjaman | null>(null);
+  const [kondisiKembali, setKondisiKembali] =
+    useState<KondisiKembali>("layak");
 
   const bukuTersedia = useMemo(
     () => buku.filter((b) => stokTersedia(b.id) > 0),
@@ -524,9 +545,10 @@ export default function SirkulasiPage() {
 
                                 <button
                                   className="whitespace-nowrap rounded-lg bg-teal-800 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-teal-900 focus:outline-none focus:ring-4 focus:ring-teal-100"
-                                  onClick={() =>
-                                    setKonfirmasiKembali(p)
-                                  }
+                                  onClick={() => {
+                                    setKondisiKembali("layak");
+                                    setKonfirmasiKembali(p);
+                                  }}
                                 >
                                   Proses Kembali
                                 </button>
@@ -704,6 +726,48 @@ export default function SirkulasiPage() {
               );
             })()}
 
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <p className="font-semibold text-slate-800">
+                Kondisi salinan yang diterima
+              </p>
+              <p className="mt-0.5 text-xs text-slate-500">
+                Salinan rusak ringan tidak akan ditawarkan untuk dipinjam lagi.
+              </p>
+
+              {!konfirmasiKembali.nomorInventaris && (
+                <p className="mt-2 text-xs text-slate-500">
+                  Judul ini belum punya data eksemplar fisik, jadi kondisi tidak
+                  ikut dicatat.
+                </p>
+              )}
+
+              <div className="mt-3 space-y-2">
+                {PILIHAN_KONDISI.map((pilihan) => (
+                  <label
+                    key={pilihan.nilai}
+                    className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2"
+                  >
+                    <input
+                      type="radio"
+                      name="kondisi-kembali"
+                      className="mt-1 h-4 w-4 accent-[var(--brand)]"
+                      value={pilihan.nilai}
+                      checked={kondisiKembali === pilihan.nilai}
+                      onChange={() => setKondisiKembali(pilihan.nilai)}
+                    />
+                    <span>
+                      <span className="block text-sm font-semibold text-slate-800">
+                        {pilihan.judul}
+                      </span>
+                      <span className="block text-xs text-slate-500">
+                        {pilihan.ket}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
             <div className="flex justify-end gap-2 pt-2">
               <button
                 className="btn btn-ghost"
@@ -720,14 +784,17 @@ export default function SirkulasiPage() {
                     konfirmasiKembali.kodePinjam;
 
                   const hasil = await kembalikanBuku(
-                    konfirmasiKembali.id
+                    konfirmasiKembali.id,
+                    kondisiKembali,
                   );
 
                   setKonfirmasiKembali(null);
 
                   if (hasil.ok) {
                     toast.sukses(
-                      `Pengembalian "${judul}" berhasil dicatat.`
+                      kondisiKembali === "rusak_ringan"
+                        ? `Pengembalian "${judul}" dicatat — salinan ditandai rusak ringan.`
+                        : `Pengembalian "${judul}" berhasil dicatat.`,
                     );
                   } else {
                     toast.gagal(hasil.pesan);
