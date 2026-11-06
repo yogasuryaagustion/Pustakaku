@@ -2,10 +2,13 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { apiFetch } from "@/lib/api";
+import { useToast } from "@/components/toast";
 import { Badge, EmptyState, StatCard } from "@/components/ui";
 import {
   KepalaInventaris,
   NavigasiInventaris,
+  pesanGalat,
   useMuatApi,
 } from "@/components/inventaris-ui";
 
@@ -50,9 +53,14 @@ interface ResponInventaris {
 type FilterSinkron = "semua" | "sesuai" | "menyimpang" | "kosong";
 
 export default function HalamanInventaris() {
+  const toast = useToast();
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<FilterSinkron>("semua");
   const [segar, setSegar] = useState(0);
+
+  // Kode rak untuk judul yang belum punya rak, diisi langsung dari tabel.
+  const [rakDraft, setRakDraft] = useState<Record<string, string>>({});
+  const [menyimpanRak, setMenyimpanRak] = useState<string | null>(null);
 
   const { data: mentah, memuat, galat } = useMuatApi<ResponInventaris>(
     "/api/eksemplar",
@@ -110,6 +118,28 @@ export default function HalamanInventaris() {
     }).length;
     return { judul: daftar.length, totalEksemplar, tersedia, menyimpang };
   }, [data]);
+
+  /** Simpan kode rak satu judul tanpa meninggalkan halaman Inventaris. */
+  const simpanRak = async (bukuId: string, judul: string, rak: string) => {
+    const nilai = rak.trim();
+    if (!nilai) return;
+
+    setMenyimpanRak(bukuId);
+    try {
+      await apiFetch(`/api/buku/${bukuId}`, { method: "PUT", body: { rak: nilai } });
+      setRakDraft((d) => {
+        const salinan = { ...d };
+        delete salinan[bukuId];
+        return salinan;
+      });
+      toast.sukses(`Rak “${judul}” disimpan: ${nilai}`);
+      setSegar((s) => s + 1);
+    } catch (e) {
+      toast.gagal(pesanGalat(e));
+    } finally {
+      setMenyimpanRak(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -282,10 +312,63 @@ export default function HalamanInventaris() {
                     </td>
                     <td>{r.kategori || "—"}</td>
                     <td>
-                      {r.rak || (
-                        <span className="inline-flex whitespace-nowrap rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
-                          Tanpa rak
-                        </span>
+                      {r.rak ? (
+                        r.rak
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            className="input h-8 w-24 border-amber-300 bg-amber-50/50 px-2 text-xs"
+                            placeholder="Kode rak…"
+                            maxLength={20}
+                            value={rakDraft[r.buku_id] ?? ""}
+                            onChange={(e) =>
+                              setRakDraft((d) => ({ ...d, [r.buku_id]: e.target.value }))
+                            }
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                void simpanRak(
+                                  r.buku_id,
+                                  r.judul,
+                                  rakDraft[r.buku_id] ?? "",
+                                );
+                              }
+                            }}
+                            aria-label={`Kode rak untuk ${r.judul}`}
+                            disabled={menyimpanRak === r.buku_id}
+                          />
+                          <button
+                            type="button"
+                            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-amber-300 bg-white text-amber-900 transition hover:border-amber-400 disabled:opacity-50"
+                            onClick={() =>
+                              void simpanRak(r.buku_id, r.judul, rakDraft[r.buku_id] ?? "")
+                            }
+                            disabled={
+                              menyimpanRak === r.buku_id ||
+                              !(rakDraft[r.buku_id] ?? "").trim()
+                            }
+                            aria-label={`Simpan kode rak ${r.judul}`}
+                            title="Simpan kode rak"
+                          >
+                            {menyimpanRak === r.buku_id ? (
+                              <span className="text-xs">…</span>
+                            ) : (
+                              <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                aria-hidden="true"
+                              >
+                                <path d="M20 6L9 17l-5-5" />
+                              </svg>
+                            )}
+                          </button>
+                        </div>
                       )}
                     </td>
                     <td className="text-right font-semibold">{r.stok}</td>
