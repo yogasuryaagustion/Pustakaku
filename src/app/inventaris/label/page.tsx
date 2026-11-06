@@ -8,7 +8,7 @@
 // tampil tanpa sidebar (lihat RUTE_POLOS di AppShell) agar hasil cetak bersih.
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useMuatApi } from "@/components/inventaris-ui";
 import { useSistem } from "@/lib/sistem";
 
@@ -29,7 +29,32 @@ export default function LabelInventarisPage() {
   );
 
   const label = useMemo(() => data?.label ?? [], [data]);
-  const jumlahLembar = Math.max(1, Math.ceil(label.length / LABEL_PER_LEMBAR));
+
+  // Penyaringan sebelum cetak: pustakawan biasanya mencetak label per rak,
+  // atau mengulang label untuk satu judul saja.
+  const [cari, setCari] = useState("");
+  const [rak, setRak] = useState("");
+
+  const daftarRak = useMemo(() => {
+    const kumpulan = new Set<string>();
+    for (const l of label) kumpulan.add(l.rak || "Tanpa rak");
+    return [...kumpulan].sort((a, b) => a.localeCompare(b, "id"));
+  }, [label]);
+
+  const tampil = useMemo(() => {
+    const q = cari.trim().toLowerCase();
+    return label.filter((l) => {
+      if (rak && (l.rak || "Tanpa rak") !== rak) return false;
+      if (!q) return true;
+      return (
+        l.judul.toLowerCase().includes(q) ||
+        l.nomor_inventaris.toLowerCase().includes(q)
+      );
+    });
+  }, [label, cari, rak]);
+
+  const menyaring = cari.trim() !== "" || rak !== "";
+  const jumlahLembar = Math.max(1, Math.ceil(tampil.length / LABEL_PER_LEMBAR));
 
   return (
     <main className="min-h-screen bg-slate-100 print:min-h-0 print:bg-white">
@@ -46,8 +71,11 @@ export default function LabelInventarisPage() {
               Label QR Inventaris
             </h1>
             <p className="mt-1 text-sm text-slate-500">
-              {label.length} eksemplar · {jumlahLembar} lembar A4 · 24 label per
-              lembar (3 × 8). QR berisi nomor inventaris saja.
+              {menyaring
+                ? `${tampil.length} dari ${label.length} eksemplar`
+                : `${label.length} eksemplar`}{" "}
+              · {jumlahLembar} lembar A4 · 24 label per lembar (3 × 8). QR
+              berisi nomor inventaris saja.
             </p>
           </div>
 
@@ -55,11 +83,66 @@ export default function LabelInventarisPage() {
             type="button"
             className="btn btn-primary"
             onClick={() => window.print()}
-            disabled={label.length === 0}
+            disabled={tampil.length === 0}
           >
             Cetak label
           </button>
         </header>
+
+        {!memuat && label.length > 0 && (
+          <div className="mb-5 flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 print:hidden">
+            <div className="min-w-[220px] flex-1">
+              <label
+                className="mb-1 block text-xs font-semibold text-slate-600"
+                htmlFor="label-cari"
+              >
+                Cari judul atau nomor inventaris
+              </label>
+              <input
+                id="label-cari"
+                className="input"
+                placeholder="mis. Laskar Pelangi atau INV-0007"
+                value={cari}
+                onChange={(e) => setCari(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label
+                className="mb-1 block text-xs font-semibold text-slate-600"
+                htmlFor="label-rak"
+              >
+                Rak
+              </label>
+              <select
+                id="label-rak"
+                className="input w-auto"
+                value={rak}
+                onChange={(e) => setRak(e.target.value)}
+              >
+                <option value="">Semua rak</option>
+                {daftarRak.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {menyaring && (
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => {
+                  setCari("");
+                  setRak("");
+                }}
+              >
+                Tampilkan semua
+              </button>
+            )}
+          </div>
+        )}
 
         {galat && (
           <p
@@ -80,14 +163,20 @@ export default function LabelInventarisPage() {
           </p>
         )}
 
-        {label.length > 0 && (
+        {!memuat && label.length > 0 && tampil.length === 0 && (
+          <p className="rounded-xl border border-slate-200 bg-white px-4 py-6 text-center text-sm text-slate-500 print:hidden">
+            Tidak ada label yang cocok dengan penyaringan ini.
+          </p>
+        )}
+
+        {tampil.length > 0 && (
           <div className="overflow-x-auto print:overflow-visible">
             <section
               className="lembar-label mx-auto w-[210mm] min-w-[210mm] bg-white p-[10mm] shadow-[0_10px_30px_rgba(15,23,42,0.08)] print:w-auto print:min-w-0 print:p-0 print:shadow-none"
               aria-label="Lembar label QR inventaris"
             >
               <div className="grid grid-cols-3">
-                {label.map((l) => (
+                {tampil.map((l) => (
                   <article
                     key={l.id}
                     className="label-item flex h-[33.9mm] items-center gap-[2.5mm] border border-dashed border-slate-300 p-[3mm]"
