@@ -352,12 +352,11 @@ export default function HalamanDataEksemplar() {
             Memuat data eksemplar…
           </div>
         ) : baris.length === 0 ? (
-          <div className="p-6">
-            <EmptyState
-              pesan="Belum ada eksemplar yang cocok"
-              sub="Tambahkan eksemplar baru atau ubah filter pencarian."
-            />
-          </div>
+          <EmptyState
+            kartu={false}
+            pesan="Belum ada eksemplar yang cocok"
+            sub="Tambahkan eksemplar baru atau ubah filter pencarian."
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="table-base">

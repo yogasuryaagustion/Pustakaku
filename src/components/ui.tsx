@@ -262,9 +262,21 @@ export function ConfirmDialog({
   );
 }
 
-export function EmptyState({ pesan, sub }: { pesan: string; sub?: string }) {
+/**
+ * Pesan kosong. `kartu={false}` dipakai bila wadahnya sudah berupa kartu —
+ * tanpa itu, border kartu tampil dua kali (kartu di dalam kartu).
+ */
+export function EmptyState({
+  pesan,
+  sub,
+  kartu = true,
+}: {
+  pesan: string;
+  sub?: string;
+  kartu?: boolean;
+}) {
   return (
-    <div className="card p-10 text-center">
+    <div className={kartu ? "card p-10 text-center" : "p-10 text-center"}>
       <div className="mx-auto mb-3 h-12 w-12 rounded-full bg-slate-100 grid place-items-center text-[var(--muted)]">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />

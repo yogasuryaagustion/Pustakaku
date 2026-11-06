@@ -144,7 +144,7 @@ export default function HalamanInventaris() {
         <StatCard
           label="Eksemplar Fisik"
           value={data ? statistik.totalEksemplar : "—"}
-          sub="baris di eksemplar_buku"
+          sub="salinan tercatat di sistem"
           tone="sky"
           ikon="M20 7l-8-4-8 4v10l8 4 8-4V7z"
         />
@@ -158,7 +158,7 @@ export default function HalamanInventaris() {
         <StatCard
           label="Stok Menyimpang"
           value={data ? statistik.menyimpang : "—"}
-          sub="stok ≠ jumlah eksemplar"
+          sub="judul perlu direkonsiliasi"
           tone="rose"
           ikon="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"
         />
@@ -197,12 +197,11 @@ export default function HalamanInventaris() {
             Memuat inventaris…
           </div>
         ) : baris.length === 0 ? (
-          <div className="p-6">
-            <EmptyState
-              pesan="Tidak ada judul yang cocok"
-              sub="Ubah kata kunci atau filter, lalu coba lagi."
-            />
-          </div>
+          <EmptyState
+            kartu={false}
+            pesan="Tidak ada judul yang cocok"
+            sub="Ubah kata kunci atau filter, lalu coba lagi."
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="table-base">

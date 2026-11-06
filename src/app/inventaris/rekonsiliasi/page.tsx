@@ -182,12 +182,15 @@ export default function HalamanRekonsiliasi() {
             Menghitung sinkronisasi…
           </div>
         ) : baris.length === 0 ? (
-          <div className="p-6">
-            <EmptyState
-              pesan={hanyaSelisih ? "Semua stok sudah sesuai" : "Belum ada data inventaris"}
-              sub={hanyaSelisih ? "Tidak ada judul yang perlu diperbaiki." : "Tambahkan eksemplar terlebih dahulu."}
-            />
-          </div>
+          <EmptyState
+            kartu={false}
+            pesan={hanyaSelisih ? "Semua stok sudah sesuai" : "Belum ada data inventaris"}
+            sub={
+              hanyaSelisih
+                ? "Tidak ada judul yang perlu diperbaiki."
+                : "Tambahkan eksemplar terlebih dahulu."
+            }
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="table-base">

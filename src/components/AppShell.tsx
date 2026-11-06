@@ -26,6 +26,16 @@ import { useKebijakan } from "@/lib/kebijakan";
 // kebijakan di src/lib/akses.ts — mengubahnya lewat /admin/akses langsung
 // menutup/membuka halaman, tombol, dan mutasi tanpa menyentuh kode.
 
+// Judul sub-halaman yang tidak punya entri menu sendiri (menu menunjuk induk).
+// Tanpa peta ini, header & judul tab jatuh ke tagline perpustakaan.
+const JUDUL_SUB: Record<string, string> = {
+  "/inventaris/eksemplar": "Data Eksemplar",
+  "/inventaris/opname": "Stock Opname",
+  "/inventaris/rekonsiliasi": "Hasil Sinkronisasi",
+  "/inventaris/riwayat": "Riwayat Opname",
+  "/inventaris/label": "Label QR Inventaris",
+};
+
 const NAV: {
   href: string;
   label: string;
@@ -729,7 +739,10 @@ function Shell({ children }: { children: React.ReactNode }) {
   const diizinkan =
     (izinRute === undefined || cekIzin(kebijakan, peran, izinRute)) &&
     peranCocok;
-  const judul = NAV.find((n) => n.href === pathname)?.label ?? sistem.tagline;
+  const judul =
+    NAV.find((n) => n.href === pathname)?.label ??
+    JUDUL_SUB[pathname] ??
+    sistem.tagline;
   const hariIni = new Date().toLocaleDateString("id-ID", {
     weekday: "long",
     day: "numeric",
@@ -803,6 +816,7 @@ function Shell({ children }: { children: React.ReactNode }) {
     const hitung = () => {
       const halaman =
         NAV.find((n) => n.href === pathname)?.label ??
+        JUDUL_SUB[pathname] ??
         (pathname === "/katalog"
           ? "Katalog Buku"
           : pathname.startsWith("/katalog/")
@@ -811,9 +825,7 @@ function Shell({ children }: { children: React.ReactNode }) {
               ? "Masuk"
               : pathname === "/register"
                 ? "Daftar"
-                : pathname === "/inventaris/label"
-                  ? "Label QR Inventaris"
-                  : null);
+                : null);
       return halaman
         ? `${halaman} — ${sistem.nama}`
         : `${sistem.nama} — ${sistem.tagline}`;
@@ -1008,7 +1020,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         {/* Navigasi versi mobile */}
-        <div className="md:hidden sticky top-16 z-20 bg-[var(--card)]/95 backdrop-blur-md border-b border-[var(--border)] px-3 py-2 flex gap-1.5 overflow-x-auto">
+        <div className="md:hidden sticky top-16 z-20 bg-[var(--card)]/95 backdrop-blur-md border-b border-[var(--border)] px-3 py-2 flex gap-1.5 overflow-x-auto tanpa-scrollbar">
           {nav.map((n) => (
             <Link
               key={n.href}

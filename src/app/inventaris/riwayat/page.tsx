@@ -125,12 +125,11 @@ export default function HalamanRiwayatOpname() {
             Memuat riwayat…
           </div>
         ) : daftar.length === 0 ? (
-          <div className="p-6">
-            <EmptyState
-              pesan="Belum ada sesi opname"
-              sub="Mulai dari halaman Stock Opname setelah memilih judul."
-            />
-          </div>
+          <EmptyState
+            kartu={false}
+            pesan="Belum ada sesi opname"
+            sub="Mulai dari halaman Stock Opname setelah memilih judul."
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="table-base">

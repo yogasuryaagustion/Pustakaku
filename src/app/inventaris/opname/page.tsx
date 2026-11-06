@@ -14,7 +14,12 @@ import {
   pesanGalat,
   useMuatApi,
 } from "@/components/inventaris-ui";
-import { KONDISI_EKSEMPLAR, STATUS_EKSEMPLAR } from "@/lib/supabase/inventaris";
+import {
+  KONDISI_EKSEMPLAR,
+  LABEL_KONDISI,
+  LABEL_STATUS,
+  STATUS_EKSEMPLAR,
+} from "@/lib/supabase/inventaris";
 
 // Stock Opname — cocokkan eksemplar fisik satu judul dengan catatan sistem.
 // Tiap baris ditandai ditemukan/tidak ditemukan, boleh sekaligus memperbarui
@@ -84,7 +89,9 @@ export default function HalamanStockOpname() {
             nomor_inventaris: e.nomor_inventaris,
             statusSistem: e.status,
             kondisiSistem: e.kondisi_fisik,
-            ditemukan: true,
+            // Salinan yang tercatat hilang mulai sebagai "tidak ditemukan" —
+            // petugas tinggal mencentang bila ternyata ada di rak.
+            ditemukan: e.status !== "hilang",
             status: e.status,
             kondisi: e.kondisi_fisik,
             keterangan: e.keterangan ?? "",
@@ -217,22 +224,27 @@ export default function HalamanStockOpname() {
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="card p-4">
             <div className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-              Diperiksa
+              Total Eksemplar
             </div>
             <div className="mt-1 text-2xl font-bold">{statistik.total}</div>
+            <div className="mt-1 text-xs text-[var(--muted)]">salinan pada judul ini</div>
           </div>
           <div className="card p-4">
             <div className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
               Ditemukan
             </div>
             <div className="mt-1 text-2xl font-bold text-emerald-600">{statistik.ditemukan}</div>
+            <div className="mt-1 text-xs text-[var(--muted)]">dicentang ada di rak</div>
           </div>
           <div className="card p-4">
             <div className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-              Tidak ditemukan / perubahan
+              Tidak Ditemukan
             </div>
-            <div className="mt-1 text-2xl font-bold text-rose-600">
-              {statistik.tidak} / {statistik.berubah}
+            <div className="mt-1 text-2xl font-bold text-rose-600">{statistik.tidak}</div>
+            <div className="mt-1 text-xs text-[var(--muted)]">
+              {statistik.berubah === 0
+                ? "belum ada perubahan status/kondisi"
+                : `${statistik.berubah} perubahan status/kondisi`}
             </div>
           </div>
         </section>
@@ -246,7 +258,7 @@ export default function HalamanStockOpname() {
               {buku ? "Tandai eksemplar yang benar-benar ada di rak." : "Pilih judul untuk memulai opname."}
             </p>
           </div>
-          {bolehKelola && (
+          {bolehKelola && buku && (
             <button
               type="button"
               className="btn btn-primary"
@@ -259,21 +271,22 @@ export default function HalamanStockOpname() {
         </div>
 
         {!buku ? (
-          <div className="p-6">
-            <EmptyState pesan="Pilih judul terlebih dahulu" sub="Daftar eksemplar akan muncul di sini." />
-          </div>
+          <EmptyState
+            kartu={false}
+            pesan="Pilih judul terlebih dahulu"
+            sub="Daftar eksemplar akan muncul di sini."
+          />
         ) : memuatBaris ? (
           <div className="p-10 text-center text-sm text-[var(--muted)]">
             <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-[var(--brand)]" />
             Memuat eksemplar…
           </div>
         ) : baris.length === 0 ? (
-          <div className="p-6">
-            <EmptyState
-              pesan="Judul ini belum punya eksemplar"
-              sub="Tambahkan eksemplar lewat halaman Data Eksemplar."
-            />
-          </div>
+          <EmptyState
+            kartu={false}
+            pesan="Judul ini belum punya eksemplar"
+            sub="Tambahkan eksemplar lewat halaman Data Eksemplar."
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="table-base">
@@ -295,7 +308,18 @@ export default function HalamanStockOpname() {
                         type="checkbox"
                         className="h-4 w-4 accent-[var(--brand)]"
                         checked={b.ditemukan}
-                        onChange={(e) => ubah(b.id, { ditemukan: e.target.checked })}
+                        onChange={(e) => {
+                          const dicentang = e.target.checked;
+                          // Salinan yang sebelumnya hilang dan kini ditemukan
+                          // tidak boleh tersimpan sebagai "hilang" lagi.
+                          ubah(b.id, {
+                            ditemukan: dicentang,
+                            status:
+                              dicentang && b.status === "hilang" ? "tersedia" : b.status,
+                            kondisi:
+                              dicentang && b.kondisi === "hilang" ? "layak" : b.kondisi,
+                          });
+                        }}
                         aria-label={`Tandai ${b.nomor_inventaris} ditemukan`}
                       />
                     </td>
@@ -318,7 +342,7 @@ export default function HalamanStockOpname() {
                       >
                         {STATUS_EKSEMPLAR.map((s) => (
                           <option key={s} value={s}>
-                            {s}
+                            {LABEL_STATUS[s] ?? s}
                           </option>
                         ))}
                       </select>
@@ -333,7 +357,7 @@ export default function HalamanStockOpname() {
                       >
                         {KONDISI_EKSEMPLAR.map((k) => (
                           <option key={k} value={k}>
-                            {k}
+                            {LABEL_KONDISI[k] ?? k}
                           </option>
                         ))}
                       </select>

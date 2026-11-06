@@ -122,6 +122,16 @@ body {
   background-clip: content-box;
 }
 
+/* Deret menu/filter yang digulir mendatar tanpa batang gulir — batang tipis
+   di bawah deret tombol terlihat seperti garis nyasar. Gulir tetap bisa
+   lewat usapan/roda geser. */
+.tanpa-scrollbar {
+  scrollbar-width: none;
+}
+.tanpa-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* === Utilitas gradien bertema =============================================
    Semua berbasis CSS variable di atas, jadi ikut berubah saat admin
    mengganti warna dasar/gradien di /admin/pengaturan. Dipakai lewat kelas
