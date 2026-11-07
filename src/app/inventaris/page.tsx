@@ -58,6 +58,9 @@ export default function HalamanInventaris() {
   const [filter, setFilter] = useState<FilterSinkron>("semua");
   const [segar, setSegar] = useState(0);
 
+  // Filter cepat untuk memusatkan pengisian rak pada judul yang belum punya.
+  const [hanyaTanpaRak, setHanyaTanpaRak] = useState(false);
+
   // Kode rak untuk judul yang belum punya rak, diisi langsung dari tabel.
   const [rakDraft, setRakDraft] = useState<Record<string, string>>({});
   const [menyimpanRak, setMenyimpanRak] = useState<string | null>(null);
@@ -93,12 +96,13 @@ export default function HalamanInventaris() {
         );
       })
       .filter((r) => {
+        if (hanyaTanpaRak && (r.rak ?? "").trim()) return false;
         if (filter === "sesuai") return r.total > 0 && r.selisih === 0;
         if (filter === "menyimpang") return r.total > 0 && r.selisih !== 0;
         if (filter === "kosong") return r.total === 0;
         return true;
       });
-  }, [data, q, filter]);
+  }, [data, q, filter, hanyaTanpaRak]);
 
   // Judul tanpa rak menyulitkan penelusuran fisik dan pelabelan, jadi
   // ditampilkan sebagai peringatan — dihitung dari seluruh katalog, bukan
@@ -270,6 +274,19 @@ export default function HalamanInventaris() {
             <option value="menyimpang">Stok menyimpang</option>
             <option value="kosong">Belum ada eksemplar</option>
           </select>
+          <button
+            type="button"
+            className={
+              hanyaTanpaRak
+                ? "shrink-0 rounded-lg border border-amber-400 bg-amber-100 px-3 py-2 text-xs font-semibold text-amber-900 transition"
+                : "shrink-0 rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-amber-300"
+            }
+            aria-pressed={hanyaTanpaRak}
+            aria-label="Tampilkan hanya judul yang belum punya rak"
+            onClick={() => setHanyaTanpaRak((v) => !v)}
+          >
+            Tanpa rak{data ? ` (${tanpaRak.length})` : ""}
+          </button>
         </div>
 
         {memuat ? (
@@ -278,11 +295,19 @@ export default function HalamanInventaris() {
             Memuat inventaris…
           </div>
         ) : baris.length === 0 ? (
-          <EmptyState
-            kartu={false}
-            pesan="Tidak ada judul yang cocok"
-            sub="Ubah kata kunci atau filter, lalu coba lagi."
-          />
+          hanyaTanpaRak && tanpaRak.length === 0 ? (
+            <EmptyState
+              kartu={false}
+              pesan="Semua judul sudah punya kode rak"
+              sub="Tidak ada yang perlu dilengkapi. Matikan filter untuk melihat seluruh inventaris."
+            />
+          ) : (
+            <EmptyState
+              kartu={false}
+              pesan="Tidak ada judul yang cocok"
+              sub="Ubah kata kunci atau filter, lalu coba lagi."
+            />
+          )
         ) : (
           <div className="overflow-x-auto">
             <table className="table-base">
