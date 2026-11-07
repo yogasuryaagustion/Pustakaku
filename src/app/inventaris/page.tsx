@@ -65,6 +65,11 @@ export default function HalamanInventaris() {
   const [rakDraft, setRakDraft] = useState<Record<string, string>>({});
   const [menyimpanRak, setMenyimpanRak] = useState<string | null>(null);
 
+  // Pengisian beberapa kode rak sekaligus dari panel peringatan.
+  const [massalTerbuka, setMassalTerbuka] = useState(false);
+  const [massalDraft, setMassalDraft] = useState<Record<string, string>>({});
+  const [menyimpanMassal, setMenyimpanMassal] = useState(false);
+
   const { data: mentah, memuat, galat } = useMuatApi<ResponInventaris>(
     "/api/eksemplar",
     segar,
@@ -123,6 +128,9 @@ export default function HalamanInventaris() {
     return { judul: daftar.length, totalEksemplar, tersedia, menyimpang };
   }, [data]);
 
+  // Berapa kode rak yang sudah diisi di panel isian sekaligus.
+  const terisiMassal = tanpaRak.filter((r) => (massalDraft[r.buku_id] ?? "").trim()).length;
+
   /** Simpan kode rak satu judul tanpa meninggalkan halaman Inventaris. */
   const simpanRak = async (bukuId: string, judul: string, rak: string) => {
     const nilai = rak.trim();
@@ -142,6 +150,47 @@ export default function HalamanInventaris() {
       toast.gagal(pesanGalat(e));
     } finally {
       setMenyimpanRak(null);
+    }
+  };
+
+  /** Simpan semua kode rak yang diisi di panel peringatan sekaligus. */
+  const simpanMassal = async (daftar: BarisRingkas[]) => {
+    const isian = daftar
+      .map((r) => ({ r, rak: (massalDraft[r.buku_id] ?? "").trim() }))
+      .filter((x) => x.rak);
+    if (isian.length === 0) return;
+
+    setMenyimpanMassal(true);
+    const hasil = await Promise.allSettled(
+      isian.map((x) =>
+        apiFetch(`/api/buku/${x.r.buku_id}`, { method: "PUT", body: { rak: x.rak } }),
+      ),
+    );
+    setMenyimpanMassal(false);
+
+    const gagal = hasil.flatMap((h, i) =>
+      h.status === "rejected" ? [{ id: isian[i].r.buku_id, alasan: h.reason }] : [],
+    );
+    const sukses = hasil.length - gagal.length;
+
+    if (sukses > 0) {
+      toast.sukses(
+        `${sukses} kode rak tersimpan${gagal.length ? `, ${gagal.length} gagal` : ""}`,
+      );
+      setSegar((s) => s + 1);
+    } else {
+      toast.gagal(`Kode rak gagal disimpan. ${pesanGalat(gagal[0].alasan)}`);
+    }
+
+    if (gagal.length === 0) {
+      setMassalTerbuka(false);
+      setMassalDraft({});
+    } else {
+      // Sisakan isian yang gagal supaya bisa dicoba lagi.
+      const sisa = new Set(gagal.map((g) => g.id));
+      setMassalDraft((d) =>
+        Object.fromEntries(Object.entries(d).filter(([id]) => sisa.has(id))),
+      );
     }
   };
 
@@ -233,12 +282,36 @@ export default function HalamanInventaris() {
             </p>
             <p className="mt-0.5 leading-6 text-amber-800/90">
               Eksemplarnya sulit dicari di rak dan label QR tercetak tanpa
-              keterangan rak. Lengkapi lewat halaman Katalog.
+              keterangan rak. Isi kode di kolom Rak tabel, atau sekaligus lewat
+              tombol di samping.
             </p>
             <p className="mt-1 line-clamp-2 text-xs leading-5 text-amber-800/80">
               {tanpaRak.map((r) => r.judul).join(" · ")}
             </p>
           </div>
+
+          <button
+            type="button"
+            className={
+              massalTerbuka
+                ? "shrink-0 rounded-lg border border-amber-400 bg-amber-200 px-3 py-1.5 text-xs font-semibold text-amber-900 transition"
+                : "shrink-0 rounded-lg border border-amber-400 bg-amber-100 px-3 py-1.5 text-xs font-semibold text-amber-900 transition hover:border-amber-500"
+            }
+            aria-expanded={massalTerbuka}
+            onClick={() => {
+              if (massalTerbuka) {
+                setMassalTerbuka(false);
+                setMassalDraft({});
+              } else {
+                setMassalTerbuka(true);
+                setMassalDraft(
+                  Object.fromEntries(tanpaRak.map((r) => [r.buku_id, ""])),
+                );
+              }
+            }}
+          >
+            {massalTerbuka ? "Tutup isian" : "Isi sekaligus"}
+          </button>
 
           <Link
             href="/katalog"
@@ -246,6 +319,80 @@ export default function HalamanInventaris() {
           >
             Buka Katalog
           </Link>
+        </section>
+      )}
+
+      {massalTerbuka && tanpaRak.length > 0 && (
+        <section
+          className="card overflow-hidden"
+          aria-label="Isi kode rak sekaligus"
+        >
+          <div className="border-b border-[var(--border)] px-5 py-3.5">
+            <p className="text-sm font-semibold text-slate-800">
+              Isi kode rak sekaligus
+            </p>
+            <p className="mt-0.5 text-xs leading-5 text-[var(--muted)]">
+              {tanpaRak.length} judul menunggu kode rak. Isi yang sudah pasti,
+              sisanya bisa dibiarkan kosong.
+            </p>
+          </div>
+
+          <ul className="divide-y divide-[var(--border)]">
+            {tanpaRak.map((r) => (
+              <li
+                key={r.buku_id}
+                className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-2.5"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-slate-800">
+                    {r.judul}
+                  </p>
+                  <p className="truncate text-xs text-[var(--muted)]">
+                    {r.penulis || "Tanpa penulis"}
+                  </p>
+                </div>
+                <input
+                  className="input h-9 w-32 px-2 text-xs"
+                  placeholder="Kode rak…"
+                  maxLength={20}
+                  value={massalDraft[r.buku_id] ?? ""}
+                  onChange={(e) =>
+                    setMassalDraft((d) => ({ ...d, [r.buku_id]: e.target.value }))
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      void simpanMassal(tanpaRak);
+                    }
+                  }}
+                  aria-label={`Kode rak untuk ${r.judul}`}
+                  disabled={menyimpanMassal}
+                />
+              </li>
+            ))}
+          </ul>
+
+          <div className="flex flex-wrap items-center justify-end gap-2 border-t border-[var(--border)] px-5 py-3">
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => {
+                setMassalTerbuka(false);
+                setMassalDraft({});
+              }}
+              disabled={menyimpanMassal}
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => void simpanMassal(tanpaRak)}
+              disabled={menyimpanMassal || terisiMassal === 0}
+            >
+              {menyimpanMassal ? "Menyimpan…" : `Simpan ${terisiMassal} rak`}
+            </button>
+          </div>
         </section>
       )}
 
