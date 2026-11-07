@@ -133,6 +133,24 @@ export default function HalamanInventaris() {
   // Berapa kode rak yang sudah diisi di panel isian sekaligus.
   const terisiMassal = tanpaRak.filter((r) => (massalDraft[r.buku_id] ?? "").trim()).length;
 
+  // Judul yang berbagi kode rak bisa menandakan salah isi atau penataan fisik
+  // yang perlu dicek, jadi pemakaian tiap rak dihitung sekali di sini.
+  const pemakaianRak = useMemo(() => {
+    const peta = new Map<string, BarisRingkas[]>();
+    for (const r of data?.ringkasan ?? []) {
+      const kunci = (r.rak ?? "").trim().toLowerCase();
+      if (!kunci) continue;
+      peta.set(kunci, [...(peta.get(kunci) ?? []), r]);
+    }
+    return peta;
+  }, [data]);
+
+  /** Judul lain yang memakai kode rak yang sama dengan baris ini. */
+  const rakSerupa = (r: BarisRingkas) => {
+    const sama = pemakaianRak.get((r.rak ?? "").trim().toLowerCase()) ?? [];
+    return sama.length > 1 ? sama.filter((x) => x.buku_id !== r.buku_id) : [];
+  };
+
   /** Simpan kode rak satu judul tanpa meninggalkan halaman Inventaris. */
   const simpanRak = async (bukuId: string, judul: string, rak: string) => {
     const nilai = rak.trim();
@@ -522,7 +540,19 @@ export default function HalamanInventaris() {
                     <td>{r.kategori || "—"}</td>
                     <td>
                       {r.rak ? (
-                        r.rak
+                        <span className="inline-flex flex-wrap items-center gap-1.5">
+                          {r.rak}
+                          {rakSerupa(r).length > 0 && (
+                            <span
+                              className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[11px] font-semibold text-amber-800"
+                              title={`Rak ini juga dipakai: ${rakSerupa(r)
+                                .map((x) => x.judul)
+                                .join(", ")}`}
+                            >
+                              ×{rakSerupa(r).length + 1}
+                            </span>
+                          )}
+                        </span>
                       ) : (
                         <div className="flex items-center gap-1.5">
                           <input
