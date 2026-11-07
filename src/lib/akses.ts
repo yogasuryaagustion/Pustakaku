@@ -161,6 +161,9 @@ const RUTE_IZIN: { path: string; izin: string }[] = [
   { path: "/panel", izin: "panel.lihat" },
   { path: "/dashboard", izin: "dashboard.lihat" },
   { path: "/sirkulasi", izin: "sirkulasi.lihat" },
+  // Kartu pribadi anggota berada di bawah /anggota, tetapi izinnya berbeda —
+  // entri ini harus lebih awal agar tidak tertangkap aturan /anggota.
+  { path: "/anggota/kartu", izin: "kartu.lihat" },
   { path: "/anggota", izin: "anggota.lihat" },
   { path: "/laporan", izin: "laporan.lihat" },
   { path: "/statistik-kunjungan", izin: "laporan.lihat" },
