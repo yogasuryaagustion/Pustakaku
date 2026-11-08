@@ -5,6 +5,8 @@ import { useLibrary, useHelper, hariTerlambat } from "@/lib/library-context";
 import { useSistem } from "@/lib/sistem";
 import { StatCard, Badge, EmptyState, rupiah, tanggalPanjang, BadgeTone } from "@/components/ui";
 import { useJejak, type JenisJejak } from "@/lib/audit";
+import { useReducedMotion } from "motion/react";
+import { NaikBertahap } from "@/components/gerak";
 
 function statusBadge(status: string, telat: number): { label: string; tone: BadgeTone } {
   if (status === "Dikembalikan") return { label: "Dikembalikan", tone: "green" };
@@ -44,6 +46,8 @@ export default function DashboardAdminPage() {
   const sistem = useSistem();
   // useSyncExternalStore: aman dipanggil sebelum early return (server selalu []).
   const jejak = useJejak();
+  // Hormati preferensi sistem: bila gerak dimatikan, grafik langsung penuh.
+  const kurangiGerak = useReducedMotion();
 
   if (!siap) {
     return <div className="p-6 text-[var(--muted)]">Memuat data…</div>;
@@ -154,12 +158,12 @@ export default function DashboardAdminPage() {
       )}
 
       {/* Kartu statistik */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <NaikBertahap className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Total Judul Buku" value={buku.length} sub={`${totalStok} eksemplar`} tone="brand" ikon="M4 19.5A2.5 2.5 0 016.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
         <StatCard label="Anggota Terdaftar" value={anggota.length} sub={`${anggota.filter((a) => a.aktif).length} aktif`} tone="sky" ikon="M16 20v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2 M9 10a4 4 0 100-8 4 4 0 000 8 M22 20v-2a4 4 0 00-3-3.87" />
         <StatCard label="Sedang Dipinjam" value={dipinjam.length} sub="belum kembali" tone="amber" ikon="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01" />
         <StatCard label="Terlambat" value={terlambat.length} sub={rupiah(totalDendaBelum)} tone="rose" ikon="M12 9v4m0 4h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" />
-      </div>
+      </NaikBertahap>
 
       {/* Tren peminjaman + aktivitas terkini */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -200,6 +204,12 @@ export default function DashboardAdminPage() {
                           rx="5"
                           fill="var(--brand)"
                           opacity={t.kini ? 1 : 0.45}
+                          className={kurangiGerak ? undefined : "batang-tumbuh"}
+                          style={
+                            kurangiGerak
+                              ? undefined
+                              : { animationDelay: `${i * 60}ms` }
+                          }
                         />
                       )}
                       <text

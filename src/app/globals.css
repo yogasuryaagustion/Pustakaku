@@ -441,6 +441,27 @@ html {
   animation-delay: 0.24s;
 }
 
+/* Batang grafik tumbuh dari garis dasarnya. Skala dipakai — bukan atribut
+   height — supaya posisi batang tidak bergeser saat animasi berjalan. */
+@keyframes batang-tumbuh {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+.batang-tumbuh {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: batang-tumbuh 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .batang-tumbuh {
+    animation: none;
+  }
+}
+
 /* Ubin ikon mengapung (hero): gerak naik-turun halus tanpa loop keras. */
 @keyframes apung {
   from {
@@ -994,6 +1015,15 @@ html {
 }
 
 /* Judul utama dengan gradien brand (clip-text). */
+/* Judul editorial: serif hangat khusus halaman publik, supaya karakter
+   "buku" terasa tanpa mengubah tipografi antarmuka aplikasi. */
+.judul-editorial {
+  font-family: Georgia, "Iowan Old Style", "Palatino Linotype", "Book Antiqua",
+    serif;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+}
+
 .landing-gradient-text {
   padding-bottom: 0.06em; /* cegah garis dasar terpotong */
   background-image: linear-gradient(

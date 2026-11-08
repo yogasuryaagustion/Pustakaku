@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Reveal, Angka, SampulBuku } from "@/components/ui";
+import { Naik, NaikBertahap } from "@/components/gerak";
 import { useBoleh } from "@/lib/auth";
-import { SEED_BUKU, SEED_ANGGOTA, SEED_PEMINJAMAN } from "@/lib/seed";
+import { useLibrary } from "@/lib/library-context";
+import type { Buku } from "@/lib/types";
 import { useSistem, type SistemPengaturan } from "@/lib/sistem";
 import KoleksiPopuler from "@/components/landing/KoleksiPopuler";
 
@@ -66,7 +68,7 @@ const rupiahRb = (n: number) => "Rp" + new Intl.NumberFormat("id-ID").format(n);
 
 // Kartu buku deret "Koleksi Populer" — dipakai di marquee horizontal
 // (deret diduplikasi di markup agar putaran loop mulus, lihat .marquee-*).
-type BukuPilihan = (typeof SEED_BUKU)[number] & { pinjam: number };
+type BukuPilihan = Buku & { pinjam: number };
 function KartuKoleksi({ b }: { b: BukuPilihan }) {
   return (
     // Margin kanan seragam di SEMUA kartu (termasuk terakhir salinan):
@@ -219,6 +221,15 @@ function keSection(e: React.MouseEvent<HTMLAnchorElement>, id: string) {
 
 export default function LandingPage() {
   const sistem = useSistem();
+  // Katalog publik: angka dan sampul di hero memakai koleksi sungguhan dari
+  // database, bukan data contoh — statistik yang tampil harus bisa dicek ke
+  // katalog. `muatKatalogPublik` di-dedupe oleh context, jadi aman dipanggil
+  // bersamaan dengan section "Koleksi Populer" di bawah.
+  const { buku: bukuKatalog, dipinjam: dipinjamBuku, muatKatalogPublik } =
+    useLibrary();
+  useEffect(() => {
+    void muatKatalogPublik();
+  }, [muatKatalogPublik]);
   // RBAC visual: izin akun.daftar mengatur apakah tombol & ajakan pendaftaran
   // tampil; /register sendiri ikut menutup lewat guard rute AppShell.
   const bolehDaftar = useBoleh("akun.daftar");
@@ -276,20 +287,24 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Angka "real" dari data seed.
-  const totalJudul = SEED_BUKU.length;
-  const totalEksemplar = SEED_BUKU.reduce((s, b) => s + b.stok, 0);
-  const anggotaAktif = SEED_ANGGOTA.filter((a) => a.aktif).length;
+  // Statistik & sampul hero dihitung dari katalog yang benar-benar termuat.
+  // Selama data belum tiba, angka ditampilkan sebagai "—" agar tidak ada
+  // angka contoh yang sempat tampil lalu berubah.
+  const totalJudul = bukuKatalog.length;
+  const totalEksemplar = bukuKatalog.reduce((s, b) => s + b.stok, 0);
+  const jumlahKategori = new Set(
+    bukuKatalog.map((b) => b.kategori).filter(Boolean),
+  ).size;
 
-  // Buku populer berdasarkan jumlah peminjaman seed, diambil 6 teratas.
-  const hitungPinjam: Record<string, number> = {};
-  SEED_PEMINJAMAN.forEach((p) => {
-    hitungPinjam[p.bukuId] = (hitungPinjam[p.bukuId] || 0) + 1;
-  });
-  const bukuPilihan = SEED_BUKU.slice()
-    .map((b) => ({ ...b, pinjam: hitungPinjam[b.id] || 0 }))
-    .sort((a, b) => b.pinjam - a.pinjam || a.judul.localeCompare(b.judul))
-    .slice(0, 6);
+  // Enam judul untuk komposisi sampul & chip kategori — urut berdasarkan
+  // jumlah peminjaman aktif (agregat dari API, tanpa identitas peminjam).
+  const bukuPilihan = useMemo<BukuPilihan[]>(() => {
+    return bukuKatalog
+      .slice()
+      .map((b) => ({ ...b, pinjam: dipinjamBuku[b.id] ?? 0 }))
+      .sort((a, b) => b.pinjam - a.pinjam || a.judul.localeCompare(b.judul))
+      .slice(0, 6);
+  }, [bukuKatalog, dipinjamBuku]);
 
   return (
     <div className="landing-page min-h-screen bg-[var(--background)]">
@@ -554,10 +569,10 @@ export default function LandingPage() {
       >
         <div aria-hidden="true" className="landing-hero-glow" />
 
-        <div className="landing-hero-inner relative z-10 mx-auto grid w-full max-w-7xl items-center gap-12 px-5 pb-16 pt-32 sm:px-8 lg:min-h-[690px] lg:grid-cols-[1.08fr_.92fr] lg:gap-8 lg:px-10 lg:pb-20 lg:pt-36">
-          {/* Kolom kiri */}
-          <div className="landing-hero-copy min-w-0">
-            <div className="anim-naik inline-flex items-center gap-2 rounded-full border border-amber-200/70 bg-white/90 px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-[var(--sh-1)]">
+        <div className="landing-hero-inner relative z-10 mx-auto grid w-full max-w-7xl items-center gap-12 px-5 pb-16 pt-24 sm:px-8 sm:pt-32 lg:min-h-[690px] lg:grid-cols-[1.08fr_.92fr] lg:gap-8 lg:px-10 lg:pb-20 lg:pt-36">
+          {/* Kolom kiri — masuk berurutan agar mata mengikuti alur baca. */}
+          <NaikBertahap className="landing-hero-copy min-w-0" jeda={0.08}>
+            <div className="inline-flex items-center gap-2 rounded-full border border-amber-200/70 bg-white/90 px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-[var(--sh-1)]">
               <span className="grid h-7 w-7 place-items-center rounded-full bg-amber-50 text-amber-500">
                 <svg
                   width="17"
@@ -577,13 +592,15 @@ export default function LandingPage() {
               <span>Perpustakaan Digital Modern</span>
             </div>
 
-            <h1 className="anim-naik anim-naik-1 mt-7 max-w-3xl text-4xl font-extrabold leading-[1.08] tracking-[-0.045em] text-slate-950 sm:text-5xl lg:text-[66px]">
+            <h1 className="mt-7 max-w-3xl text-4xl font-extrabold leading-[1.08] tracking-[-0.045em] text-slate-950 sm:text-5xl lg:text-[66px]">
               Akses Pengetahuan{" "}
-              <span className="landing-gradient-text">Tanpa Batas</span> di Era
-              Digital.
+              <span className="landing-gradient-text judul-editorial italic">
+                Tanpa Batas
+              </span>{" "}
+              di Era Digital.
             </h1>
 
-            <p className="anim-naik anim-naik-2 mt-6 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
+            <p className="mt-6 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
               Jelajahi koleksi buku {sistem.nama}, temukan bacaan yang sesuai
               minatmu, dan kelola peminjaman dengan lebih mudah dari mana saja.
             </p>
@@ -592,7 +609,7 @@ export default function LandingPage() {
             <form
               action="/katalog"
               method="get"
-              className="landing-search anim-naik anim-naik-3 mt-8 flex w-full max-w-2xl items-center gap-3 rounded-2xl border border-teal-900/15 bg-white p-2 shadow-[0_12px_40px_rgba(15,118,110,0.08)] transition-all focus-within:border-teal-600/50 focus-within:shadow-[0_12px_40px_rgba(15,118,110,0.14)]"
+              className="landing-search mt-8 flex w-full max-w-2xl items-center gap-3 rounded-2xl border border-teal-900/15 bg-white p-2 shadow-[0_12px_40px_rgba(15,118,110,0.08)] transition-all focus-within:border-teal-600/50 focus-within:shadow-[0_12px_40px_rgba(15,118,110,0.14)]"
             >
               <svg
                 className="ml-2 shrink-0 text-teal-800"
@@ -643,7 +660,7 @@ export default function LandingPage() {
             </form>
 
             {/* Topik populer berdasarkan kategori buku yang tersedia */}
-            <div className="anim-naik anim-naik-3 mt-5 flex flex-wrap items-center gap-2">
+            <div className="mt-5 flex flex-wrap items-center gap-2">
               <span className="mr-1 text-xs font-semibold text-slate-600">
                 Jelajahi:
               </span>
@@ -662,17 +679,20 @@ export default function LandingPage() {
                 ))}
             </div>
 
-            {/* Statistik dari seed yang saat ini dipakai halaman */}
+            {/* Statistik nyata dari katalog publik — angka bulat tanpa "+". */}
             <div className="mt-9 grid max-w-2xl grid-cols-3 gap-3 border-t border-slate-200/80 pt-6 sm:gap-6">
               {[
                 { v: totalJudul, l: "Judul Buku" },
-                { v: anggotaAktif, l: "Anggota Aktif" },
                 { v: totalEksemplar, l: "Eksemplar" },
+                { v: jumlahKategori, l: "Kategori" },
               ].map((stat) => (
                 <div key={stat.l} className="min-w-0">
                   <div className="text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">
-                    <Angka nilai={stat.v} />
-                    <span className="ml-1 text-teal-600">+</span>
+                    {stat.v > 0 ? (
+                      <Angka nilai={stat.v} />
+                    ) : (
+                      <span className="text-slate-300">—</span>
+                    )}
                   </div>
                   <div className="mt-1 text-xs text-slate-500 sm:text-sm">
                     {stat.l}
@@ -680,10 +700,10 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </NaikBertahap>
 
           {/* Kolom kanan — komposisi sampul buku */}
-          <div className="landing-hero-art relative mx-auto w-full max-w-[530px]">
+          <Naik className="landing-hero-art relative mx-auto w-full max-w-[530px]" delay={0.18}>
             <div aria-hidden="true" className="landing-art-halo" />
 
             {/* Label tren dekoratif */}
@@ -844,7 +864,7 @@ export default function LandingPage() {
                 </span>
               </span>
             </div>
-          </div>
+          </Naik>
         </div>
       </section>
 
@@ -858,7 +878,7 @@ export default function LandingPage() {
           <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand)]">
             Fitur Unggulan
           </span>
-          <h2 className="mt-2 text-3xl lg:text-4xl font-bold tracking-tight">
+          <h2 className="judul-editorial mt-2 text-3xl lg:text-4xl tracking-tight">
             Kenapa memilih {sistem.nama}?
           </h2>
           <p className="mt-3 text-slate-600">
@@ -931,7 +951,7 @@ export default function LandingPage() {
               Alur Praktis 3 Menit
             </span>
 
-            <h2 className="mt-4 text-3xl font-extrabold leading-tight tracking-tight text-slate-950 sm:text-4xl lg:text-[44px]">
+            <h2 className="judul-editorial mt-4 text-3xl leading-tight tracking-tight text-slate-950 sm:text-4xl lg:text-[44px]">
               3 Langkah Mudah Memulai Baca
             </h2>
 
@@ -1051,7 +1071,7 @@ export default function LandingPage() {
               Informasi Perpustakaan
             </span>
 
-            <h2 className="mt-7 text-3xl font-extrabold leading-tight tracking-tight text-slate-950 sm:text-4xl lg:text-[44px]">
+            <h2 className="judul-editorial mt-7 text-3xl leading-tight tracking-tight text-slate-950 sm:text-4xl lg:text-[44px]">
               Jam Layanan & Aturan Peminjaman
             </h2>
 
@@ -1249,7 +1269,7 @@ export default function LandingPage() {
             <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand)]">
               Testimoni
             </span>
-            <h2 className="mt-2 text-3xl lg:text-4xl font-bold tracking-tight">
+            <h2 className="judul-editorial mt-2 text-3xl lg:text-4xl tracking-tight">
               Kata mereka yang sudah memakai
             </h2>
           </Reveal>
@@ -1358,7 +1378,7 @@ export default function LandingPage() {
               Tanya Jawab
             </span>
 
-            <h2 className="mt-7 max-w-lg text-3xl font-extrabold leading-tight tracking-tight text-slate-950 sm:text-4xl lg:text-[44px]">
+            <h2 className="judul-editorial mt-7 max-w-lg text-3xl leading-tight tracking-tight text-slate-950 sm:text-4xl lg:text-[44px]">
               Pertanyaan yang Sering Diajukan
             </h2>
 

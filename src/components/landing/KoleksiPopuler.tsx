@@ -218,7 +218,7 @@ export default function KoleksiPopuler() {
               Katalog Terlengkap
             </span>
 
-            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+            <h2 className="judul-editorial mt-3 text-2xl tracking-tight text-slate-900 sm:text-3xl">
               Koleksi Buku Terpopuler
             </h2>
 

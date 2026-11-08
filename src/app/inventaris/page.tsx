@@ -5,6 +5,7 @@ import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import { useToast } from "@/components/toast";
 import { Badge, EmptyState, StatCard } from "@/components/ui";
+import { Lipat, NaikBertahap } from "@/components/gerak";
 import {
   KepalaInventaris,
   NavigasiInventaris,
@@ -264,7 +265,7 @@ export default function HalamanInventaris() {
         </div>
       )}
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <NaikBertahap className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Judul Terdata"
           value={data ? statistik.judul : "—"}
@@ -293,9 +294,9 @@ export default function HalamanInventaris() {
           tone="rose"
           ikon="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"
         />
-      </section>
+      </NaikBertahap>
 
-      {!memuat && tanpaRak.length > 0 && (
+      <Lipat tunjuk={!memuat && tanpaRak.length > 0}>
         <section
           className="flex flex-wrap items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
           role="status"
@@ -350,9 +351,9 @@ export default function HalamanInventaris() {
             Buka Katalog
           </Link>
         </section>
-      )}
+      </Lipat>
 
-      {massalTerbuka && tanpaRak.length > 0 && (
+      <Lipat tunjuk={massalTerbuka && tanpaRak.length > 0}>
         <section
           className="card overflow-hidden"
           aria-label="Isi kode rak sekaligus"
@@ -449,7 +450,7 @@ export default function HalamanInventaris() {
             </button>
           </div>
         </section>
-      )}
+      </Lipat>
 
       <section className="card overflow-hidden">
         <div className="flex flex-wrap items-center gap-3 border-b border-[var(--border)] px-5 py-4">
