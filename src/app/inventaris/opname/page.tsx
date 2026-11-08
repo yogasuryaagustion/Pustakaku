@@ -6,10 +6,10 @@ import { apiFetch } from "@/lib/api";
 import { useBoleh } from "@/lib/auth";
 import { useToast } from "@/components/toast";
 import { EmptyState } from "@/components/ui";
+import { KepalaHalaman } from "@/components/kepala-halaman";
 import {
   BadgeKondisi,
   BadgeStatus,
-  KepalaInventaris,
   NavigasiInventaris,
   pesanGalat,
   useMuatApi,
@@ -167,9 +167,8 @@ export default function HalamanStockOpname() {
 
   return (
     <div className="space-y-6">
-      <KepalaInventaris
-        judul="Stock Opname"
-        sub="Periksa barang fisik satu judul, tandai yang tidak ditemukan, lalu simpan. Hasilnya tersimpan sebagai riwayat dan langsung memperbarui status eksemplar."
+      <KepalaHalaman
+        deskripsi="Periksa barang fisik satu judul, tandai yang tidak ditemukan, lalu simpan. Hasilnya tersimpan sebagai riwayat dan langsung memperbarui status eksemplar."
       />
 
       <NavigasiInventaris />

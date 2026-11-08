@@ -1,107 +1,55 @@
-
 "use client";
 
 import Link from "next/link";
-import { motion } from "motion/react";
-import {
-  BookOpen,
-  BookMarked,
-  Clock,
-  CheckCircle2,
-  ArrowRight,
-  Library,
-} from "lucide-react";
+import { ArrowRight, BookMarked, BookOpen, Library } from "lucide-react";
 import { useLibrary, useHelper } from "@/lib/library-context";
-import { tanggalPanjang } from "@/components/ui";
+import { Badge, EmptyState, StatCard, tanggalPanjang } from "@/components/ui";
+import { Naik, NaikBertahap } from "@/components/gerak";
+import { useSistem } from "@/lib/sistem";
+
+// Beranda panel anggota. Disusun dengan komponen bersama (.card, StatCard,
+// Badge) supaya terasa satu aplikasi dengan halaman petugas — bukan halaman
+// terpisah dengan kanvas dan judulnya sendiri. Judul halaman sudah tampil di
+// header AppShell ("Beranda"), jadi tidak diulang di sini.
 
 export default function PanelPage() {
   const { peminjaman, siap } = useLibrary();
   const { cariBuku } = useHelper();
+  const sistem = useSistem();
 
-  // Data ringkasan
+  // Ringkasan aktivitas anggota.
   const totalPeminjaman = peminjaman?.length ?? 0;
 
-  // Status mengikuti type Peminjaman (src/lib/types.ts): "Dipinjam" /
-  // "Dikembalikan" / "Terlambat" — tanpa pembanding longgar.
   const peminjamanAktif = (peminjaman ?? []).filter(
-    (item) => item.status === "Dipinjam"
+    (item) => item.status === "Dipinjam",
   );
 
   const selesai = (peminjaman ?? []).filter(
-    (item) => item.status === "Dikembalikan"
+    (item) => item.status === "Dikembalikan",
   );
 
-  const stats = [
-    {
-      title: "Total Peminjaman",
-      value: totalPeminjaman,
-      icon: BookOpen,
-    },
-    {
-      title: "Sedang Dipinjam",
-      value: peminjamanAktif.length,
-      icon: Clock,
-    },
-    {
-      title: "Buku Dikembalikan",
-      value: selesai.length,
-      icon: CheckCircle2,
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-[#f8fafc] px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl space-y-6">
-
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
-        >
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-800">
-              Beranda
-            </h1>
-            <p className="mt-1 text-sm text-slate-500">
-              Selamat datang di panel anggota PustakaKu.
-            </p>
-          </div>
-
-          <Link
-            href="/katalog"
-            className="inline-flex w-fit items-center gap-2 rounded-xl bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-700"
-          >
-            <BookOpen size={17} />
-            Jelajahi Buku
-          </Link>
-        </motion.div>
-
-        {/* Welcome Banner */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-800 to-teal-500 p-6 text-white sm:p-8"
-        >
+    <div className="space-y-6">
+      {/* Sambutan + jalan pintas ke katalog */}
+      <Naik>
+        <section className="relative isolate overflow-hidden rounded-2xl grad-brand p-6 text-white sm:p-8">
           <div className="relative z-10 max-w-xl">
-            <p className="text-sm font-medium text-teal-100">
-              DIGITAL LIBRARY
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/75">
+              Perpustakaan digital
             </p>
             <h2 className="mt-2 text-2xl font-bold sm:text-3xl">
-              Selamat Datang di PustakaKu
+              Selamat datang di {sistem.nama}
             </h2>
-            <p className="mt-3 text-sm leading-relaxed text-teal-50">
-              Temukan pengetahuan baru, jelajahi koleksi buku, dan kelola
-              aktivitas peminjaman buku dengan mudah.
+            <p className="mt-3 text-sm leading-relaxed text-white/85">
+              Temukan bacaan baru, pantau pinjaman, dan kelola keanggotaan Anda
+              dari satu tempat.
             </p>
 
             <Link
               href="/katalog"
-              className="mt-5 inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-teal-700 transition hover:bg-teal-50"
+              className="mt-5 inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-[var(--brand)] transition hover:bg-[var(--brand-soft)]"
             >
-              Lihat Katalog
+              Jelajahi katalog
               <ArrowRight size={16} />
             </Link>
           </div>
@@ -109,184 +57,158 @@ export default function PanelPage() {
           <Library
             className="absolute -bottom-8 -right-4 h-48 w-48 text-white/10 sm:h-56 sm:w-56"
             strokeWidth={1}
+            aria-hidden
           />
-        </motion.div>
+        </section>
+      </Naik>
 
-        {/* Statistics */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {stats.map((stat, index) => {
-            const Icon = stat.icon;
+      {/* Ringkasan angka */}
+      <NaikBertahap className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard
+          label="Total Peminjaman"
+          value={siap ? totalPeminjaman : "—"}
+          sub="sepanjang riwayat"
+          tone="brand"
+          ikon="M4 19.5A2.5 2.5 0 016.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"
+        />
+        <StatCard
+          label="Sedang Dipinjam"
+          value={siap ? peminjamanAktif.length : "—"}
+          sub="belum dikembalikan"
+          tone="sky"
+          ikon="M12 6v6l4 2 M3 12a9 9 0 109-9 8.9 8.9 0 00-6.4 2.6L3 8"
+        />
+        <StatCard
+          label="Buku Dikembalikan"
+          value={siap ? selesai.length : "—"}
+          sub="selesai dipinjam"
+          tone="slate"
+          ikon="M20 6L9 17l-5-5"
+        />
+      </NaikBertahap>
 
-            return (
-              <motion.div
-                key={stat.title}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1, duration: 0.4 }}
-                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-slate-500">
-                      {stat.title}
-                    </p>
-                    <p className="mt-2 text-3xl font-bold text-slate-800">
-                      {siap ? stat.value : "—"}
-                    </p>
-                  </div>
-
-                  <div className="rounded-xl bg-teal-50 p-3 text-teal-600">
-                    <Icon size={23} />
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {/* Main Content */}
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-
-          {/* Loan List */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-slate-800">
-                  Aktivitas Peminjaman
-                </h3>
-                <p className="mt-1 text-xs text-slate-500">
-                  Ringkasan aktivitas peminjaman buku.
-                </p>
-              </div>
-
-              <BookMarked className="text-teal-600" size={22} />
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
+        {/* Peminjaman aktif terbaru */}
+        <div className="card lg:col-span-2">
+          <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-4">
+            <div className="flex items-center gap-2">
+              <span className="grid h-7 w-7 place-items-center rounded-md bg-[var(--brand-soft)] text-[var(--brand)]">
+                <BookMarked size={15} />
+              </span>
+              <h2 className="font-bold">Aktivitas Peminjaman</h2>
             </div>
+            <Link
+              href="/panel/pinjaman"
+              className="text-sm font-semibold text-[var(--brand)] hover:underline"
+            >
+              Lihat semua →
+            </Link>
+          </div>
 
-            {!siap ? (
-              <p className="py-10 text-center text-sm text-slate-500">
-                Memuat data...
-              </p>
-            ) : peminjamanAktif.length === 0 ? (
-              <div className="py-12 text-center">
-                <BookOpen
-                  size={35}
-                  className="mx-auto text-slate-300"
-                />
-                <p className="mt-3 text-sm font-medium text-slate-600">
-                  Belum ada peminjaman aktif.
-                </p>
-                <p className="mt-1 text-xs text-slate-400">
-                  Buku yang sedang dipinjam akan muncul di sini.
-                </p>
-              </div>
-            ) : (
-              <div className="mt-5 divide-y divide-slate-100">
+          {!siap ? (
+            <p className="p-6 text-sm text-[var(--muted)]">Memuat data…</p>
+          ) : peminjamanAktif.length === 0 ? (
+            <EmptyState
+              kartu={false}
+              pesan="Belum ada peminjaman aktif"
+              sub="Buku yang sedang dipinjam akan muncul di sini."
+            />
+          ) : (
+            <div className="px-5">
+              <div className="divide-y divide-[var(--border)]">
                 {peminjamanAktif.slice(0, 5).map((item, index) => (
                   <div
                     key={item.id ?? index}
-                    className="flex items-center justify-between gap-3 py-4"
+                    className="flex items-center justify-between gap-3 py-3.5"
                   >
                     <div className="flex min-w-0 items-center gap-3">
-                      <div className="rounded-xl bg-teal-50 p-3 text-teal-600">
-                        <BookOpen size={19} />
-                      </div>
+                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[var(--brand-soft)] text-[var(--brand)]">
+                        <BookOpen size={17} />
+                      </span>
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-slate-700">
+                        <p className="truncate text-sm font-medium">
                           {cariBuku(item.bukuId)?.judul ?? "Buku"}
                         </p>
-                        <p className="mt-1 text-xs text-slate-400">
-                          {tanggalPanjang(item.tanggalPinjam)}
+                        <p className="mt-0.5 text-xs text-[var(--muted)]">
+                          Dipinjam {tanggalPanjang(item.tanggalPinjam)}
                         </p>
                       </div>
                     </div>
 
-                    <span className="shrink-0 rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
-                      Dipinjam
-                    </span>
+                    <Badge tone="sky">Dipinjam</Badge>
                   </div>
                 ))}
               </div>
-            )}
-
-            <Link
-              href="/panel/pinjaman"
-              className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-slate-200 py-3 text-sm font-semibold text-teal-700 transition hover:bg-teal-50"
-            >
-              Lihat Semua Peminjaman
-              <ArrowRight size={16} />
-            </Link>
-          </div>
-
-          {/* Quick Access */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h3 className="font-bold text-slate-800">
-              Akses Cepat
-            </h3>
-            <p className="mt-1 text-xs text-slate-500">
-              Akses menu anggota dengan mudah.
-            </p>
-
-            <div className="mt-5 space-y-3">
-              <Link
-                href="/katalog"
-                className="flex items-center gap-3 rounded-xl border border-slate-100 p-4 transition hover:border-teal-200 hover:bg-teal-50"
-              >
-                <div className="rounded-lg bg-teal-50 p-2.5 text-teal-600">
-                  <BookOpen size={20} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-slate-700">
-                    Katalog Buku
-                  </p>
-                  <p className="mt-1 text-xs text-slate-400">
-                    Jelajahi koleksi buku
-                  </p>
-                </div>
-                <ArrowRight size={16} className="text-slate-400" />
-              </Link>
-
-              <Link
-                href="/panel/pinjaman"
-                className="flex items-center gap-3 rounded-xl border border-slate-100 p-4 transition hover:border-teal-200 hover:bg-teal-50"
-              >
-                <div className="rounded-lg bg-teal-50 p-2.5 text-teal-600">
-                  <BookMarked size={20} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-slate-700">
-                    Peminjaman Saya
-                  </p>
-                  <p className="mt-1 text-xs text-slate-400">
-                    Periksa status peminjaman
-                  </p>
-                </div>
-                <ArrowRight size={16} className="text-slate-400" />
-              </Link>
-
-              <Link
-                href="/panel/profil"
-                className="flex items-center gap-3 rounded-xl border border-slate-100 p-4 transition hover:border-teal-200 hover:bg-teal-50"
-              >
-                <div className="rounded-lg bg-teal-50 p-2.5 text-teal-600">
-                  <CheckCircle2 size={20} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-slate-700">
-                    Profil Anggota
-                  </p>
-                  <p className="mt-1 text-xs text-slate-400">
-                    Kelola informasi akun
-                  </p>
-                </div>
-                <ArrowRight size={16} className="text-slate-400" />
-              </Link>
             </div>
-          </div>
+          )}
         </div>
 
-        <p className="pb-3 text-center text-xs text-slate-400">
-          PustakaKu · Sistem Informasi Perpustakaan Digital
-        </p>
+        {/* Jalan pintas menu anggota */}
+        <div className="card">
+          <div className="border-b border-[var(--border)] px-5 py-4">
+            <h2 className="font-bold">Akses Cepat</h2>
+            <p className="mt-0.5 text-xs text-[var(--muted)]">
+              Menu yang paling sering dibuka anggota.
+            </p>
+          </div>
+
+          <div className="space-y-1 p-3">
+            {[
+              {
+                href: "/katalog",
+                label: "Katalog Buku",
+                sub: "Jelajahi koleksi",
+                ikon: <BookOpen size={18} />,
+              },
+              {
+                href: "/panel/pinjaman",
+                label: "Peminjaman Saya",
+                sub: "Periksa status pinjaman",
+                ikon: <BookMarked size={18} />,
+              },
+              {
+                href: "/panel/profil",
+                label: "Profil Anggota",
+                sub: "Kelola informasi akun",
+                ikon: (
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                  >
+                    <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
+                    <path d="M9 11a4 4 0 100-8 4 4 0 000 8" />
+                  </svg>
+                ),
+              },
+            ].map((menu) => (
+              <Link
+                key={menu.href}
+                href={menu.href}
+                className="flex items-center gap-3 rounded-lg px-2.5 py-2.5 transition-colors hover:bg-[var(--brand-soft)]/50"
+              >
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[var(--brand-soft)] text-[var(--brand)]">
+                  {menu.ikon}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium">
+                    {menu.label}
+                  </span>
+                  <span className="mt-0.5 block truncate text-xs text-[var(--muted)]">
+                    {menu.sub}
+                  </span>
+                </span>
+                <ArrowRight size={15} className="shrink-0 text-[var(--muted)]" />
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

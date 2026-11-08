@@ -5,8 +5,8 @@ import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/toast";
 import { Badge, EmptyState, StatCard } from "@/components/ui";
+import { KepalaHalaman } from "@/components/kepala-halaman";
 import {
-  KepalaInventaris,
   NavigasiInventaris,
   pesanGalat,
   useMuatApi,
@@ -89,9 +89,8 @@ export default function HalamanRekonsiliasi() {
 
   return (
     <div className="space-y-6">
-      <KepalaInventaris
-        judul="Hasil Sinkronisasi"
-        sub="Selisih dihitung dari stok katalog dikurangi jumlah eksemplar fisik. Nilai positif berarti stok tercatat lebih banyak daripada barang yang ada."
+      <KepalaHalaman
+        deskripsi="Selisih dihitung dari stok katalog dikurangi jumlah eksemplar fisik. Nilai positif berarti stok tercatat lebih banyak daripada barang yang ada."
         aksi={
           superadmin ? (
             <button

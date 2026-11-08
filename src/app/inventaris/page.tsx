@@ -6,8 +6,8 @@ import { apiFetch } from "@/lib/api";
 import { useToast } from "@/components/toast";
 import { Badge, EmptyState, StatCard } from "@/components/ui";
 import { Lipat, NaikBertahap } from "@/components/gerak";
+import { KepalaHalaman } from "@/components/kepala-halaman";
 import {
-  KepalaInventaris,
   NavigasiInventaris,
   pesanGalat,
   useMuatApi,
@@ -237,9 +237,8 @@ export default function HalamanInventaris() {
 
   return (
     <div className="space-y-6">
-      <KepalaInventaris
-        judul="Inventaris Buku"
-        sub="Pantau jumlah eksemplar fisik tiap judul dan bandingkan dengan stok tercatat di katalog. Selisih berarti stok perlu direkonsiliasi."
+      <KepalaHalaman
+        deskripsi="Pantau jumlah eksemplar fisik tiap judul dan bandingkan dengan stok tercatat di katalog. Selisih berarti stok perlu direkonsiliasi."
         aksi={
           <Link href="/inventaris/opname" className="btn btn-primary">
             Mulai Stock Opname

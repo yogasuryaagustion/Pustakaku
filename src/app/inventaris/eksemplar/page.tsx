@@ -7,10 +7,10 @@ import { apiFetch } from "@/lib/api";
 import { useBoleh } from "@/lib/auth";
 import { useToast } from "@/components/toast";
 import { ConfirmDialog, EmptyState, Modal, StatCard } from "@/components/ui";
+import { KepalaHalaman } from "@/components/kepala-halaman";
 import {
   BadgeKondisi,
   BadgeStatus,
-  KepalaInventaris,
   NavigasiInventaris,
   pesanGalat,
   tanggalSingkat,
@@ -267,9 +267,8 @@ export default function HalamanDataEksemplar() {
 
   return (
     <div className="space-y-6">
-      <KepalaInventaris
-        judul="Data Eksemplar"
-        sub="Setiap buku fisik punya satu nomor inventaris unik. Status dan kondisi di sini menjadi acuan ketersediaan di katalog."
+      <KepalaHalaman
+        deskripsi="Setiap buku fisik punya satu nomor inventaris unik. Status dan kondisi di sini menjadi acuan ketersediaan di katalog."
         aksi={
           bolehKelola ? (
             <div className="flex flex-wrap gap-2">

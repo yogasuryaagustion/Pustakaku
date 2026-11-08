@@ -10,6 +10,7 @@ import {
   StatCard,
   tanggalPanjang,
 } from "@/components/ui";
+import { KepalaHalaman } from "@/components/kepala-halaman";
 
 // === Monitoring Kunjungan ==================================================
 // Halaman presensi/buku tamu di DALAM panel admin (src/components/AppShell.tsx):
@@ -325,49 +326,41 @@ export default function MonitoringKunjunganPage() {
 
   return (
     <main className="min-w-0 space-y-6 pb-8">
-      {/* JUDUL + AKSI */}
-      <section className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-              Buku Kunjungan &amp; Presensi
-            </h1>
-            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              Check-in langsung
-            </span>
-          </div>
-
-          <p className="mt-1 text-sm leading-6 text-slate-500">
-            Log pengunjung perpustakaan — satu anggota tercatat sekali per
-            hari lengkap dengan waktu check-in (WIB).
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={() => {
-              setGalatModal("");
-              setModal(true);
-            }}
-          >
-            Catat Kunjungan
-          </button>
-
-          {bolehEkspor && (
+      {/* Kepala halaman — judul sudah tampil di header AppShell. */}
+      <KepalaHalaman
+        remah={
+          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            Check-in langsung
+          </span>
+        }
+        deskripsi="Buku kunjungan dan presensi: log pengunjung perpustakaan — satu anggota tercatat sekali per hari lengkap dengan waktu check-in (WIB)."
+        aksi={
+          <>
             <button
               type="button"
-              className="btn btn-ghost"
-              onClick={() => void eksporCSV()}
-              disabled={prosesEkspor || memuat}
+              className="btn btn-primary"
+              onClick={() => {
+                setGalatModal("");
+                setModal(true);
+              }}
             >
-              {prosesEkspor ? "Menyiapkan…" : "Ekspor CSV"}
+              Catat Kunjungan
             </button>
-          )}
-        </div>
-      </section>
+
+            {bolehEkspor && (
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => void eksporCSV()}
+                disabled={prosesEkspor || memuat}
+              >
+                {prosesEkspor ? "Menyiapkan…" : "Ekspor CSV"}
+              </button>
+            )}
+          </>
+        }
+      />
 
       {!bolehEkspor && (
         <p className="text-xs text-[var(--muted)]">

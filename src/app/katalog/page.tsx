@@ -17,6 +17,7 @@ import {
   SampulBuku,
   tanggalPanjang,
 } from "@/components/ui";
+import { KepalaHalaman } from "@/components/kepala-halaman";
 
 import { useToast } from "@/components/toast";
 
@@ -379,35 +380,29 @@ function KatalogKonten() {
 
   return (
     <div className="min-w-0 space-y-6 pb-8">
-      {/* HEADER KONTEN */}
-      <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            PustakaKu / Koleksi
-          </div>
-
-          <h1 className="text-2xl font-bold tracking-tight text-[var(--foreground)] sm:text-3xl">
-            Katalog Koleksi Buku
-          </h1>
-
-          <p className="mt-1.5 max-w-2xl text-sm leading-6 text-[var(--muted)]">
-            Kelola dan jelajahi koleksi buku fisik maupun e-book yang terdaftar
-            dalam inventaris perpustakaan.
-          </p>
-        </div>
-
-        {bolehKelolaBuku && sedangMasuk && (
-          <button
-            type="button"
-            onClick={bukaTambah}
-            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-teal-800 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-teal-900/10 transition hover:-translate-y-0.5 hover:bg-teal-900 focus:outline-none focus:ring-4 focus:ring-teal-700/15"
-          >
-            <Ikon d={IKON.tambah} size={18} />
-            Tambah Judul Baru
-          </button>
-        )}
-      </section>
+      {/* HEADER KONTEN — judul sudah tampil di header AppShell. */}
+      <KepalaHalaman
+        remah={
+          <span className="inline-flex items-center gap-1.5 text-[var(--brand)]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--brand)]" />
+            Koleksi perpustakaan
+          </span>
+        }
+        deskripsi="Kelola dan jelajahi koleksi buku fisik maupun e-book yang terdaftar dalam inventaris perpustakaan."
+        aksi={
+          bolehKelolaBuku &&
+          sedangMasuk && (
+            <button
+              type="button"
+              onClick={bukaTambah}
+              className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--brand)] px-5 py-3 text-sm font-semibold text-white shadow-md shadow-teal-900/10 transition hover:-translate-y-0.5 hover:bg-[var(--brand-hover)] focus:outline-none focus:ring-4 focus:ring-[var(--brand-soft)]"
+            >
+              <Ikon d={IKON.tambah} size={18} />
+              Tambah Judul Baru
+            </button>
+          )
+        }
+      />
 
       {/* STATISTIK RINGKAS */}
 

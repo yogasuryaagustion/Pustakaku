@@ -11,6 +11,7 @@ import {
 import { useBoleh } from "@/lib/auth";
 import type { Peminjaman } from "@/lib/types";
 import { useSistem } from "@/lib/sistem";
+import { KepalaHalaman } from "@/components/kepala-halaman";
 import {
   Modal,
   Badge,
@@ -195,46 +196,37 @@ export default function SirkulasiPage() {
 
   return (
     <div className="min-h-full space-y-6 pb-8">
-      {/* Judul halaman */}
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="mb-2 flex items-center gap-2">
-            <span className="h-6 w-1 rounded-full bg-teal-700" />
-            <span className="text-xs font-bold uppercase tracking-[0.16em] text-teal-700">
-              Operasional Perpustakaan
-            </span>
-          </div>
-
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-            Meja Sirkulasi Peminjaman
-          </h1>
-
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 sm:text-base">
-            Kelola peminjaman aktif, tanggal pengembalian,
-            dan riwayat sirkulasi pembaca.
-          </p>
-        </div>
-
-        {bolehKelola && (
-          <button
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-teal-800 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-900 focus:outline-none focus:ring-4 focus:ring-teal-100"
-            onClick={() => setOpenPinjam(true)}
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
+      {/* Kepala halaman — judul sudah tampil di header AppShell. */}
+      <KepalaHalaman
+        remah={
+          <span className="inline-flex items-center gap-2 text-[var(--brand)]">
+            <span className="h-4 w-1 rounded-full bg-[var(--brand)]" />
+            Operasional perpustakaan
+          </span>
+        }
+        deskripsi="Meja sirkulasi peminjaman: kelola peminjaman aktif, tanggal pengembalian, dan riwayat sirkulasi pembaca."
+        aksi={
+          bolehKelola && (
+            <button
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--brand)] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--brand-hover)] focus:outline-none focus:ring-4 focus:ring-[var(--brand-soft)]"
+              onClick={() => setOpenPinjam(true)}
             >
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-            Pinjam Buku
-          </button>
-        )}
-      </section>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              >
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              Pinjam Buku
+            </button>
+          )
+        }
+      />
 
       {/* Ringkasan */}
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">

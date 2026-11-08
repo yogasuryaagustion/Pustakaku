@@ -146,7 +146,7 @@ function TabButton({
       onClick={onClick}
       className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition ${
         aktif
-          ? "bg-teal-800 text-white shadow-sm"
+          ? "bg-[var(--brand)] text-white shadow-sm"
           : "text-slate-600 hover:bg-teal-50 hover:text-teal-800"
       }`}
     >
@@ -221,7 +221,7 @@ function Toggle({
       aria-checked={aktif}
       onClick={() => onChange(!aktif)}
       className={`relative h-6 w-11 shrink-0 rounded-full transition ${
-        aktif ? "bg-teal-800" : "bg-slate-300"
+        aktif ? "bg-[var(--brand)]" : "bg-slate-300"
       }`}
     >
       <span
@@ -253,7 +253,7 @@ export default function PengaturanProfilPage() {
 
   if (!sedangMasuk || !siap || !kartu || !boleh) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
+      <div className="card p-8 text-center text-sm text-[var(--muted)]">
         Memuat data profil...
       </div>
     );
@@ -466,7 +466,7 @@ function KontenProfil({
   return (
     <div className="mx-auto w-full max-w-[1500px] space-y-6 pb-8">
       {/* HEADER PROFIL */}
-      <section className="relative isolate overflow-hidden rounded-[28px] border border-emerald-400/20 bg-gradient-to-r from-[#00483f] via-[#00785e] to-[#05a875] p-6 text-white shadow-lg shadow-emerald-900/10 sm:p-8">
+      <section className="relative isolate overflow-hidden rounded-2xl border border-white/10 grad-brand p-6 text-white shadow-[var(--sh-3)] sm:p-8">
 
   {/* DEKORASI BACKGROUND */}
   <div className="pointer-events-none absolute inset-0 bg-teal-600 overflow-hidden">
@@ -521,7 +521,7 @@ function KontenProfil({
             className="h-24 w-24 rounded-[22px] border-2 border-emerald-200/50 object-cover shadow-xl sm:h-[120px] sm:w-[120px]"
           />
         ) : (
-          <div className="grid h-24 w-24 place-items-center rounded-[22px] border-2 border-emerald-200/50 bg-gradient-to-br from-emerald-400 to-emerald-700 text-3xl font-extrabold text-white shadow-xl sm:h-[120px] sm:w-[120px] sm:text-4xl">
+          <div className="grid h-24 w-24 place-items-center rounded-[22px] border-2 border-white/30 grad-brand text-3xl font-extrabold text-white shadow-xl sm:h-[120px] sm:w-[120px] sm:text-4xl">
             {inisial || "A"}
           </div>
         )}
@@ -580,10 +580,10 @@ function KontenProfil({
 
         </div>
 
-        {/* NAMA ANGGOTA */}
-        <h1 className="break-words text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+        {/* NAMA ANGGOTA — h2, karena judul halaman (h1) ada di header AppShell. */}
+        <h2 className="break-words text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
           {sedangMasuk.nama}
-        </h1>
+        </h2>
 
         {/* INFORMASI TAMBAHAN */}
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs font-medium text-emerald-50 sm:text-sm">
@@ -643,7 +643,7 @@ function KontenProfil({
 </section>
 
       {/* NAVIGASI TAB */}
-      <nav className="overflow-x-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+      <nav className="overflow-x-auto card p-2">
         <div className="flex min-w-max items-center gap-1">
           <TabButton
             aktif={tab === "identitas"}
@@ -683,7 +683,7 @@ function KontenProfil({
       {tab === "identitas" && (
         <div className="space-y-6">
           {!modeEdit ? (
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
+            <section className="card p-6 sm:p-7">
               <div className="flex flex-col justify-between gap-3 border-b border-slate-100 pb-5 sm:flex-row sm:items-center">
                 <div>
                   <h2 className="text-base font-bold text-slate-900">
@@ -728,7 +728,7 @@ function KontenProfil({
           ) : (
             <form
               onSubmit={simpanProfil}
-              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7"
+              className="card p-6 sm:p-7"
             >
               <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-5">
                 <div>
@@ -757,7 +757,7 @@ function KontenProfil({
                     className="h-16 w-16 rounded-2xl border border-slate-100 object-cover"
                   />
                 ) : (
-                  <div className="grid h-16 w-16 place-items-center rounded-2xl bg-teal-800 text-xl font-bold text-white">
+                  <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[var(--brand)] text-xl font-bold text-white">
                     {inisial || "A"}
                   </div>
                 )}
@@ -853,7 +853,7 @@ function KontenProfil({
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-teal-800 px-6 py-3 text-xs font-semibold text-white shadow-sm transition hover:bg-teal-900"
+                  className="rounded-xl bg-[var(--brand)] px-6 py-3 text-xs font-semibold text-white shadow-sm transition hover:bg-[var(--brand-hover)]"
                 >
                   Simpan Perubahan
                 </button>
@@ -866,7 +866,7 @@ function KontenProfil({
       {/* TAB PREFERENSI */}
       {tab === "preferensi" && (
         <div className="space-y-6">
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
+          <section className="card p-6 sm:p-7">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-5">
               <div>
                 <h2 className="text-base font-bold text-slate-900">
@@ -903,7 +903,7 @@ function KontenProfil({
             </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
+          <section className="card p-6 sm:p-7">
             <div className="border-b border-slate-100 pb-5">
               <h2 className="text-base font-bold text-slate-900">
                 Target & Tantangan Membaca
@@ -945,7 +945,7 @@ function KontenProfil({
             </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
+          <section className="card p-6 sm:p-7">
             <div className="border-b border-slate-100 pb-5">
               <h2 className="text-base font-bold text-slate-900">
                 Pengaturan Notifikasi & Pengingat Otomatis
@@ -1010,7 +1010,7 @@ function KontenProfil({
         <div className="space-y-6">
           <form
             onSubmit={simpanSandi}
-            className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7"
+            className="card p-6 sm:p-7"
           >
             <div className="border-b border-slate-100 pb-5">
               <h2 className="text-base font-bold text-slate-900">
@@ -1049,14 +1049,14 @@ function KontenProfil({
               <button
                 type="submit"
                 disabled={prosesSandi}
-                className="rounded-xl bg-teal-800 px-6 py-3 text-xs font-semibold text-white shadow-sm transition hover:bg-teal-900 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-xl bg-[var(--brand)] px-6 py-3 text-xs font-semibold text-white shadow-sm transition hover:bg-[var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {prosesSandi ? "Memproses..." : "Perbarui Kata Sandi"}
               </button>
             </div>
           </form>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
+          <section className="card p-6 sm:p-7">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-5">
               <div>
                 <h2 className="text-base font-bold text-slate-900">
@@ -1089,7 +1089,7 @@ function KontenProfil({
             </div>
           </section>
 
-          <section className="flex flex-col justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:p-7">
+          <section className="flex flex-col justify-between gap-4 card p-6 sm:flex-row sm:items-center sm:p-7">
             <div className="flex items-center gap-4">
               <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700">
                 <Ikon nama="shield" ukuran={22} />
@@ -1113,7 +1113,7 @@ function KontenProfil({
       {/* TAB AKTIVITAS */}
       {tab === "aktivitas" && (
         <div className="space-y-6">
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
+          <section className="card p-6 sm:p-7">
             <div className="border-b border-slate-100 pb-5">
               <h2 className="text-base font-bold text-slate-900">
                 Lencana Kehormatan Anggota
@@ -1171,7 +1171,7 @@ function KontenProfil({
             </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
+          <section className="card p-6 sm:p-7">
             <div className="border-b border-slate-100 pb-5">
               <h2 className="text-base font-bold text-slate-900">
                 Statistik Baca Akumulatif

@@ -118,7 +118,9 @@ export default function BantuanPage() {
             </svg>
           </span>
           <div className="min-w-0">
-            <h1 className="text-2xl font-extrabold sm:text-3xl">Pusat Bantuan {sistem.nama}</h1>
+            {/* Judul halaman sudah ada di header AppShell ("Bantuan"); di
+                sini cukup subjudul agar tidak ada dua judul halaman. */}
+            <h2 className="text-2xl font-extrabold sm:text-3xl">Pusat Bantuan {sistem.nama}</h2>
             <p className="mt-1 text-sm text-white/80">
               Temukan jawaban untuk masalah umum, atau hubungi layanan dukungan perpustakaan kami.
             </p>

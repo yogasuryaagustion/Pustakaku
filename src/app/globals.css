@@ -186,7 +186,11 @@ section[class*="landing"]:not([class*="landing-hero"]):not(
   ) {
   background: #ffffff !important;
 }
-section:not([class*="landing"]):not([id]) {
+/* Dibatasi ke halaman landing. Sebelumnya aturan ini mengenai SEMUA section
+   tanpa id di seluruh aplikasi dengan !important, sehingga section bergradien
+   (mis. hero Profil Anggota) dan section bertanda peringatan (bg-amber-50 pada
+   Inventaris) ikut dipaksa putih — teks putihnya jadi tak terbaca. */
+.landing-page section:not([class*="landing"]):not([id]) {
   background: #ffffff !important;
 }
 .grad-cta {

@@ -77,26 +77,6 @@ export function useMuatApi<T>(path: string, segar = 0) {
   return { data, memuat, galat };
 }
 
-export function KepalaInventaris({
-  judul,
-  sub,
-  aksi,
-}: {
-  judul: string;
-  sub: string;
-  aksi?: React.ReactNode;
-}) {
-  return (
-    <section className="flex flex-wrap items-start justify-between gap-4">
-      <div className="min-w-0">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">{judul}</h1>
-        <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">{sub}</p>
-      </div>
-      {aksi && <div className="flex flex-wrap items-center gap-2">{aksi}</div>}
-    </section>
-  );
-}
-
 export function toneStatus(status: string): BadgeTone {
   switch (status) {
     case "tersedia":

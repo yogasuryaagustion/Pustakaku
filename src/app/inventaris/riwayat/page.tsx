@@ -5,8 +5,8 @@ import { apiFetch } from "@/lib/api";
 import { useBoleh } from "@/lib/auth";
 import { useToast } from "@/components/toast";
 import { Badge, ConfirmDialog, EmptyState, Modal } from "@/components/ui";
+import { KepalaHalaman } from "@/components/kepala-halaman";
 import {
-  KepalaInventaris,
   NavigasiInventaris,
   pesanGalat,
   waktuSingkat,
@@ -90,9 +90,8 @@ export default function HalamanRiwayatOpname() {
 
   return (
     <div className="space-y-6">
-      <KepalaInventaris
-        judul="Riwayat Stock Opname"
-        sub="Setiap penyimpanan opname tercatat sebagai satu sesi lengkap dengan jumlah barang yang diperiksa dan yang tidak ditemukan."
+      <KepalaHalaman
+        deskripsi="Setiap penyimpanan opname tercatat sebagai satu sesi lengkap dengan jumlah barang yang diperiksa dan yang tidak ditemukan."
       />
 
       <NavigasiInventaris />

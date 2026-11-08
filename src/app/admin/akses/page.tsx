@@ -301,11 +301,8 @@ export default function KontrolAksesPage() {
     <div className="space-y-4">
       {/* Kepala dan ringkasan */}
       <div className="card p-6">
-        <h1 className="text-2xl font-bold tracking-tight">
-          Kelola Akses
-        </h1>
-
-        <p className="mt-1 max-w-3xl text-sm text-[var(--muted)]">
+        {/* Judul "Kelola Akses" sudah tampil di header AppShell. */}
+        <p className="max-w-3xl text-sm text-[var(--muted)]">
           Matriks izin (peran × aksi) yang menentukan halaman, tombol,
           dan data mana yang bisa diakses. Menyimpan perubahan langsung
           berlaku di seluruh aplikasi tanpa mengubah kode atau memuat ulang.

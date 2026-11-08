@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { KepalaHalaman } from "@/components/kepala-halaman";
 import type { FormEvent } from "react";
 import { useLibrary } from "@/lib/library-context";
 import {
@@ -586,81 +587,73 @@ export default function AnggotaPage() {
 
   return (
     <main className="min-w-0 space-y-6 pb-8">
-      {/* Judul dan tombol aksi */}
-      <section className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-              Manajemen Pengguna
-            </h1>
+      {/* Kepala halaman — judul sudah tampil di header AppShell. */}
+      <KepalaHalaman
+        remah={
+          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            {daftarAnggota.length} anggota
+          </span>
+        }
+        deskripsi="Kelola data anggota, informasi keanggotaan, dan akun akses PustakaKu dalam satu halaman."
+        aksi={
+          <>
+            <div className="flex rounded-2xl border border-[var(--border)] bg-slate-100 p-1">
+              <button
+                type="button"
+                onClick={() => setMode("grid")}
+                className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition ${
+                  mode === "grid"
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                {ikon(
+                  "M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z",
+                  16
+                )}
+                Grid
+              </button>
 
-            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              {daftarAnggota.length} Anggota
-            </span>
-          </div>
+              <button
+                type="button"
+                onClick={() => setMode("tabel")}
+                className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition ${
+                  mode === "tabel"
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                {ikon(
+                  "M8 6h13 M8 12h13 M8 18h13 M3 6h.01 M3 12h.01 M3 18h.01",
+                  16
+                )}
+                Tabel
+              </button>
+            </div>
 
-          <p className="mt-1 text-sm leading-6 text-slate-500">
-            Kelola data anggota, informasi keanggotaan, dan akun akses PustakaKu dalam satu halaman.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex rounded-2xl border border-slate-200 bg-slate-100 p-1">
             <button
               type="button"
-              onClick={() => setMode("grid")}
-              className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition ${
-                mode === "grid"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-500 hover:text-slate-900"
-              }`}
+              onClick={() => unduhCSV(anggotaTampil)}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
             >
               {ikon(
-                "M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z",
-                16
+                "M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4 M7 10l5 5 5-5 M12 15V3",
+                17
               )}
-              Grid
+              Ekspor CSV
             </button>
 
-            <button
-              type="button"
-              onClick={() => setMode("tabel")}
-              className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition ${
-                mode === "tabel"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-500 hover:text-slate-900"
-              }`}
+            <Link
+              href="/anggota/tambah"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--brand)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--brand-hover)]"
             >
-              {ikon(
-                "M8 6h13 M8 12h13 M8 18h13 M3 6h.01 M3 12h.01 M3 18h.01",
-                16
-              )}
-              Tabel
-            </button>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => unduhCSV(anggotaTampil)}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
-          >
-            {ikon(
-              "M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4 M7 10l5 5 5-5 M12 15V3",
-              17
-            )}
-            Ekspor CSV
-          </button>
-
-          <Link
-            href="/anggota/tambah"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-900"
-          >
-            {ikon("M12 5v14 M5 12h14", 17)}
-            Tambah Anggota
-          </Link>
-        </div>
-      </section>
+              {ikon("M12 5v14 M5 12h14", 17)}
+              Tambah Anggota
+            </Link>
+          </>
+        }
+      />
 
       {/* Statistik */}
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">

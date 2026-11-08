@@ -12,10 +12,12 @@ import {
   Badge,
   Modal,
   EmptyState,
+  StatCard,
   rupiah,
   tanggalPanjang,
   BadgeTone,
 } from "@/components/ui";
+import { NaikBertahap } from "@/components/gerak";
 import { useSistem } from "@/lib/sistem";
 import { useToast } from "@/components/toast";
 
@@ -121,56 +123,6 @@ function Ikon({
     >
       {paths[nama]}
     </svg>
-  );
-}
-
-function KartuStatistik({
-  judul,
-  nilai,
-  keterangan,
-  ikon,
-  warna,
-  nilaiMerah = false,
-}: {
-  judul: string;
-  nilai: string | number;
-  keterangan: string;
-  ikon: "buku" | "peringatan" | "uang";
-  warna: "teal" | "emerald" | "amber";
-  nilaiMerah?: boolean;
-}) {
-  const warnaIkon = {
-    teal: "bg-teal-50 text-teal-700",
-    emerald: "bg-emerald-50 text-emerald-600",
-    amber: "bg-amber-50 text-amber-600",
-  };
-
-  return (
-    <div className="rounded-[18px] border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-          {judul}
-        </p>
-
-        <span
-          className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${warnaIkon[warna]}`}
-        >
-          <Ikon nama={ikon} ukuran={22} />
-        </span>
-      </div>
-
-      <div
-        className={`mt-1 text-3xl font-bold tracking-tight ${
-          nilaiMerah ? "text-rose-600" : "text-slate-950"
-        }`}
-      >
-        {nilai}
-      </div>
-
-      <p className="mt-1 text-xs text-slate-400">
-        {keterangan}
-      </p>
-    </div>
   );
 }
 
@@ -378,40 +330,34 @@ export function PinjamanSaya({
   };
 
   return (
-    <div className="min-h-full space-y-6 bg-slate-50/70">
+    <div className="space-y-6">
 
       {/* STATISTIK PEMINJAMAN */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <KartuStatistik
-          judul="Sedang Dipinjam"
-          nilai={aktif.length}
-          keterangan={`dari maks. ${sistem.maksPinjaman} buku`}
-          ikon="buku"
-          warna="teal"
+      <NaikBertahap className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <StatCard
+          label="Sedang Dipinjam"
+          value={aktif.length}
+          sub={`dari maks. ${sistem.maksPinjaman} buku`}
+          tone="brand"
+          ikon="M4 19.5A2.5 2.5 0 016.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"
         />
 
-        <KartuStatistik
-          judul="Terlambat"
-          nilai={terlambat.length}
-          keterangan={
-            terlambat.length
-              ? "Segera kembalikan buku"
-              : "Semua tepat waktu"
-          }
-          ikon="peringatan"
-          warna="emerald"
-          nilaiMerah={terlambat.length > 0}
+        <StatCard
+          label="Terlambat"
+          value={terlambat.length}
+          sub={terlambat.length ? "segera kembalikan" : "semua tepat waktu"}
+          tone="rose"
+          ikon="M12 9v4m0 4h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"
         />
 
-        <KartuStatistik
-          judul="Denda Berjalan"
-          nilai={rupiah(dendaBelum)}
-          keterangan={`${rupiah(sistem.dendaPerHari)}/hari keterlambatan`}
-          ikon="uang"
-          warna="amber"
-          nilaiMerah={dendaBelum > 0}
+        <StatCard
+          label="Denda Berjalan"
+          value={rupiah(dendaBelum)}
+          sub={`${rupiah(sistem.dendaPerHari)}/hari`}
+          tone="amber"
+          ikon="M12 1v22 M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"
         />
-      </div>
+      </NaikBertahap>
 
       {/* DAFTAR PINJAMAN DAN FORM PINJAM */}
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
@@ -420,7 +366,7 @@ export function PinjamanSaya({
         <div className="min-w-0 space-y-5 lg:col-span-2">
 
           {/* TAB NAVIGASI */}
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-slate-200 bg-white p-3 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 card p-3">
             <div className="flex flex-wrap items-center gap-1">
               {(["Aktif", "Riwayat", "Semua"] as Tab[]).map(
                 (t) => {
@@ -434,8 +380,8 @@ export function PinjamanSaya({
                       aria-pressed={terpilih}
                       className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
                         terpilih
-                          ? "bg-teal-800 text-white shadow-sm"
-                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                          ? "bg-[var(--brand)] text-white shadow-sm"
+                          : "text-[var(--muted)] hover:bg-slate-100 hover:text-[var(--foreground)]"
                       }`}
                     >
                       {t}
@@ -461,7 +407,7 @@ export function PinjamanSaya({
           </div>
 
           {/* KARTU DAFTAR BUKU */}
-          <div className="overflow-hidden rounded-[20px] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+          <div className="card overflow-hidden p-4 sm:p-5">
             {daftar.length === 0 ? (
               <div className="flex min-h-[190px] flex-col items-center justify-center px-5 text-center">
                 <div className="mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-teal-50 text-teal-700">
@@ -496,7 +442,7 @@ export function PinjamanSaya({
                   return (
                     <div
                       key={p.id}
-                      className="flex flex-col gap-4 rounded-[18px] border border-slate-200 bg-slate-50/80 p-4 transition hover:border-teal-200 hover:bg-white sm:flex-row sm:items-center"
+                      className="flex flex-col gap-4 rounded-xl border border-[var(--border)] bg-slate-50/60 p-4 transition hover:border-[var(--brand)]/40 hover:bg-[var(--card)] sm:flex-row sm:items-center"
                     >
                       {/* COVER BUKU */}
                       <div className="flex shrink-0 items-center gap-3 sm:block">
@@ -522,7 +468,7 @@ export function PinjamanSaya({
                       {/* INFORMASI BUKU */}
                       <div className="min-w-0 flex-1">
                         <div className="hidden flex-wrap items-center gap-2 sm:flex">
-                          <span className="rounded-lg bg-teal-50 px-2.5 py-1 text-[11px] font-semibold text-teal-800">
+                          <span className="rounded-lg bg-[var(--brand-soft)] px-2.5 py-1 text-[11px] font-semibold text-[var(--brand)]">
                             Informasi Peminjaman
                           </span>
 
@@ -645,8 +591,8 @@ export function PinjamanSaya({
         </div>
 
         {/* FORM PINJAM BUKU */}
-        <div className="self-start overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-100 px-5 py-4">
+        <div className="self-start overflow-hidden card">
+          <div className="border-b border-[var(--border)] px-5 py-4">
             <h2 className="text-base font-bold text-slate-900">
               Pinjam Buku
             </h2>
@@ -672,7 +618,7 @@ export function PinjamanSaya({
 
                   <select
                     id="pilih-buku"
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+                    className="input"
                     value={bukuDipilih}
                     onChange={(e) =>
                       setBukuDipilih(e.target.value)
@@ -698,7 +644,7 @@ export function PinjamanSaya({
                 </div>
 
                 {/* INFORMASI JATUH TEMPO */}
-                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                <div className="rounded-xl border border-[var(--border)] bg-slate-50 p-4">
                   <div className="flex items-start gap-3">
                     <span className="mt-0.5 text-teal-700">
                       <Ikon nama="kalender" ukuran={18} />
@@ -719,7 +665,7 @@ export function PinjamanSaya({
                 {/* TOMBOL PINJAM */}
                 <button
                   type="submit"
-                  className="w-full rounded-xl bg-teal-800 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-teal-900 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full rounded-xl bg-[var(--brand)] px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-50"
                   disabled={
                     !bukuDipilih ||
                     aktif.length >= sistem.maksPinjaman ||
