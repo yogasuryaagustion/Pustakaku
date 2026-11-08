@@ -1259,6 +1259,22 @@ html {
   }
 }
 
+/* Ponsel: kolom isian 16px mencegah Safari iOS memperbesar halaman saat
+   fokus, dan tombol utama dinaikkan agar mudah disentuh jari. */
+@media (max-width: 639px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  .btn,
+  .btn-primary,
+  .btn-ghost {
+    min-height: 42px;
+  }
+}
+
 /* Layar sangat kecil */
 @media (max-width: 380px) {
   .landing-hero-art {

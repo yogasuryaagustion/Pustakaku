@@ -204,7 +204,7 @@ export default function SirkulasiPage() {
             Operasional perpustakaan
           </span>
         }
-        deskripsi="Meja sirkulasi peminjaman: kelola peminjaman aktif, tanggal pengembalian, dan riwayat sirkulasi pembaca."
+        deskripsi="Catat peminjaman baru, perpanjang masa pinjam, dan proses pengembalian buku. Riwayat peminjaman pembaca tampil di tabel yang sama."
         aksi={
           bolehKelola && (
             <button
@@ -399,7 +399,8 @@ export default function SirkulasiPage() {
               </span>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* Tabel 1000px hanya muat di layar lebar; di ponsel diganti kartu. */}
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full min-w-[1000px] border-collapse text-left">
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50/90">
@@ -576,6 +577,119 @@ export default function SirkulasiPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Versi ponsel: satu kartu per peminjaman supaya petugas tidak
+                perlu menggeser tabel ke samping untuk melihat status & aksi. */}
+            <ul className="divide-y divide-slate-100 md:hidden">
+              {daftar.map((p) => {
+                const b = cariBuku(p.bukuId);
+                const a = cariAnggota(p.anggotaId);
+                const telat = hariTerlambat(p.tanggalKembali);
+                const sb = statusBadge(p);
+                const masihAktif =
+                  p.status === "Dipinjam" || p.status === "Terlambat";
+
+                return (
+                  <li key={p.id} className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p
+                          className="truncate text-sm font-semibold text-slate-900"
+                          title={b?.judul ?? "-"}
+                        >
+                          {b?.judul ?? "-"}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {a?.nama ?? "-"}
+                          {a?.nomorAnggota ? ` · ${a.nomorAnggota}` : ""}
+                        </p>
+                        <p className="mt-0.5 font-mono text-[11px] text-slate-400">
+                          {p.kodePinjam}
+                        </p>
+                      </div>
+
+                      <Badge tone={sb.tone}>{sb.label}</Badge>
+                    </div>
+
+                    <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
+                      <dt className="text-slate-400">Dipinjam</dt>
+                      <dd className="text-right text-slate-600">
+                        {tanggalPanjang(p.tanggalPinjam)}
+                      </dd>
+
+                      <dt className="text-slate-400">Batas kembali</dt>
+                      <dd
+                        className={`text-right font-semibold ${
+                          masihAktif && telat > 0
+                            ? "text-rose-700"
+                            : "text-slate-700"
+                        }`}
+                      >
+                        {tanggalPanjang(p.tanggalKembali)}
+                      </dd>
+
+                      {masihAktif && telat > 0 && (
+                        <>
+                          <dt className="text-slate-400">Terlambat</dt>
+                          <dd className="text-right font-medium text-rose-600">
+                            {telat} hari
+                          </dd>
+                        </>
+                      )}
+
+                      {p.tanggalKembaliAktual && (
+                        <>
+                          <dt className="text-slate-400">Dikembalikan</dt>
+                          <dd className="text-right text-slate-600">
+                            {tanggalPanjang(p.tanggalKembaliAktual)}
+                          </dd>
+                        </>
+                      )}
+
+                      {p.denda > 0 && (
+                        <>
+                          <dt className="text-slate-400">Denda</dt>
+                          <dd className="text-right font-medium text-rose-600">
+                            {rupiah(p.denda)}
+                          </dd>
+                        </>
+                      )}
+                    </dl>
+
+                    {masihAktif && bolehKelola && (
+                      <div className="mt-3 flex gap-2">
+                        <button
+                          className="btn btn-ghost flex-1 !py-2 text-xs"
+                          onClick={async () => {
+                            const hasil = await perpanjangPinjam(p.id);
+
+                            if (hasil.ok) {
+                              toast.sukses(
+                                `Pinjaman "${b?.judul ?? p.kodePinjam}" diperpanjang ${sistem.lamaPinjam} hari.`
+                              );
+                            } else {
+                              toast.gagal(hasil.pesan);
+                            }
+                          }}
+                        >
+                          Perpanjang
+                        </button>
+
+                        <button
+                          className="btn btn-primary flex-1 !py-2 text-xs"
+                          onClick={() => {
+                            setKondisiKembali("layak");
+                            setKonfirmasiKembali(p);
+                          }}
+                        >
+                          Proses Kembali
+                        </button>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
 
             <div className="flex flex-col gap-2 border-t border-slate-100 bg-slate-50/60 px-5 py-3.5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6">
               <span>

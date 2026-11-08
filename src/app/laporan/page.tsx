@@ -28,13 +28,12 @@ interface IsiLaporan {
   bagian: BagianLaporan[];
 }
 
-type TabLaporan = "semua" | "buku" | "peminjaman" | "anggota";
+type TabLaporan = "semua" | "buku" | "peminjaman";
 
 const TAB_LAPORAN: { id: TabLaporan; label: string }[] = [
   { id: "semua", label: "Semua Laporan" },
   { id: "buku", label: "Laporan Buku" },
   { id: "peminjaman", label: "Laporan Peminjaman" },
-  { id: "anggota", label: "Direktori Anggota" },
 ];
 
 function fmtID(iso: string, opt: Intl.DateTimeFormatOptions) {
@@ -63,8 +62,6 @@ export default function LaporanPage() {
   const [jenisPilihan, setJenisLaporan] = useState<JenisLaporan>("sirkulasi");
   const [tanggalAcuan, setTanggalAcuan] = useState(tanggalLokalISO);
   const [cariTabel, setCariTabel] = useState("");
-  const [filterJenisAnggota, setFilterJenisAnggota] = useState("semua");
-  const [filterStatusAnggota, setFilterStatusAnggota] = useState("semua");
 
   const jenisLaporan: JenisLaporan =
     tab === "buku"
@@ -262,83 +259,6 @@ export default function LaporanPage() {
       .map(([id, n]) => ({ buku: cariBuku(id), n }))
       .filter((x) => x.buku);
   }, [peminjaman, cariBuku]);
-
-  // Statistik direktori anggota
-  const statistikAnggota = useMemo(() => {
-    const total = anggota.length;
-    const aktif = anggota.filter((a) => a.aktif).length;
-    const tidakAktif = total - aktif;
-
-    const jenis = anggota.reduce<Record<string, number>>((acc, a) => {
-      const namaJenis = a.jenis || "Lainnya";
-      acc[namaJenis] = (acc[namaJenis] || 0) + 1;
-      return acc;
-    }, {});
-
-    const totalTransaksi = peminjaman.length;
-    const anggotaMeminjam = new Set(
-      peminjaman.map((p) => p.anggotaId)
-    ).size;
-
-    return {
-      total,
-      aktif,
-      tidakAktif,
-      jenis: Object.entries(jenis)
-        .map(([nama, jumlah]) => ({ nama, jumlah }))
-        .sort((a, b) => b.jumlah - a.jumlah),
-      totalTransaksi,
-      anggotaMeminjam,
-    };
-  }, [anggota, peminjaman]);
-
-  const maxJenisAnggota = Math.max(
-    1,
-    ...statistikAnggota.jenis.map((j) => j.jumlah)
-  );
-
-  const anggotaTersaring = useMemo(() => {
-    const q = cariTabel.trim().toLowerCase();
-
-    return anggota
-      .filter((a) => {
-        const cocokCari =
-          !q ||
-          [
-            a.nama,
-            a.nomorAnggota,
-            a.email,
-            a.telepon,
-            a.alamat,
-            a.jenis,
-          ].some((v) => String(v ?? "").toLowerCase().includes(q));
-
-        const cocokJenis =
-          filterJenisAnggota === "semua" ||
-          a.jenis === filterJenisAnggota;
-
-        const cocokStatus =
-          filterStatusAnggota === "semua" ||
-          (filterStatusAnggota === "aktif" && a.aktif) ||
-          (filterStatusAnggota === "nonaktif" && !a.aktif);
-
-        return cocokCari && cocokJenis && cocokStatus;
-      })
-      .sort((a, b) => a.nama.localeCompare(b.nama, "id"));
-  }, [
-    anggota,
-    cariTabel,
-    filterJenisAnggota,
-    filterStatusAnggota,
-  ]);
-
-  const daftarJenisAnggota = useMemo(
-    () =>
-      Array.from(
-        new Set(anggota.map((a) => a.jenis).filter(Boolean))
-      ).sort(),
-    [anggota]
-  );
 
   if (!siap) {
     return (
@@ -725,9 +645,7 @@ export default function LaporanPage() {
               ? buku.length
               : item.id === "peminjaman"
                 ? peminjaman.length
-                : item.id === "anggota"
-                  ? anggota.length
-                  : buku.length + peminjaman.length;
+                : buku.length + peminjaman.length;
 
           return (
             <button
@@ -751,349 +669,6 @@ export default function LaporanPage() {
         })}
       </nav>
 
-      {/* DIREKTORI ANGGOTA */}
-      {tab === "anggota" ? (
-        <div className="space-y-5">
-          {/* Header direktori */}
-          <section className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-            <div>
-              <h1 className="text-xl font-black tracking-tight text-slate-900">
-                Direktori Anggota
-              </h1>
-              <p className="mt-1 text-sm text-slate-500">
-                Kelola dan lihat informasi seluruh anggota perpustakaan.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                Data anggota
-              </span>
-            </div>
-          </section>
-
-          {/* KPI anggota */}
-          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {[
-              {
-                label: "Total Anggota",
-                value: statistikAnggota.total,
-                sub: "Seluruh anggota terdaftar",
-                icon: "♙",
-                tone: "teal",
-              },
-              {
-                label: "Anggota Aktif",
-                value: statistikAnggota.aktif,
-                sub: "Status keanggotaan aktif",
-                icon: "✓",
-                tone: "green",
-              },
-              {
-                label: "Anggota Nonaktif",
-                value: statistikAnggota.tidakAktif,
-                sub: "Status keanggotaan nonaktif",
-                icon: "◷",
-                tone: "amber",
-              },
-              {
-                label: "Pernah Meminjam",
-                value: statistikAnggota.anggotaMeminjam,
-                sub: "Anggota dengan riwayat transaksi",
-                icon: "▤",
-                tone: "blue",
-              },
-            ].map((item) => (
-              <article
-                key={item.label}
-                className="flex items-center justify-between rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,.04)]"
-              >
-                <div className="min-w-0">
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
-                    {item.label}
-                  </p>
-                  <p className="mt-1 font-mono text-2xl font-black tracking-tight text-slate-950">
-                    {item.value}
-                  </p>
-                  <p className="mt-0.5 text-xs text-slate-500">
-                    {item.sub}
-                  </p>
-                </div>
-
-                <span
-                  className={`ml-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-xl font-bold ${
-                    item.tone === "green"
-                      ? "bg-emerald-50 text-emerald-600"
-                      : item.tone === "amber"
-                        ? "bg-amber-50 text-amber-600"
-                        : item.tone === "blue"
-                          ? "bg-blue-50 text-blue-600"
-                          : "bg-teal-50 text-[#00665c]"
-                  }`}
-                >
-                  {item.icon}
-                </span>
-              </article>
-            ))}
-          </section>
-
-          {/* Analitik anggota */}
-          <section className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,.04)]">
-            <div className="flex flex-col gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50 text-lg text-[#00665c]">
-                  ▥
-                </span>
-                <div>
-                  <h2 className="text-sm font-bold text-slate-900">
-                    Analitik Keanggotaan
-                  </h2>
-                  <p className="text-xs text-slate-400">
-                    Distribusi anggota berdasarkan jenis keanggotaan.
-                  </p>
-                </div>
-              </div>
-
-              <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                Data dari basis data
-              </span>
-            </div>
-
-            <div className="grid gap-6 pt-5 lg:grid-cols-[1.7fr_1fr]">
-              <div className="space-y-4">
-                <p className="text-xs font-semibold text-slate-600">
-                  Distribusi berdasarkan jenis anggota
-                </p>
-
-                {statistikAnggota.jenis.length === 0 ? (
-                  <EmptyState pesan="Belum ada data anggota." />
-                ) : (
-                  statistikAnggota.jenis.map((item) => (
-                    <div key={item.nama}>
-                      <div className="mb-1.5 flex justify-between gap-3 text-xs">
-                        <span className="font-medium text-slate-700">
-                          {item.nama}
-                        </span>
-                        <span className="font-mono text-slate-500">
-                          {item.jumlah} anggota
-                        </span>
-                      </div>
-
-                      <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                        <div
-                          className="h-full rounded-full bg-[#00665c] transition-all"
-                          style={{
-                            width: `${(item.jumlah / maxJenisAnggota) * 100}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              <div className="space-y-3 rounded-xl border border-slate-100 bg-slate-50/80 p-4">
-                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
-                  Ringkasan keanggotaan
-                </p>
-
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-600">Total anggota</span>
-                  <strong>{statistikAnggota.total}</strong>
-                </div>
-
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-600">Anggota aktif</span>
-                  <strong className="text-emerald-700">
-                    {statistikAnggota.aktif}
-                  </strong>
-                </div>
-
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-600">Anggota nonaktif</span>
-                  <strong className="text-rose-600">
-                    {statistikAnggota.tidakAktif}
-                  </strong>
-                </div>
-
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-600">Pernah meminjam</span>
-                  <strong>{statistikAnggota.anggotaMeminjam}</strong>
-                </div>
-
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-600">Total transaksi</span>
-                  <strong>{statistikAnggota.totalTransaksi}</strong>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Tabel direktori */}
-          <section className="space-y-4 rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,.04)] sm:p-5">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-sm font-bold text-slate-900">
-                  Daftar Anggota Perpustakaan
-                </h2>
-                <p className="mt-1 text-xs text-slate-400">
-                  Informasi identitas dan status keanggotaan.
-                </p>
-              </div>
-
-              <span className="w-fit rounded-lg bg-teal-50 px-3 py-1.5 text-xs font-bold text-[#00665c]">
-                {anggotaTersaring.length} anggota ditemukan
-              </span>
-            </div>
-
-            <div className="grid gap-2 border-y border-slate-100 py-3 md:grid-cols-[1fr_190px_190px]">
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                  ⌕
-                </span>
-                <input
-                  value={cariTabel}
-                  onChange={(e) => setCariTabel(e.target.value)}
-                  placeholder="Cari nama, nomor anggota, email, telepon..."
-                  className="min-h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs outline-none transition focus:border-teal-500 focus:bg-white"
-                />
-              </div>
-
-              <select
-                value={filterJenisAnggota}
-                onChange={(e) => setFilterJenisAnggota(e.target.value)}
-                className="min-h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs text-slate-700 outline-none focus:border-teal-500"
-              >
-                <option value="semua">Semua Jenis</option>
-                {daftarJenisAnggota.map((jenis) => (
-                  <option key={jenis} value={jenis}>
-                    {jenis}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                value={filterStatusAnggota}
-                onChange={(e) => setFilterStatusAnggota(e.target.value)}
-                className="min-h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs text-slate-700 outline-none focus:border-teal-500"
-              >
-                <option value="semua">Semua Status</option>
-                <option value="aktif">Aktif</option>
-                <option value="nonaktif">Nonaktif</option>
-              </select>
-            </div>
-
-            <div className="overflow-x-auto rounded-xl border border-slate-200">
-              <table className="w-full min-w-[950px] text-left text-xs">
-                <thead className="bg-[#f8faf9] text-[10px] font-bold uppercase tracking-wide text-slate-500">
-                  <tr>
-                    <th className="px-4 py-3">Anggota</th>
-                    <th className="px-4 py-3">Nomor Anggota</th>
-                    <th className="px-4 py-3">Kontak</th>
-                    <th className="px-4 py-3">Jenis</th>
-                    <th className="px-4 py-3">Tanggal Bergabung</th>
-                    <th className="px-4 py-3">Status</th>
-                  </tr>
-                </thead>
-
-                <tbody className="divide-y divide-slate-100">
-                  {anggotaTersaring.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={6}
-                        className="px-4 py-12 text-center text-slate-400"
-                      >
-                        Tidak ada anggota yang sesuai dengan pencarian.
-                      </td>
-                    </tr>
-                  ) : (
-                    anggotaTersaring.map((a) => (
-                      <tr
-                        key={a.id}
-                        className="transition hover:bg-slate-50/70"
-                      >
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            {a.foto ? (
-                              <img
-                                src={a.foto}
-                                alt={a.nama}
-                                className="h-9 w-9 rounded-full border border-slate-200 object-cover"
-                              />
-                            ) : (
-                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-50 text-sm font-black text-[#00665c]">
-                                {(a.nama || "?").charAt(0).toUpperCase()}
-                              </div>
-                            )}
-
-                            <div className="min-w-0">
-                              <p className="font-bold text-slate-900">
-                                {a.nama}
-                              </p>
-                              <p className="mt-0.5 max-w-[220px] truncate text-[10px] text-slate-400">
-                                {a.alamat || "Alamat belum diisi"}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
-
-                        <td className="px-4 py-3 font-mono font-semibold text-slate-700">
-                          {a.nomorAnggota || "—"}
-                        </td>
-
-                        <td className="px-4 py-3">
-                          <p className="text-slate-700">
-                            {a.email || "—"}
-                          </p>
-                          <p className="mt-1 text-[10px] text-slate-400">
-                            {a.telepon || "Nomor telepon belum diisi"}
-                          </p>
-                        </td>
-
-                        <td className="px-4 py-3">
-                          <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-600">
-                            {a.jenis || "Umum"}
-                          </span>
-                        </td>
-
-                        <td className="px-4 py-3 text-slate-600">
-                          {a.bergabungPada
-                            ? tanggalPanjang(a.bergabungPada)
-                            : "—"}
-                        </td>
-
-                        <td className="px-4 py-3">
-                          <span
-                            className={`rounded-md px-2.5 py-1 text-[10px] font-bold ${
-                              a.aktif
-                                ? "bg-emerald-50 text-emerald-700"
-                                : "bg-rose-50 text-rose-700"
-                            }`}
-                          >
-                            {a.aktif ? "AKTIF" : "NONAKTIF"}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="flex flex-col justify-between gap-2 text-[11px] text-slate-400 sm:flex-row sm:items-center">
-              <p>
-                Menampilkan {anggotaTersaring.length} dari {anggota.length}{" "}
-                anggota.
-              </p>
-              <p>
-                Direktori anggota diperbarui berdasarkan data perpustakaan.
-              </p>
-            </div>
-          </section>
-        </div>
-      ) : (
         <>
           {/* KPI laporan umum */}
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -1755,7 +1330,6 @@ export default function LaporanPage() {
             </section>
           )}
         </>
-      )}
     </div>
   );
 }

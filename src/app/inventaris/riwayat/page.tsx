@@ -81,7 +81,7 @@ export default function HalamanRiwayatOpname() {
     if (!hapus) return;
     try {
       await apiFetch(`/api/opname/${hapus.id}`, { method: "DELETE" });
-      toast.sukses("Sesi opname dihapus.");
+      toast.sukses("Riwayat hitung fisik dihapus.");
       setSegar((s) => s + 1);
     } catch (e) {
       toast.gagal(pesanGalat(e));
@@ -91,7 +91,7 @@ export default function HalamanRiwayatOpname() {
   return (
     <div className="space-y-6">
       <KepalaHalaman
-        deskripsi="Setiap penyimpanan opname tercatat sebagai satu sesi lengkap dengan jumlah barang yang diperiksa dan yang tidak ditemukan."
+        deskripsi="Setiap penyimpanan hasil hitung fisik tercatat sebagai satu sesi, lengkap dengan jumlah barang yang diperiksa dan yang tidak ditemukan."
       />
 
       <NavigasiInventaris />
@@ -126,8 +126,8 @@ export default function HalamanRiwayatOpname() {
         ) : daftar.length === 0 ? (
           <EmptyState
             kartu={false}
-            pesan="Belum ada sesi opname"
-            sub="Mulai dari halaman Stock Opname setelah memilih judul."
+            pesan="Belum ada riwayat hitung fisik"
+            sub="Mulai dari halaman Hitung Fisik Buku setelah memilih judul."
           />
         ) : (
           <div className="overflow-x-auto">
@@ -148,7 +148,7 @@ export default function HalamanRiwayatOpname() {
                   <tr key={s.id}>
                     <td className="whitespace-nowrap text-sm">{waktuSingkat(s.dibuat_pada)}</td>
                     <td>
-                      <div className="font-semibold text-slate-800">{s.judul || "Opname"}</div>
+                      <div className="font-semibold text-slate-800">{s.judul || "Hitung Fisik"}</div>
                       {s.komentar && (
                         <div className="max-w-[260px] truncate text-xs text-[var(--muted)]">
                           {s.komentar}
@@ -198,7 +198,7 @@ export default function HalamanRiwayatOpname() {
       <Modal
         open={detail !== null}
         onClose={() => setDetail(null)}
-        title={detail?.judul || "Detail Opname"}
+        title={detail?.judul || "Detail Hitung Fisik"}
         width="max-w-3xl"
       >
         {detail && (
@@ -277,7 +277,7 @@ export default function HalamanRiwayatOpname() {
         open={hapus !== null}
         onClose={() => setHapus(null)}
         onConfirm={() => void konfirmasiHapus()}
-        title="Hapus sesi opname?"
+        title="Hapus riwayat hitung fisik?"
         message={`Riwayat "${hapus?.judul ?? ""}" beserta rincian pemeriksaannya akan dihapus permanen.`}
       />
     </div>

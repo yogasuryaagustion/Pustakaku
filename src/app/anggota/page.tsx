@@ -892,7 +892,7 @@ export default function AnggotaPage() {
                         title="Lihat informasi kartu anggota"
                       >
                         {ikon("M2 7h20v13H2z M2 11h20 M6 16h4", 15)}
-                        KTA
+                        Kartu
                       </button>
 
                       <button
@@ -1219,7 +1219,7 @@ export default function AnggotaPage() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-xl font-bold text-slate-900">
-                  Manajemen Pengguna
+                  Data Anggota
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
                   Pilih bagian yang ingin dikelola.

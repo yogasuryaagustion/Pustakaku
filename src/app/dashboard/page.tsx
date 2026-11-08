@@ -122,7 +122,7 @@ export default function DashboardAdminPage() {
             Ringkasan Operasional
           </h2>
           <p className="mt-0.5 text-sm text-[var(--muted)]">
-            Pantau sirkulasi, tunggakan, dan aktivitas {sistem.nama} hari ini.
+            Pantau peminjaman, tunggakan, dan aktivitas {sistem.nama} hari ini.
           </p>
         </div>
         <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-xs font-medium text-[var(--muted)]">
@@ -148,11 +148,11 @@ export default function DashboardAdminPage() {
               {terlambat.length} peminjaman melewati jatuh tempo
             </div>
             <div className="text-xs text-rose-700">
-              Potensi denda {rupiah(totalDendaBelum)} — tagih saat pengembalian lewat Sirkulasi.
+              Potensi denda {rupiah(totalDendaBelum)} — tagih saat pengembalian lewat menu Peminjaman.
             </div>
           </div>
           <Link href="/sirkulasi" className="btn btn-danger shrink-0">
-            Buka Sirkulasi
+            Buka Peminjaman
           </Link>
         </div>
       )}
@@ -280,7 +280,7 @@ export default function DashboardAdminPage() {
           </div>
           {pinjamanTerbaru.length === 0 ? (
             <div className="p-5">
-              <EmptyState pesan="Belum ada peminjaman" sub="Mulai dari halaman Sirkulasi." />
+              <EmptyState pesan="Belum ada peminjaman" sub="Mulai dari halaman Peminjaman & Pengembalian." />
             </div>
           ) : (
             <div className="overflow-x-auto">

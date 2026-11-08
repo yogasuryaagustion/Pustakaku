@@ -90,7 +90,7 @@ export default function HalamanRekonsiliasi() {
   return (
     <div className="space-y-6">
       <KepalaHalaman
-        deskripsi="Selisih dihitung dari stok katalog dikurangi jumlah eksemplar fisik. Nilai positif berarti stok tercatat lebih banyak daripada barang yang ada."
+        deskripsi="Angka selisih berasal dari stok di katalog dikurangi jumlah buku fisik. Angka positif berarti catatan lebih banyak daripada buku yang benar-benar ada."
         aksi={
           superadmin ? (
             <button
@@ -99,7 +99,7 @@ export default function HalamanRekonsiliasi() {
               onClick={() => void perbaiki()}
               disabled={memperbaiki || memuat}
             >
-              {memperbaiki ? "Menyinkronkan…" : "Perbaiki Stok"}
+              {memperbaiki ? "Memperbaiki…" : "Perbaiki Stok"}
             </button>
           ) : null
         }
@@ -132,7 +132,7 @@ export default function HalamanRekonsiliasi() {
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          label="Eksemplar Fisik"
+          label="Salinan Fisik"
           value={data ? data.total_eksemplar : "—"}
           sub={`dari ${data ? data.total_judul : "—"} judul`}
           tone="brand"

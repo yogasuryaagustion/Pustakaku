@@ -56,6 +56,26 @@ function beritahu() {
   pendengar.forEach((fn) => fn());
 }
 
+// Pesan dari fungsi database kadang berulang atau terlalu teknis, mis.
+// "Anggota Anggota Demo tidak aktif." karena nama anggota sudah mengandung
+// kata "Anggota". Di sini pesan dikenal itu ditulis ulang menjadi kalimat
+// yang wajar; pesan lain dibiarkan apa adanya.
+function pesanRamah(pesan: string): string {
+  const tidakAktif = pesan.match(/^Anggota (.+) tidak aktif\.$/i);
+  if (tidakAktif) {
+    return `Kartu ${tidakAktif[1]} sedang tidak aktif, jadi peminjaman belum bisa diproses. Hubungi petugas untuk mengaktifkannya kembali.`;
+  }
+
+  const kartuTidakAktif = pesan.match(
+    /^Kartu anggota (.+) berstatus tidak aktif\./i,
+  );
+  if (kartuTidakAktif) {
+    return `Kartu ${kartuTidakAktif[1]} berstatus tidak aktif. Hubungi petugas untuk mengaktifkannya kembali.`;
+  }
+
+  return pesan;
+}
+
 function pesanApi(e: unknown): string {
   if (
     e &&
@@ -63,7 +83,7 @@ function pesanApi(e: unknown): string {
     "message" in e &&
     typeof (e as Error).message === "string"
   ) {
-    return (e as Error).message;
+    return pesanRamah((e as Error).message);
   }
 
   return "Tidak bisa terhubung ke server. Periksa koneksi Anda.";

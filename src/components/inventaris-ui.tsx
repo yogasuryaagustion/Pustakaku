@@ -10,12 +10,14 @@ import { LABEL_KONDISI, LABEL_STATUS } from "@/lib/supabase/inventaris";
 // Kerangka bersama halaman inventaris: navigasi antar sub-halaman, judul, dan
 // lencana status/kondisi — supaya warna & istilahnya seragam di semua halaman.
 
+// Label tab memakai bahasa sehari-hari (hitung fisik, salinan) supaya staf
+// baru tidak perlu tahu istilah pustakawan seperti opname/rekonsiliasi.
 export const TAB_INVENTARIS = [
-  { href: "/inventaris", label: "Inventaris Buku" },
-  { href: "/inventaris/eksemplar", label: "Data Eksemplar" },
-  { href: "/inventaris/opname", label: "Stock Opname" },
-  { href: "/inventaris/rekonsiliasi", label: "Hasil Sinkronisasi" },
-  { href: "/inventaris/riwayat", label: "Riwayat Opname" },
+  { href: "/inventaris", label: "Stok per Judul" },
+  { href: "/inventaris/eksemplar", label: "Salinan Buku" },
+  { href: "/inventaris/opname", label: "Hitung Fisik" },
+  { href: "/inventaris/rekonsiliasi", label: "Perbaiki Selisih" },
+  { href: "/inventaris/riwayat", label: "Riwayat Hitung" },
 ];
 
 export function NavigasiInventaris() {

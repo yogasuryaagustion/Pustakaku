@@ -623,7 +623,7 @@ function KontenProfil({
         className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-emerald-900 shadow-md transition hover:-translate-y-0.5 hover:bg-emerald-50 hover:shadow-lg"
       >
         <Ikon nama="card" ukuran={18} />
-        Buka Kartu KTA Digital
+        Buka Kartu Anggota Digital
       </button>
 
       {/* UNDUH BIODATA */}

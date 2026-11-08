@@ -28,12 +28,14 @@ import { useKebijakan } from "@/lib/kebijakan";
 
 // Judul sub-halaman yang tidak punya entri menu sendiri (menu menunjuk induk).
 // Tanpa peta ini, header & judul tab jatuh ke tagline perpustakaan.
+// Judul memakai bahasa sehari-hari, bukan istilah pustakawan (opname,
+// eksemplar, rekonsiliasi) supaya staf baru tetap tahu halaman apa ini.
 const JUDUL_SUB: Record<string, string> = {
-  "/inventaris/eksemplar": "Data Eksemplar",
-  "/inventaris/opname": "Stock Opname",
-  "/inventaris/rekonsiliasi": "Hasil Sinkronisasi",
-  "/inventaris/riwayat": "Riwayat Opname",
-  "/inventaris/label": "Label QR Inventaris",
+  "/inventaris/eksemplar": "Daftar Salinan Buku",
+  "/inventaris/opname": "Hitung Fisik Buku",
+  "/inventaris/rekonsiliasi": "Perbaiki Selisih Stok",
+  "/inventaris/riwayat": "Riwayat Hitung Fisik",
+  "/inventaris/label": "Cetak Label QR Buku",
 };
 
 const NAV: {
@@ -91,7 +93,7 @@ const NAV: {
   {
     grup: "Utama",
     href: "/sirkulasi",
-    label: "Sirkulasi",
+    label: "Peminjaman & Pengembalian",
     icon: "M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15",
     izin: "sirkulasi.lihat",
   },
@@ -106,7 +108,7 @@ const NAV: {
   {
     grup: "Utama",
     href: "/anggota",
-    label: "Manajemen Pengguna",
+    label: "Data Anggota",
     icon: "M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2 M9 11a4 4 0 100-8 4 4 0 000 8 M22 21v-2a4 4 0 00-3-3.87 M16 3.13a4 4 0 010 7.75",
     izin: "anggota.lihat",
   },
@@ -115,7 +117,7 @@ const NAV: {
   {
     grup: "Analitik",
     href: "/kunjungan",
-    label: "Statistik Kunjungan",
+    label: "Kunjungan & Presensi",
     icon: "M22 11v1a10 10 0 11-20 0v-1M1 11h20M9 8l-1 4-2-3-4-1",
     izin: "laporan.lihat",
   },
@@ -131,7 +133,7 @@ const NAV: {
   {
     grup: "Sistem",
     href: "/admin/akses",
-    label: "Kelola Akses",
+    label: "Hak Akses Pengguna",
     icon: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z M9 12l2 2 4-4",
     hanyaPeran: ["superadmin"],
   },
@@ -725,6 +727,22 @@ function Shell({ children }: { children: React.ReactNode }) {
   const sistem = useSistem();
   const kebijakan = useKebijakan();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Tablet (768–1023px): sidebar 292px menyisakan konten terlalu sempit.
+  // Ringkas otomatis menjadi rail ikon sekali saat halaman dibuka; pengguna
+  // tetap bisa membukanya lagi lewat tombol di sidebar. Desktop tidak diubah.
+  useEffect(() => {
+    if (
+      !window.matchMedia("(min-width: 768px) and (max-width: 1023px)").matches
+    ) {
+      return;
+    }
+
+    // Ditunda satu tick: render pertama tetap sama dengan HTML server,
+    // lalu penyempitan diterapkan setelah hidrasi selesai.
+    const id = window.setTimeout(() => setSidebarCollapsed(true), 0);
+    return () => window.clearTimeout(id);
+  }, []);
   // Peran efektif — tidak ada sesi berarti tamu; semua pengecekan izin di
   // bawah mengikuti kebijakan, bukan daftar rute statis.
   const peran: PeranAkses = peranEfektif(sedangMasuk?.peran);
@@ -1022,8 +1040,9 @@ function Shell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </header>
-        {/* Navigasi versi mobile */}
-        <div className="md:hidden sticky top-16 z-20 bg-[var(--card)]/95 backdrop-blur-md border-b border-[var(--border)] px-3 py-2 flex gap-1.5 overflow-x-auto tanpa-scrollbar">
+        {/* Navigasi versi mobile. top-[88px] = tinggi header sticky (pt-4 +
+            min-h-[72px]); dengan top-16 chip menu tertutup sebagian header. */}
+        <div className="md:hidden sticky top-[88px] z-20 bg-[var(--card)]/95 backdrop-blur-md border-b border-[var(--border)] px-3 py-2 flex gap-1.5 overflow-x-auto tanpa-scrollbar">
           {nav.map((n) => (
             <Link
               key={n.href}

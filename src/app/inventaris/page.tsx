@@ -238,10 +238,10 @@ export default function HalamanInventaris() {
   return (
     <div className="space-y-6">
       <KepalaHalaman
-        deskripsi="Pantau jumlah eksemplar fisik tiap judul dan bandingkan dengan stok tercatat di katalog. Selisih berarti stok perlu direkonsiliasi."
+        deskripsi="Bandingkan jumlah buku fisik di rak dengan stok yang tercatat di katalog. Kalau angkanya berbeda, buka Perbaiki Selisih Stok untuk menyamakan."
         aksi={
           <Link href="/inventaris/opname" className="btn btn-primary">
-            Mulai Stock Opname
+            Mulai Hitung Fisik
           </Link>
         }
       />
@@ -273,7 +273,7 @@ export default function HalamanInventaris() {
           ikon="M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5V5a2 2 0 012-2h12a2 2 0 012 2v14"
         />
         <StatCard
-          label="Eksemplar Fisik"
+          label="Salinan Fisik"
           value={data ? statistik.totalEksemplar : "—"}
           sub="salinan tercatat di sistem"
           tone="sky"
@@ -289,7 +289,7 @@ export default function HalamanInventaris() {
         <StatCard
           label="Stok Menyimpang"
           value={data ? statistik.menyimpang : "—"}
-          sub="judul perlu direkonsiliasi"
+          sub="judul punya selisih stok"
           tone="rose"
           ikon="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"
         />
@@ -321,7 +321,7 @@ export default function HalamanInventaris() {
               {tanpaRak.length} judul belum punya kode rak
             </p>
             <p className="mt-0.5 leading-6 text-amber-800/90">
-              Eksemplarnya sulit dicari di rak dan label QR tercetak tanpa
+              Salinan bukunya sulit dicari di rak dan label QR tercetak tanpa
               keterangan rak. Isi kode di kolom Rak tabel, atau sekaligus lewat
               tombol di samping.
             </p>
@@ -474,7 +474,7 @@ export default function HalamanInventaris() {
             <option value="semua">Semua judul</option>
             <option value="sesuai">Stok sesuai</option>
             <option value="menyimpang">Stok menyimpang</option>
-            <option value="kosong">Belum ada eksemplar</option>
+            <option value="kosong">Belum ada salinan</option>
           </select>
           <button
             type="button"
@@ -657,7 +657,7 @@ export default function HalamanInventaris() {
                           href={`/inventaris/eksemplar?buku=${r.buku_id}`}
                           className="text-sm font-semibold text-[var(--brand)] hover:underline"
                         >
-                          Eksemplar
+                          Salinan
                         </Link>
                         <Link
                           href={`/inventaris/opname?buku=${r.buku_id}`}

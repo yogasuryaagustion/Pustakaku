@@ -133,7 +133,7 @@ export default function HalamanStockOpname() {
 
   const simpan = async () => {
     if (!bolehKelola) return;
-    if (!buku) return setGalat("Pilih judul yang akan diopname.");
+    if (!buku) return setGalat("Pilih dulu judul buku yang akan dihitung.");
     if (baris.length === 0) return setGalat("Judul ini belum punya eksemplar untuk diperiksa.");
 
     setMenyimpan(true);
@@ -155,7 +155,7 @@ export default function HalamanStockOpname() {
           })),
         },
       });
-      toast.sukses("Hasil opname tersimpan dan eksemplar diperbarui.");
+      toast.sukses("Hasil hitung fisik tersimpan dan data salinan diperbarui.");
       setKomentar("");
       setSegar((s) => s + 1);
     } catch (e) {
@@ -211,7 +211,7 @@ export default function HalamanStockOpname() {
             <input
               id="opname-komentar"
               className="input"
-              placeholder="mis. opname rutin rak A"
+              placeholder="mis. hitung rutin rak A"
               value={komentar}
               onChange={(e) => setKomentar(e.target.value)}
             />
@@ -254,7 +254,7 @@ export default function HalamanStockOpname() {
           <div>
             <h2 className="font-bold">{judul || "Belum ada judul dipilih"}</h2>
             <p className="text-xs text-[var(--muted)]">
-              {buku ? "Tandai eksemplar yang benar-benar ada di rak." : "Pilih judul untuk memulai opname."}
+              {buku ? "Tandai salinan yang benar-benar ada di rak." : "Pilih judul untuk mulai menghitung."}
             </p>
           </div>
           {bolehKelola && buku && (
@@ -264,7 +264,7 @@ export default function HalamanStockOpname() {
               onClick={() => void simpan()}
               disabled={menyimpan || memuatBaris || baris.length === 0}
             >
-              {menyimpan ? "Menyimpan…" : "Simpan Hasil Opname"}
+              {menyimpan ? "Menyimpan…" : "Simpan Hasil Hitung"}
             </button>
           )}
         </div>
