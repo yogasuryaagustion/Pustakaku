@@ -181,16 +181,58 @@ Backup yang belum pernah diuji restore bukan backup — anggap belum ada.
 Tujuan: memastikan migrasi dan alur kerja berjalan di database kosong, tanpa
 menyentuh data sekolah.
 
-1. Buat proyek Supabase **staging** terpisah.
-2. Jalankan 21 migrasi (bagian 4) pada database kosong.
-3. Buat akun Super Admin (bagian 5).
-4. Isi data tiruan **lewat antarmuka**, bukan SQL, agar fungsi bisnis ikut teruji:
-   - Pengaturan: durasi 7 hari, denda 1000, maks 2 judul.
-   - 3 buku (satu judul dengan 2 salinan), lalu cetak label QR-nya.
-   - 5 anggota tiruan dengan nama jelas, mis. "Uji Satu", "Uji Dua".
-   - 2 peminjaman, 1 pengembalian terlambat (denda muncul), 1 perpanjangan.
-   - 1 hitung fisik dengan 1 selisih, lalu perbaiki selisihnya.
-5. Uji daftar periksa berikut dan catat hasilnya:
+### 8.1 Proyek staging yang sudah tersedia
+
+| | |
+|---|---|
+| Nama | `sistem-perpustakaan-staging` |
+| Reference ID | `xbgvkcoktvhkiwkerqai` |
+| URL | `https://xbgvkcoktvhkiwkerqai.supabase.co` |
+| Region | ap-south-1 (sama dengan produksi) |
+| Paket | free |
+| Super Admin | `admin@staging.perpus.id` (sandinya ada di `.env.staging.local`) |
+
+Sudah dikerjakan: 21 migrasi diterapkan berurutan tanpa galat, 11 tabel publik
+dengan RLS aktif (40 kebijakan), baris `pengaturan_sistem` bawaan ada, akun Super
+Admin terkonfirmasi bisa login, dan data tiruan awal terisi — 3 buku, 9 salinan,
+5 anggota (4 tiruan + 1 kartu otomatis milik akun admin), 2 peminjaman (1 sudah
+dikembalikan dengan kondisi `layak`, 1 masih aktif).
+
+Kredensial staging (URL, anon/publishable key, sandi super admin, sandi database)
+ada di `.env.staging.local` — berkas ini di-ignore git, jangan di-commit dan jangan
+bagikan. Sandi database juga tidak bisa dilihat lagi di dasbor Supabase, jadi
+simpan berkas itu.
+
+### 8.2 Yang masih perlu dilakukan di dasbor staging
+
+1. **Authentication → URL Configuration**: Site URL `http://localhost:3000`,
+   tambahkan `http://localhost:3000/**` di Redirect URLs.
+2. **Authentication → Providers → Email**: matikan "Confirm email" selama uji lokal
+   supaya pendaftaran dari `/register` bisa langsung masuk tanpa SMTP.
+3. **Project Settings → Database → Backups**: aktifkan backup otomatis (paket
+   berbayar) sebelum proyek ini dipakai untuk uji yang berarti.
+
+### 8.3 Menjalankan aplikasi terhadap staging
+
+```bash
+# simpan kunci sekolah dulu, jangan sampai tertimpa
+mv .env.local .env.local.sekolah
+grep -E '^NEXT_PUBLIC_SUPABASE_(URL|ANON_KEY)=' .env.staging.local > .env.local
+npm run build && npm run start
+
+# setelah uji selesai, kembalikan ke kunci sekolah
+rm .env.local && mv .env.local.sekolah .env.local
+```
+
+Jangan biarkan `.env.local` menunjuk ke staging saat sedang mengerjakan data
+sekolah: berkas itu yang dipakai `npm run dev` sehari-hari.
+
+### 8.4 Daftar periksa uji
+
+Isi dulu sisa data tiruan **lewat antarmuka**, bukan SQL, agar fungsi bisnis ikut
+teruji: ubah Pengaturan (durasi 7 hari, denda 1000, maks 2 judul), cetak label QR
+salinan, buat 1 pengembalian terlambat agar denda muncul, 1 perpanjangan, dan 1
+hitung fisik dengan 1 selisih. Lalu uji:
 
 - [ ] Daftar akun baru dari `/register`, lalu masuk.
 - [ ] Pinjam buku → stok tersedia turun; kembalikan → stok kembali.
@@ -203,8 +245,8 @@ menyentuh data sekolah.
 - [ ] Hapus/Reset akun di Kelola Akun (butuh service role key).
 - [ ] Tampilan 390 px (ponsel), 768 px (tablet), 1440 px (desktop).
 
-6. Isi `.env.local` staging dengan kunci proyek staging dan jalankan
-   `npm run build && npm run start` untuk uji lokal sebelum deploy.
+Catat hasil tiap butir; butir yang gagal adalah blocker rilis. Setelah semua
+lulus, ulangi bagian 4–6 pada proyek produksi (bagian 9).
 
 ## 9. Rilis produksi
 

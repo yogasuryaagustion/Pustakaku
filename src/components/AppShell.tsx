@@ -503,154 +503,117 @@ function AkunMenu({ peran }: { peran: Peran }) {
   const router = useRouter();
   const [buka, setBuka] = useState(false);
   if (!sedangMasuk) return null;
-  const inisial = sedangMasuk.nama.trim().charAt(0).toUpperCase();
-  // Kartu anggota sesi ini — foto profil tampil di chip akun anggota.
+  // Kartu anggota sesi ini — foto profil tampil di chip akun.
   const kartu =
     anggota.find((a) => a.id === sedangMasuk.anggotaId) ??
     anggota.find(
       (a) => a.email.toLowerCase() === sedangMasuk.email.toLowerCase(),
     );
+  // Halaman profil dijaga `hanyaPeran: ["user"]` (src/lib/akses.ts), jadi
+  // tautan Profil hanya untuk anggota — staf tidak dikirim ke layar tolak.
+  const bisaProfil = peran === "user";
 
-  // Anggota: chip nama dengan dropdown (Profil + Keluar) —
-  // sesuai desain panel anggota yang dirujuk.
-  if (peran === "user") {
-    const keprofil = () => {
-      setBuka(false);
-      router.push("/panel/profil");
-    };
-    const keluarsekarang = () => {
-      setBuka(false);
-      keluar();
-      router.replace("/");
-    };
-    return (
-      <div className="relative">
-        <button
-          className="flex items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--background)] py-1.5 pl-1.5 pr-3 transition-shadow hover:shadow-[var(--sh-1)]"
-          onClick={() => setBuka((v) => !v)}
-          aria-haspopup="menu"
-          aria-expanded={buka}
-        >
-          <Avatar
-            nama={sedangMasuk.nama}
-            foto={kartu?.foto}
-            className="h-8 w-8 rounded-lg text-sm"
-          />
-          <span className="hidden sm:block leading-tight text-left">
-            <span className="block text-[13px] font-semibold">
-              {sedangMasuk.nama}
-            </span>
-            <span className="block text-[10px] uppercase tracking-wide text-[var(--muted)]">
-              Anggota
-            </span>
-          </span>
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            className={`text-[var(--muted)] transition-transform ${buka ? "rotate-180" : ""}`}
-            aria-hidden
-          >
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        </button>
-        {buka && (
-          <div
-            role="menu"
-            className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] py-1 shadow-[var(--sh-3)]"
-          >
-            <button
-              role="menuitem"
-              className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm hover:bg-slate-100"
-              onClick={keprofil}
-            >
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden
-              >
-                <circle cx="12" cy="12" r="3" />
-                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51h.01a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" />
-              </svg>
-              Profil
-            </button>
-            <div className="my-1 h-px bg-[var(--border)]" />
-            <button
-              role="menuitem"
-              className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-rose-600 hover:bg-rose-50"
-              onClick={keluarsekarang}
-            >
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden
-              >
-                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
-              </svg>
-              Keluar
-            </button>
-          </div>
-        )}
-      </div>
-    );
-  }
+  const keprofil = () => {
+    setBuka(false);
+    router.push("/panel/profil");
+  };
+  const keluarsekarang = () => {
+    setBuka(false);
+    keluar();
+    router.replace("/");
+  };
 
+  // Satu bentuk chip akun untuk semua peran (anggota, Admin, Super Admin):
+  // avatar + nama + peran, membuka menu tarik-turun berisi Profil (anggota)
+  // dan Keluar (semua peran).
   return (
-    <div className="flex items-center gap-3">
-      <div className="hidden sm:flex items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--background)] py-1.5 pl-1.5 pr-3 transition-shadow hover:shadow-[var(--sh-1)]">
-        <div
-          className={`h-8 w-8 rounded-lg grid place-items-center text-sm font-bold text-white grad-brand`}
-        >
-          {inisial}
-        </div>
-        <div className="leading-tight">
-          <div className="text-[13px] font-semibold">{sedangMasuk.nama}</div>
-          <div className="text-[10px] uppercase tracking-wide text-[var(--muted)]">
-            {peran === "superadmin"
-              ? "Super Admin"
-              : peran === "admin"
-                ? "Admin"
-                : "Anggota"}
-          </div>
-        </div>
-      </div>
+    <div className="relative">
       <button
-        className="btn btn-ghost !py-1.5 !px-2.5"
-        onClick={() => {
-          keluar();
-          router.replace("/");
-        }}
-        title="Keluar dari akun"
+        className="flex items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--background)] py-1.5 pl-1.5 pr-3 transition-shadow hover:shadow-[var(--sh-1)]"
+        onClick={() => setBuka((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={buka}
+        title={`Akun ${sedangMasuk.nama}`}
       >
+        <Avatar
+          nama={sedangMasuk.nama}
+          foto={kartu?.foto}
+          className="h-8 w-8 rounded-lg text-sm"
+        />
+        <span className="hidden sm:block leading-tight text-left">
+          <span className="block max-w-[9rem] truncate text-[13px] font-semibold">
+            {sedangMasuk.nama}
+          </span>
+          <span className="block text-[10px] uppercase tracking-wide text-[var(--muted)]">
+            {INFO_PERAN[peran].label}
+          </span>
+        </span>
         <svg
-          width="15"
-          height="15"
+          width="14"
+          height="14"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          className={`text-[var(--muted)] transition-transform ${buka ? "rotate-180" : ""}`}
+          aria-hidden
         >
-          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+          <path d="M6 9l6 6 6-6" />
         </svg>
-        Keluar
       </button>
+      {buka && (
+        <div
+          role="menu"
+          className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] py-1 shadow-[var(--sh-3)]"
+        >
+          {bisaProfil && (
+            <>
+              <button
+                role="menuitem"
+                className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm hover:bg-slate-100"
+                onClick={keprofil}
+              >
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden
+                >
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51h.01a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" />
+                </svg>
+                Profil
+              </button>
+              <div className="my-1 h-px bg-[var(--border)]" />
+            </>
+          )}
+          <button
+            role="menuitem"
+            className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-rose-600 hover:bg-rose-50"
+            onClick={keluarsekarang}
+          >
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+            </svg>
+            Keluar
+          </button>
+        </div>
+      )}
     </div>
   );
 }
