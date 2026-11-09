@@ -618,7 +618,7 @@ function KatalogKonten() {
                         }`}
                       />
                       {tersedia
-                        ? `Stok ${angka(stok)} eksemplar`
+                        ? `Total ${angka(item.stok)} eksemplar`
                         : "Tidak ada stok tersedia"}
                     </div>
 

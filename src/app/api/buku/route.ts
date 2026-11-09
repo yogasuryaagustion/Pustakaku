@@ -19,15 +19,16 @@ export async function GET() {
     // GET ini tidak membaca k.pengguna, jadi konteksPublik (tanpa validasi sesi)
     // sudah cukup dan menghemat dua roundtrip per muat halaman.
     const k = await konteksPublik();
-    // Daftar buku & agregat ketersediaan diambil PARALEL — dua roundtrip
-    // Supabase yang dulu berurutan kini tumpang tindih.
-    const [{ data, error }, hasilRpc] = await Promise.all([
+    // Daftar buku & agregat ketersediaan diambil PARALEL — roundtrip Supabase
+    // yang dulu berurutan kini tumpang tindih.
+    const [{ data, error }, hasilRpc, hasilTersedia] = await Promise.all([
       k.supabase
         .from("buku")
         .select("*")
         .order("created_at", { ascending: false })
         .order("ditambahkan_pada", { ascending: true }),
       k.supabase.rpc("jumlah_dipinjam"),
+      k.supabase.rpc("jumlah_tersedia"),
     ]);
     if (error) throw dariSupabase(error);
 
@@ -43,7 +44,24 @@ export async function GET() {
       console.warn("[buku] agregat ketersediaan gagal:", errHitung.message);
     }
 
-    return json({ buku: ((data ?? []) as BarisBuku[]).map(keBuku), dipinjam });
+    // Salinan yang benar-benar bisa dipinjam (rusak/hilang tidak dihitung).
+    // Bila fungsi belum ada (migrasi terlewat), biarkan kosong agar klien
+    // memakai perhitungan lama `stok - dipinjam`.
+    const { data: hitungTersedia, error: errTersedia } = hasilTersedia;
+    const tersedia: Record<string, number> = {};
+    if (!errTersedia && Array.isArray(hitungTersedia)) {
+      for (const baris of hitungTersedia as { buku_id: string; jumlah: number }[]) {
+        tersedia[baris.buku_id] = Number(baris.jumlah) || 0;
+      }
+    } else if (errTersedia) {
+      console.warn("[buku] agregat salinan tersedia gagal:", errTersedia.message);
+    }
+
+    return json({
+      buku: ((data ?? []) as BarisBuku[]).map(keBuku),
+      dipinjam,
+      tersedia,
+    });
   });
 }
 

@@ -55,7 +55,7 @@ Aturan yang tidak boleh dilanggar:
      harus mengklik tautan email sebelum bisa masuk (aplikasi sudah menampilkan
      pesan yang sesuai).
 
-## 4. Menjalankan migrasi (21 berkas, urut)
+## 4. Menjalankan migrasi (22 berkas, urut)
 
 Migrasi ada di `supabase/migrations/` dan **harus dijalankan berurutan menurut
 nama berkas** (tanggal di depan nama). Semua migrasi bersifat menambah, tidak
@@ -63,7 +63,7 @@ menghapus data lama — tetapi tetap **backup dulu** (bagian 7).
 
 **Cara A — SQL Editor (paling mudah, tanpa CLI).**
 Buka Supabase → SQL Editor → tempel isi berkas → Run, satu berkas per satu kali,
-urut dari `202610260001_skema.sql` sampai `202611060005_format_nomor_inventaris.sql`.
+urut dari `202610260001_skema.sql` sampai `202611090001_jumlah_tersedia.sql`.
 
 Urutan lengkapnya:
 
@@ -89,6 +89,7 @@ Urutan lengkapnya:
 202611060003_peminjaman_eksemplar.sql
 202611060004_kondisi_pengembalian.sql
 202611060005_format_nomor_inventaris.sql
+202611090001_jumlah_tersedia.sql
 ```
 
 **Cara B — Supabase CLI.** Repo ini belum punya `supabase/config.toml`, jadi
@@ -193,7 +194,7 @@ menyentuh data sekolah.
 | Super Admin | `admin@staging.perpus.id` (sandinya ada di `.env.staging.local`) |
 | Akun anggota uji | `anggota.uji@staging.perpus.id` — sudah terkonfirmasi, kartu `AGT-0002` |
 
-Sudah dikerjakan: 21 migrasi diterapkan berurutan tanpa galat, 11 tabel publik
+Sudah dikerjakan: 22 migrasi diterapkan berurutan tanpa galat, 11 tabel publik
 dengan RLS aktif (40 kebijakan), baris `pengaturan_sistem` bawaan ada, akun Super
 Admin terkonfirmasi bisa login, dan data tiruan awal terisi — 3 buku, 9 salinan,
 5 anggota (4 tiruan + 1 kartu otomatis milik akun admin), 2 peminjaman (1 sudah
@@ -268,7 +269,7 @@ lulus, ulangi bagian 4–6 pada proyek produksi (bagian 9).
 
 **Banyak sekolah:** karena satu instalasi hanya untuk satu perpustakaan, buat
 satu proyek Supabase + satu deployment per sekolah. Checklist per sekolah:
-variabel lingkungan sendiri, 21 migrasi, akun Super Admin, nama perpustakaan,
+variabel lingkungan sendiri, 22 migrasi, akun Super Admin, nama perpustakaan,
 domain, backup. Jangan pernah menaruh dua sekolah dalam satu database — RLS
 memeriksa peran, bukan institusi, sehingga petugas sekolah A akan melihat data
 sekolah B.

@@ -33,6 +33,7 @@ interface Snapshot {
   anggota: Anggota[];
   peminjaman: Peminjaman[];
   dipinjam: Record<string, number>;
+  tersedia: Record<string, number>;
   siap: boolean;
   galat: string | null;
 }
@@ -42,6 +43,7 @@ const SNAPSHOT_SERVER: Snapshot = {
   anggota: [],
   peminjaman: [],
   dipinjam: {},
+  tersedia: {},
   siap: false,
   galat: null,
 };
@@ -112,6 +114,7 @@ async function muatSatuData(kunci: KunciData): Promise<void> {
         const res = await apiFetch<{
           buku: Buku[];
           dipinjam?: Record<string, number>;
+          tersedia?: Record<string, number>;
         }>("/api/buku");
 
         if (!Array.isArray(res.buku)) {
@@ -122,6 +125,7 @@ async function muatSatuData(kunci: KunciData): Promise<void> {
           ...snapshot,
           buku: res.buku,
           dipinjam: res.dipinjam ?? snapshot.dipinjam,
+          tersedia: res.tersedia ?? snapshot.tersedia,
           galat: null,
         };
       } else if (kunci === "anggota") {
@@ -270,6 +274,7 @@ interface LibraryState {
   anggota: Anggota[];
   peminjaman: Peminjaman[];
   dipinjam: Record<string, number>;
+  tersedia: Record<string, number>;
   siap: boolean;
   galat: string | null;
 
@@ -494,6 +499,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       anggota: s.anggota,
       peminjaman: s.peminjaman,
       dipinjam: s.dipinjam,
+      tersedia: s.tersedia,
       siap: s.siap,
       galat: s.galat,
 
@@ -545,7 +551,7 @@ export function useLibrary(): LibraryState {
 // ---- Helper ----------------------------------------------------------------
 
 export function useHelper() {
-  const { buku, anggota, peminjaman, dipinjam } = useLibrary();
+  const { buku, anggota, peminjaman, dipinjam, tersedia } = useLibrary();
 
   const cariBuku = useCallback(
     (id: string) => buku.find((b) => b.id === id),
@@ -565,15 +571,24 @@ export function useHelper() {
     [dipinjam, peminjaman],
   );
 
+  // Ketersediaan mengikuti aturan server (pinjam_buku): hitung salinan yang
+  // berstatus tersedia dan bukan hilang. Salinan rusak/hilang tidak boleh
+  // ditawarkan. Untuk judul lama tanpa data salinan, pakai `stok - dipinjam`.
   const stokTersedia = useCallback(
     (bukuId: string) => {
       const item = buku.find((b) => b.id === bukuId);
 
       if (!item) return 0;
 
+      const dariSalinan = tersedia[bukuId];
+
+      if (typeof dariSalinan === "number") {
+        return Math.max(0, dariSalinan);
+      }
+
       return Math.max(0, item.stok - jumlahDipinjam(bukuId));
     },
-    [buku, jumlahDipinjam],
+    [buku, tersedia, jumlahDipinjam],
   );
 
   const pinjamanAnggota = useCallback(
