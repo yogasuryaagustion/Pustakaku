@@ -31,10 +31,35 @@ export async function POST(request: Request, { params }: Params) {
       throw new GalatApi("Kondisi pengembalian harus \"layak\" atau \"rusak_ringan\".", 400);
     }
 
-    const { data, error } = await k.supabase.rpc("kembalikan_buku", {
+    // Opsional: salinan fisik yang diterima, dipakai untuk menautkan pinjaman
+    // lama yang belum punya eksemplar agar kondisinya tercatat di inventaris.
+    const mentahEksemplar = body?.eksemplar_id;
+    const eksemplarId =
+      typeof mentahEksemplar === "string" && mentahEksemplar
+        ? mentahEksemplar
+        : null;
+
+    // Bila anggota sudah mengajukan pengembalian, proses ini sekaligus menjadi
+    // validasi petugas: kondisi yang dipilih dicatat pada pengajuannya.
+    const { data: ajuan } = await k.supabase
+      .from("pengembalian_ajuan")
+      .select("id")
+      .eq("peminjaman_id", id)
+      .eq("status", "menunggu")
+      .maybeSingle();
+
+    // Parameter salinan hanya dikirim bila ada, sehingga database yang belum
+    // menjalankan migrasi tautan salinan tetap bisa memproses pengembalian.
+    const argumen: Record<string, unknown> = {
       p_peminjaman_id: id,
-      p_kondisi_fisik: kondisi,
-    });
+      p_kondisi_fisik: ajuan ? kondisi ?? "layak" : kondisi,
+    };
+    if (eksemplarId) argumen.p_eksemplar_id = eksemplarId;
+
+    const { data, error } = await k.supabase.rpc(
+      ajuan ? "verifikasi_kembali" : "kembalikan_buku",
+      argumen,
+    );
     if (error) throw dariSupabase(error);
 
     return json({ peminjaman: kePeminjaman(data as unknown as BarisPeminjaman) });

@@ -138,13 +138,14 @@ export function PinjamanSaya({
     siap,
     pinjamBuku,
     perpanjangPinjam,
-    kembalikanBuku,
+    ajukanKembali,
   } = useLibrary();
 
   const {
     cariBuku,
     stokTersedia,
     pinjamanAnggota,
+    ajuanMenunggu,
   } = useHelper();
 
   const sistem = useSistem();
@@ -293,7 +294,7 @@ export function PinjamanSaya({
     }
   }
 
-  // Memproses pengembalian buku.
+  // Mengajukan pengembalian: petugas yang memvalidasi kondisi buku.
   async function konfirmasiPengembalian() {
     if (!konfirmasiKembali || sedangProsesId) return;
 
@@ -301,13 +302,12 @@ export function PinjamanSaya({
     setSedangProsesId(data.id);
 
     try {
-      const hasil = await kembalikanBuku(data.id);
+      const hasil = await ajukanKembali(data.id);
 
       if (hasil.ok) {
         toast.sukses(
-          `Buku "${data.judul}" berhasil dikembalikan.`
+          `Pengembalian "${data.judul}" diajukan. Serahkan buku ke petugas untuk diperiksa.`
         );
-        setTab("Riwayat");
       } else {
         toast.gagal(hasil.pesan);
       }
@@ -558,22 +558,28 @@ export function PinjamanSaya({
                             Perpanjang
                           </button>
 
-                          {/* KEMBALIKAN */}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setKonfirmasiKembali({
-                                id: p.id,
-                                judul: b?.judul ?? p.kodePinjam,
-                                nomorInventaris: p.nomorInventaris ?? null,
-                              })
-                            }
-                            disabled={!!sedangProsesId}
-                            className="flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-white px-3 py-2.5 text-xs font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            <Ikon nama="centang" ukuran={16} />
-                            Kembalikan
-                          </button>
+                          {/* AJUKAN PENGEMBALIAN — kondisi divalidasi petugas */}
+                          {ajuanMenunggu(p.id) ? (
+                            <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-center text-[11px] font-semibold leading-snug text-amber-800">
+                              Menunggu pemeriksaan petugas
+                            </p>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setKonfirmasiKembali({
+                                  id: p.id,
+                                  judul: b?.judul ?? p.kodePinjam,
+                                  nomorInventaris: p.nomorInventaris ?? null,
+                                })
+                              }
+                              disabled={!!sedangProsesId}
+                              className="flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-white px-3 py-2.5 text-xs font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              <Ikon nama="centang" ukuran={16} />
+                              Ajukan Kembali
+                            </button>
+                          )}
 
                           {sedangDiproses && (
                             <p className="text-center text-[11px] text-slate-500">
@@ -747,12 +753,12 @@ export function PinjamanSaya({
             setKonfirmasiKembali(null);
           }
         }}
-        title="Konfirmasi Pengembalian"
+        title="Ajukan Pengembalian"
         width="max-w-md"
       >
         <div className="space-y-4 text-sm">
           <p className="leading-relaxed text-slate-600">
-            Apakah Anda yakin ingin mengembalikan buku{" "}
+            Apakah Anda akan mengembalikan buku{" "}
             <span className="font-bold text-slate-900">
               {konfirmasiKembali?.judul}
             </span>
@@ -769,8 +775,9 @@ export function PinjamanSaya({
           </p>
 
           <div className="rounded-xl border border-amber-100 bg-amber-50 p-3 text-xs leading-relaxed text-amber-800">
-            Pastikan buku sudah diserahkan kepada pustakawan
-            sebelum mengonfirmasi pengembalian.
+            Pengembalian belum selesai sampai petugas memeriksa buku dan
+            memilih kondisinya (layak atau rusak ringan). Serahkan buku ke
+            pustakawan setelah mengajukan.
           </div>
 
           <div className="flex justify-end gap-2">
@@ -791,7 +798,7 @@ export function PinjamanSaya({
             >
               {sedangProsesId
                 ? "Memproses..."
-                : "Ya, Kembalikan"}
+                : "Ya, Ajukan"}
             </button>
           </div>
         </div>

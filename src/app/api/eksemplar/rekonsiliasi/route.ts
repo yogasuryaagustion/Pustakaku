@@ -46,7 +46,11 @@ export async function GET() {
   });
 }
 
-/** POST /api/eksemplar/rekonsiliasi — samakan buku.stok dengan jumlah eksemplar. */
+/**
+ * POST /api/eksemplar/rekonsiliasi — tulis habis salinan hilang lalu samakan
+ * stok katalog dengan salinan yang masih ada. `diperbaiki` berisi jumlah
+ * salinan hilang yang dikeluarkan dari koleksi.
+ */
 export async function POST() {
   return jalankan(async () => {
     const k = await konteksRoute({ wajibMasuk: true, wajibSuperAdmin: true });
@@ -58,8 +62,8 @@ export async function POST() {
     await catatJejakServer(k, {
       jenis: "sistem",
       aksi: "Rekonsiliasi stok",
-      objek: `${diperbaiki} judul`,
-      detail: "stok disamakan dengan jumlah eksemplar fisik",
+      objek: `${diperbaiki} salinan hilang`,
+      detail: "salinan hilang ditulis habis, stok disamakan dengan salinan yang ada",
     });
 
     return json({ ok: true, diperbaiki });

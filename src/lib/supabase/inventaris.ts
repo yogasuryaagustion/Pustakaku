@@ -37,23 +37,28 @@ export type StatusSistem = "tanpa-eksemplar" | "sesuai" | "stok-kurang" | "stok-
 
 export interface RingkasanInventaris extends BarisInventarisPerBuku {
   status_sistem: StatusSistem;
+  fisik: number;
   selisih: number;
   keterangan: string;
 }
 
 /**
- * Bandingkan stok tercatat (buku.stok) dengan jumlah eksemplar fisik.
+ * Bandingkan stok tercatat (buku.stok) dengan eksemplar yang benar-benar ada.
  * selisih > 0 berarti stok tercatat lebih banyak daripada barang fisik.
  *
- * Judul yang belum punya eksemplar sama sekali sengaja TIDAK dihitung
- * menyimpang: stoknya masih angka katalog yang diisi manual, dan menghitungnya
- * sebagai selisih membuat seluruh katalog tampak perlu diperbaiki (stoknya akan
- * jadi 0 bila rekonsiliasi dijalankan).
+ * Salinan berstatus `hilang` sudah tidak ada di rak, jadi tidak dihitung
+ * sebagai fisik; itulah sumber selisih yang paling sering muncul setelah
+ * hitung fisik. Judul yang belum punya eksemplar sama sekali sengaja TIDAK
+ * dihitung menyimpang: stoknya masih angka katalog yang diisi manual, dan
+ * menghitungnya sebagai selisih membuat seluruh katalog tampak perlu
+ * diperbaiki (stoknya akan jadi 0 bila rekonsiliasi dijalankan).
  */
 export function ringkasInventaris(r: BarisInventarisPerBuku): RingkasanInventaris {
   const total = Number(r.total_eksemplar) || 0;
   const stok = Number(r.stok) || 0;
-  const selisih = total === 0 ? 0 : stok - total;
+  const hilang = Number(r.hilang) || 0;
+  const fisik = Math.max(0, total - hilang);
+  const selisih = total === 0 ? 0 : stok - fisik;
 
   let status: StatusSistem = "sesuai";
   if (total === 0) status = "tanpa-eksemplar";
@@ -70,6 +75,7 @@ export function ringkasInventaris(r: BarisInventarisPerBuku): RingkasanInventari
   return {
     ...r,
     status_sistem: status,
+    fisik,
     selisih,
     keterangan: total === 0 ? "Belum ada eksemplar tercatat" : bagian.join(" · "),
   };

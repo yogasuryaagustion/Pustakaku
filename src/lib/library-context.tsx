@@ -10,7 +10,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { usePathname } from "next/navigation";
-import type { Anggota, Buku, Peminjaman } from "./types";
+import type { AjuanKembali, Anggota, Buku, Peminjaman } from "./types";
 import { DENDA_PER_HARI } from "./types";
 import { apiFetch } from "./api";
 import { useToast } from "@/components/toast";
@@ -32,6 +32,7 @@ interface Snapshot {
   buku: Buku[];
   anggota: Anggota[];
   peminjaman: Peminjaman[];
+  pengembalian: AjuanKembali[];
   dipinjam: Record<string, number>;
   tersedia: Record<string, number>;
   siap: boolean;
@@ -42,6 +43,7 @@ const SNAPSHOT_SERVER: Snapshot = {
   buku: [],
   anggota: [],
   peminjaman: [],
+  pengembalian: [],
   dipinjam: {},
   tersedia: {},
   siap: false,
@@ -141,9 +143,12 @@ async function muatSatuData(kunci: KunciData): Promise<void> {
           galat: null,
         };
       } else if (kunci === "peminjaman") {
-        const res = await apiFetch<{
-          peminjaman: Peminjaman[];
-        }>("/api/peminjaman");
+        // Pengajuan pengembalian dimuat bersama pinjaman: satu kali muat untuk
+        // panel anggota (mengajukan) dan /sirkulasi (memvalidasi).
+        const [res, resAjuan] = await Promise.all([
+          apiFetch<{ peminjaman: Peminjaman[] }>("/api/peminjaman"),
+          apiFetch<{ pengembalian: AjuanKembali[] }>("/api/pengembalian"),
+        ]);
 
         if (!Array.isArray(res.peminjaman)) {
           throw new Error("Format data peminjaman dari server tidak valid.");
@@ -152,6 +157,9 @@ async function muatSatuData(kunci: KunciData): Promise<void> {
         snapshot = {
           ...snapshot,
           peminjaman: res.peminjaman,
+          pengembalian: Array.isArray(resAjuan.pengembalian)
+            ? resAjuan.pengembalian
+            : snapshot.pengembalian,
           galat: null,
         };
       }
@@ -273,6 +281,7 @@ interface LibraryState {
   buku: Buku[];
   anggota: Anggota[];
   peminjaman: Peminjaman[];
+  pengembalian: AjuanKembali[];
   dipinjam: Record<string, number>;
   tersedia: Record<string, number>;
   siap: boolean;
@@ -305,7 +314,21 @@ interface LibraryState {
     peminjamanId: string,
     /** Kondisi salinan saat diterima; kosong = kondisi lama dipertahankan. */
     kondisi?: KondisiKembali,
+    /** Salinan yang diterima; menautkan pinjaman lama yang belum punya eksemplar. */
+    eksemplarId?: string,
   ) => Promise<Hasil>;
+
+  /** Anggota mengajukan pengembalian; menunggu validasi petugas. */
+  ajukanKembali: (peminjamanId: string, catatan?: string) => Promise<Hasil>;
+
+  /** Petugas memvalidasi kondisi buku lalu menutup pinjaman. */
+  verifikasiKembali: (
+    peminjamanId: string,
+    kondisi: KondisiKembali,
+  ) => Promise<Hasil>;
+
+  /** Petugas menolak pengajuan; pinjaman tetap aktif. */
+  tolakKembali: (peminjamanId: string, alasan?: string) => Promise<Hasil>;
 
   perpanjangPinjam: (
     peminjamanId: string,
@@ -456,18 +479,76 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
   );
 
   const kembalikanBuku = useCallback(
-    (peminjamanId: string, kondisi?: KondisiKembali) =>
-      jalankan(
+    (peminjamanId: string, kondisi?: KondisiKembali, eksemplarId?: string) => {
+      const body: Record<string, string> = {};
+      if (kondisi) body.kondisi_fisik = kondisi;
+      if (eksemplarId) body.eksemplar_id = eksemplarId;
+
+      return jalankan(
         () =>
           apiFetch<{ peminjaman: Peminjaman }>(
             `/api/peminjaman/${peminjamanId}/kembali`,
             {
               method: "POST",
-              body: kondisi ? { kondisi_fisik: kondisi } : undefined,
+              body: Object.keys(body).length > 0 ? body : undefined,
             },
           ),
         "Pengembalian dicatat.",
         ["buku", "peminjaman"],
+      );
+    },
+    [],
+  );
+
+  const ajukanKembali = useCallback(
+    (peminjamanId: string, catatan?: string) =>
+      jalankan(
+        () =>
+          apiFetch<{ pengajuan: unknown }>(
+            `/api/peminjaman/${peminjamanId}/ajukan-kembali`,
+            {
+              method: "POST",
+              body: catatan ? { catatan } : undefined,
+            },
+          ),
+        "Pengembalian diajukan. Serahkan buku ke petugas untuk diperiksa.",
+        ["peminjaman"],
+      ),
+    [],
+  );
+
+  const verifikasiKembali = useCallback(
+    (peminjamanId: string, kondisi: KondisiKembali) =>
+      jalankan(
+        () =>
+          apiFetch<{ peminjaman: Peminjaman }>(
+            `/api/peminjaman/${peminjamanId}/verifikasi-kembali`,
+            {
+              method: "POST",
+              body: { kondisi_fisik: kondisi },
+            },
+          ),
+        kondisi === "rusak_ringan"
+          ? "Pengembalian divalidasi: buku rusak ringan dan tidak ditawarkan lagi."
+          : "Pengembalian divalidasi: buku layak kembali ke rak.",
+        ["buku", "peminjaman"],
+      ),
+    [],
+  );
+
+  const tolakKembali = useCallback(
+    (peminjamanId: string, alasan?: string) =>
+      jalankan(
+        () =>
+          apiFetch<{ ok: boolean }>(
+            `/api/peminjaman/${peminjamanId}/tolak-kembali`,
+            {
+              method: "POST",
+              body: alasan ? { alasan } : undefined,
+            },
+          ),
+        "Pengajuan pengembalian ditolak. Pinjaman tetap aktif.",
+        ["peminjaman"],
       ),
     [],
   );
@@ -498,6 +579,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       buku: s.buku,
       anggota: s.anggota,
       peminjaman: s.peminjaman,
+      pengembalian: s.pengembalian,
       dipinjam: s.dipinjam,
       tersedia: s.tersedia,
       siap: s.siap,
@@ -516,6 +598,9 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
 
       pinjamBuku,
       kembalikanBuku,
+      ajukanKembali,
+      verifikasiKembali,
+      tolakKembali,
       perpanjangPinjam,
     }),
     [
@@ -529,6 +614,9 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       hapusAnggota,
       pinjamBuku,
       kembalikanBuku,
+      ajukanKembali,
+      verifikasiKembali,
+      tolakKembali,
       perpanjangPinjam,
     ],
   );
@@ -551,7 +639,8 @@ export function useLibrary(): LibraryState {
 // ---- Helper ----------------------------------------------------------------
 
 export function useHelper() {
-  const { buku, anggota, peminjaman, dipinjam, tersedia } = useLibrary();
+  const { buku, anggota, peminjaman, pengembalian, dipinjam, tersedia } =
+    useLibrary();
 
   const cariBuku = useCallback(
     (id: string) => buku.find((b) => b.id === id),
@@ -596,11 +685,21 @@ export function useHelper() {
     [peminjaman],
   );
 
+  /** Pengajuan pengembalian yang masih menunggu validasi petugas. */
+  const ajuanMenunggu = useCallback(
+    (peminjamanId: string) =>
+      pengembalian.find(
+        (a) => a.peminjamanId === peminjamanId && a.status === "menunggu",
+      ) ?? null,
+    [pengembalian],
+  );
+
   return {
     cariBuku,
     cariAnggota,
     jumlahDipinjam,
     stokTersedia,
     pinjamanAnggota,
+    ajuanMenunggu,
   };
 }

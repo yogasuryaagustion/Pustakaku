@@ -13,8 +13,9 @@ import {
 } from "@/components/inventaris-ui";
 
 // Hasil Sinkronisasi — membandingkan stok tercatat (buku.stok) dengan jumlah
-// eksemplar fisik. Tombol perbaiki memanggil fungsi database yang menyamakan
-// stok; hanya Super Admin yang boleh menjalankannya.
+// eksemplar yang benar-benar ada (salinan hilang tidak dihitung). Tombol
+// perbaiki menulis habis salinan hilang lalu menyamakan stok; hanya Super Admin
+// yang boleh menjalankannya.
 
 interface BarisSinkron {
   buku_id: string;
@@ -29,6 +30,7 @@ interface BarisSinkron {
   rusak: number;
   hilang: number;
   status_sistem: string;
+  fisik: number;
   selisih: number;
   keterangan: string;
 }
@@ -68,7 +70,27 @@ export default function HalamanRekonsiliasi() {
     return hanyaSelisih ? daftar.filter((r) => Number(r.selisih) !== 0) : daftar;
   }, [data, hanyaSelisih]);
 
+  // Jumlah salinan yang benar-benar ada (salinan hilang tidak dihitung).
+  const totalFisik = useMemo(
+    () =>
+      (data?.ringkasan ?? []).reduce(
+        (total, r) => total + (Number(r.fisik) || 0),
+        0,
+      ),
+    [data],
+  );
+
   const perbaiki = async () => {
+    const banyakSelisih = data?.perlu_diperbaiki ?? 0;
+
+    if (banyakSelisih > 0) {
+      const yakin = window.confirm(
+        `Perbaiki ${banyakSelisih} judul? Salinan yang ditandai hilang akan dihapus dari koleksi ` +
+          "agar stok katalog sama dengan barang yang benar-benar ada. Tindakan ini tercatat di riwayat.",
+      );
+      if (!yakin) return;
+    }
+
     setMemperbaiki(true);
     try {
       const res = await apiFetch<{ diperbaiki: number }>("/api/eksemplar/rekonsiliasi", {
@@ -76,8 +98,8 @@ export default function HalamanRekonsiliasi() {
       });
       toast.sukses(
         res.diperbaiki > 0
-          ? `Stok ${res.diperbaiki} judul disamakan dengan jumlah eksemplar.`
-          : "Semua stok sudah sesuai — tidak ada yang perlu diperbaiki.",
+          ? `${res.diperbaiki} salinan hilang ditulis habis; stok disamakan.`
+          : "Tidak ada salinan hilang — stok sudah sesuai.",
       );
       setSegar((s) => s + 1);
     } catch (e) {
@@ -90,7 +112,7 @@ export default function HalamanRekonsiliasi() {
   return (
     <div className="space-y-6">
       <KepalaHalaman
-        deskripsi="Angka selisih berasal dari stok di katalog dikurangi jumlah buku fisik. Angka positif berarti catatan lebih banyak daripada buku yang benar-benar ada."
+        deskripsi="Angka selisih berasal dari stok di katalog dikurangi jumlah buku yang benar-benar ada (salinan hilang tidak dihitung). Angka positif berarti catatan lebih banyak daripada barang di rak — biasanya karena salinan yang dinyatakan hilang saat hitung fisik. Tombol Perbaiki menulis habis salinan hilang itu lalu menyamakan stok."
         aksi={
           superadmin ? (
             <button
@@ -133,7 +155,7 @@ export default function HalamanRekonsiliasi() {
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Salinan Fisik"
-          value={data ? data.total_eksemplar : "—"}
+          value={data ? totalFisik : "—"}
           sub={`dari ${data ? data.total_judul : "—"} judul`}
           tone="brand"
           ikon="M20 7l-8-4-8 4v10l8 4 8-4V7z"
@@ -215,7 +237,7 @@ export default function HalamanRekonsiliasi() {
                         </div>
                       </td>
                       <td className="text-right font-semibold">{Number(r.stok) || 0}</td>
-                      <td className="text-right font-semibold">{Number(r.total_eksemplar) || 0}</td>
+                      <td className="text-right font-semibold">{Number(r.fisik) || 0}</td>
                       <td className="text-right font-semibold">
                         {selisih > 0 ? `+${selisih}` : selisih}
                       </td>

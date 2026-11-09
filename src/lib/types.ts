@@ -52,6 +52,21 @@ export interface Peminjaman {
   nomorInventaris?: string | null;
 }
 
+/** Pengajuan pengembalian dari anggota yang menunggu pemeriksaan petugas. */
+export type StatusAjuanKembali = "menunggu" | "disetujui" | "ditolak";
+
+export interface AjuanKembali {
+  id: string;
+  peminjamanId: string;
+  anggotaId: string;
+  status: StatusAjuanKembali;
+  /** Kondisi yang ditetapkan petugas saat memvalidasi (layak/rusak ringan). */
+  kondisiDivalidasi: "layak" | "rusak_ringan" | null;
+  catatan: string;
+  dibuatPada: string; // ISO timestamp
+  diprosesPada: string | null; // ISO timestamp
+}
+
 export const KATEGORI_LIST: Kategori[] = [
   "Fiksi",
   "Non-Fiksi",

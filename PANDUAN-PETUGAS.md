@@ -63,6 +63,25 @@ habis, buku tidak muncul di daftar pilihan — bukan aplikasi yang rusak.
    - **Rusak ringan** → dicatat rusak, tidak ditawarkan untuk dipinjam.
 3. Simpan. Denda keterlambatan langsung dihitung sesuai Pengaturan.
 
+Bila pinjaman lama belum tertaut ke salinan fisik, muncul pilihan **Salinan yang
+Anda terima**. Pilih nomor inventaris yang tertulis di buku — tanpa itu, pilihan
+kondisi tidak bisa disimpan ke inventaris dan salinannya tetap dianggap layak.
+
+### Pengembalian yang diajukan anggota
+Anggota bisa menekan **Ajukan Kembali** di panelnya. Pinjaman **belum** selesai
+sampai petugas memeriksa bukunya:
+
+1. Di **Peminjaman & Pengembalian**, baris pinjaman itu bertanda
+   **“Diajukan kembali”**.
+2. Setelah buku benar-benar diterima, tekan **Proses Kembali** dan pilih kondisi
+   **Layak** atau **Rusak ringan**. Pilihan itulah validasi petugas, dan tercatat
+   pada pengajuan anggota.
+3. Bila buku belum diserahkan, abaikan dulu — anggota bisa mengajukan ulang, dan
+   pinjaman tetap aktif sampai divalidasi.
+
+Alur lama tetap sama: petugas juga masih bisa langsung memproses pengembalian
+tanpa menunggu pengajuan anggota.
+
 ### Memperpanjang
 Tombol **Perpanjang** pada baris peminjaman menambah durasi sesuai Pengaturan.
 
@@ -97,8 +116,10 @@ Lakukan berkala, misalnya setiap akhir semester:
 1. **Inventaris Buku → Hitung Fisik** → mulai hitung, lalu masukkan jumlah
    salinan yang benar-benar ada di rak untuk setiap judul.
 2. Sistem menandai judul yang jumlahnya berbeda dengan catatan.
-3. **Perbaiki Selisih** → tinjau selisihnya dan simpan koreksi. Lakukan hanya
-   setelah rak benar-benar dihitung ulang.
+3. **Perbaiki Selisih** → selisih muncul bila stok katalog lebih besar daripada
+   salinan yang benar-benar ada, biasanya karena salinan dinyatakan hilang saat
+   hitung fisik. Tombol **Perbaiki Stok** menulis habis salinan hilang itu agar
+   stok katalog sesuai rak. Lakukan hanya setelah rak benar-benar dihitung ulang.
 4. **Riwayat Hitung** menyimpan catatan siapa mengoreksi apa dan kapan.
 
 ## 7. Laporan

@@ -7,7 +7,14 @@
 // Kolom `buku.stok` diatur oleh trigger fn_sinkronisasi_stok_buku (hitungan
 // baris) sehingga ikut sinkronisasi dari eksemplar.
 
-import type { Anggota, Buku, Peminjaman, StatusPinjam } from "../types";
+import type {
+  AjuanKembali,
+  Anggota,
+  Buku,
+  Peminjaman,
+  StatusAjuanKembali,
+  StatusPinjam,
+} from "../types";
 import type { JejakAksi, JenisJejak } from "../audit";
 import type { Pengguna } from "../auth";
 
@@ -83,6 +90,34 @@ export interface BarisPeminjaman {
   /** Diisi fungsi RPC pinjam/kembali, atau hasil embed `eksemplar_buku`. */
   nomor_inventaris?: string | null;
   eksemplar_buku?: { nomor_inventaris: string } | null;
+}
+
+export interface BarisAjuanKembali {
+  id: string;
+  peminjaman_id: string;
+  anggota_id: string;
+  status: string;
+  kondisi_divalidasi: string | null;
+  catatan: string | null;
+  dibuat_pada: string;
+  diproses_pada: string | null;
+}
+
+/** Pengajuan pengembalian anggota → bentuk yang dipakai UI. */
+export function keAjuanKembali(r: BarisAjuanKembali): AjuanKembali {
+  return {
+    id: r.id,
+    peminjamanId: r.peminjaman_id,
+    anggotaId: r.anggota_id,
+    status: r.status as StatusAjuanKembali,
+    kondisiDivalidasi:
+      r.kondisi_divalidasi === "layak" || r.kondisi_divalidasi === "rusak_ringan"
+        ? r.kondisi_divalidasi
+        : null,
+    catatan: r.catatan ?? "",
+    dibuatPada: r.dibuat_pada,
+    diprosesPada: r.diproses_pada,
+  };
 }
 
 export interface BarisJejak {

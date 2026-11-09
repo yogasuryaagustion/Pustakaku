@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   useLibrary,
   useHelper,
@@ -10,6 +10,7 @@ import {
 } from "@/lib/library-context";
 import { useBoleh } from "@/lib/auth";
 import type { Peminjaman } from "@/lib/types";
+import type { BarisEksemplar } from "@/lib/supabase/peta";
 import { useSistem } from "@/lib/sistem";
 import { KepalaHalaman } from "@/components/kepala-halaman";
 import {
@@ -72,7 +73,7 @@ export default function SirkulasiPage() {
     perpanjangPinjam,
   } = useLibrary();
 
-  const { cariBuku, cariAnggota, stokTersedia } = useHelper();
+  const { cariBuku, cariAnggota, stokTersedia, ajuanMenunggu } = useHelper();
   const sistem = useSistem();
   const toast = useToast();
   const bolehKelola = useBoleh("sirkulasi.kelola");
@@ -88,6 +89,36 @@ export default function SirkulasiPage() {
     useState<Peminjaman | null>(null);
   const [kondisiKembali, setKondisiKembali] =
     useState<KondisiKembali>("layak");
+  // Pinjaman lama bisa belum tertaut ke salinan; petugas memilih salinan yang
+  // benar-benar diterima agar kondisi fisiknya tercatat di inventaris.
+  const [salinanKembali, setSalinanKembali] = useState("");
+  const [salinanBuku, setSalinanBuku] = useState<BarisEksemplar[]>([]);
+
+  useEffect(() => {
+    if (!konfirmasiKembali || konfirmasiKembali.nomorInventaris) return;
+
+    const bukuId = konfirmasiKembali.bukuId;
+    let batal = false;
+
+    fetch("/api/eksemplar")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { eksemplar?: BarisEksemplar[] } | null) => {
+        if (batal || !data) return;
+        const daftar = (data.eksemplar ?? []).filter(
+          (e) => e.buku_id === bukuId && e.status !== "hilang",
+        );
+        setSalinanBuku(daftar);
+
+        const sedangDipinjam = daftar.find((e) => e.status === "dipinjam");
+        if (sedangDipinjam) setSalinanKembali(sedangDipinjam.id);
+        else if (daftar.length === 1) setSalinanKembali(daftar[0].id);
+      })
+      .catch(() => {});
+
+    return () => {
+      batal = true;
+    };
+  }, [konfirmasiKembali]);
 
   const bukuTersedia = useMemo(
     () => buku.filter((b) => stokTersedia(b.id) > 0),
@@ -512,6 +543,11 @@ export default function SirkulasiPage() {
 
                         <td className="px-5 py-4">
                           <Badge tone={sb.tone}>{sb.label}</Badge>
+                          {ajuanMenunggu(p.id) && (
+                            <p className="mt-1 whitespace-nowrap text-[11px] font-semibold text-amber-700">
+                              Diajukan kembali
+                            </p>
+                          )}
                         </td>
 
                         <td className="px-5 py-4 sm:px-6">
@@ -540,6 +576,8 @@ export default function SirkulasiPage() {
                                   className="whitespace-nowrap rounded-lg bg-teal-800 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-teal-900 focus:outline-none focus:ring-4 focus:ring-teal-100"
                                   onClick={() => {
                                     setKondisiKembali("layak");
+                                    setSalinanKembali("");
+                                    setSalinanBuku([]);
                                     setKonfirmasiKembali(p);
                                   }}
                                 >
@@ -608,7 +646,14 @@ export default function SirkulasiPage() {
                         </p>
                       </div>
 
-                      <Badge tone={sb.tone}>{sb.label}</Badge>
+                      <div className="shrink-0 text-right">
+                        <Badge tone={sb.tone}>{sb.label}</Badge>
+                        {ajuanMenunggu(p.id) && (
+                          <p className="mt-1 text-[11px] font-semibold text-amber-700">
+                            Diajukan kembali
+                          </p>
+                        )}
+                      </div>
                     </div>
 
                     <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
@@ -679,6 +724,8 @@ export default function SirkulasiPage() {
                           className="btn btn-primary flex-1 !py-2 text-xs"
                           onClick={() => {
                             setKondisiKembali("layak");
+                            setSalinanKembali("");
+                            setSalinanBuku([]);
                             setKonfirmasiKembali(p);
                           }}
                         >
@@ -840,7 +887,32 @@ export default function SirkulasiPage() {
                 Salinan rusak ringan tidak akan ditawarkan untuk dipinjam lagi.
               </p>
 
-              {!konfirmasiKembali.nomorInventaris && (
+              {!konfirmasiKembali.nomorInventaris && salinanBuku.length > 0 && (
+                <div className="mt-3">
+                  <label className="mb-1 block text-xs font-semibold text-slate-600">
+                    Salinan yang Anda terima
+                  </label>
+                  <select
+                    className="input input-bordered w-full"
+                    value={salinanKembali}
+                    onChange={(e) => setSalinanKembali(e.target.value)}
+                  >
+                    <option value="">— Pilih nomor inventaris —</option>
+                    {salinanBuku.map((e) => (
+                      <option key={e.id} value={e.id}>
+                        {e.nomor_inventaris} · {e.status}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Pinjaman ini belum tertaut ke salinan fisik. Pilih nomor
+                    inventaris yang tertulis pada buku agar kondisi yang dipilih
+                    tercatat di inventaris.
+                  </p>
+                </div>
+              )}
+
+              {!konfirmasiKembali.nomorInventaris && salinanBuku.length === 0 && (
                 <p className="mt-2 text-xs text-slate-500">
                   Judul ini belum punya data eksemplar fisik, jadi kondisi tidak
                   ikut dicatat.
@@ -889,18 +961,37 @@ export default function SirkulasiPage() {
                     cariBuku(konfirmasiKembali.bukuId)?.judul ??
                     konfirmasiKembali.kodePinjam;
 
+                  if (
+                    !konfirmasiKembali.nomorInventaris &&
+                    salinanBuku.length > 0 &&
+                    !salinanKembali
+                  ) {
+                    toast.gagal(
+                      "Pilih salinan yang Anda terima agar kondisinya tercatat.",
+                    );
+                    return;
+                  }
+
+                  // Kondisi hanya bisa tercatat bila ada salinan yang terhubung.
+                  const punyaSalinan =
+                    Boolean(konfirmasiKembali.nomorInventaris) ||
+                    Boolean(salinanKembali);
+
                   const hasil = await kembalikanBuku(
                     konfirmasiKembali.id,
                     kondisiKembali,
+                    salinanKembali || undefined,
                   );
 
                   setKonfirmasiKembali(null);
 
                   if (hasil.ok) {
                     toast.sukses(
-                      kondisiKembali === "rusak_ringan"
+                      kondisiKembali === "rusak_ringan" && punyaSalinan
                         ? `Pengembalian "${judul}" dicatat — salinan ditandai rusak ringan.`
-                        : `Pengembalian "${judul}" berhasil dicatat.`,
+                        : kondisiKembali === "rusak_ringan"
+                          ? `Pengembalian "${judul}" dicatat — judul ini belum punya salinan fisik, kondisi belum tercatat.`
+                          : `Pengembalian "${judul}" berhasil dicatat.`,
                     );
                   } else {
                     toast.gagal(hasil.pesan);

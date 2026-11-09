@@ -21,7 +21,7 @@ npm install
 npm run dev                  # http://localhost:3000
 ```
 
-Database perlu disiapkan lebih dulu: jalankan 22 berkas di
+Database perlu disiapkan lebih dulu: jalankan 25 berkas di
 `supabase/migrations/` sesuai urutan nama, lalu buat akun Super Admin pertama.
 Langkah lengkapnya ada di [`SUPABASE.md`](./SUPABASE.md) bagian 3–5.
 
