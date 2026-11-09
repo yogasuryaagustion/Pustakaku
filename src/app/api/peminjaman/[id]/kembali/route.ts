@@ -16,7 +16,7 @@ interface Params {
 }
 
 /** Kondisi fisik yang boleh dicatat saat pengembalian. */
-const KONDISI_KEMBALI = ["layak", "rusak_ringan"] as const;
+const KONDISI_KEMBALI = ["layak", "rusak_ringan", "rusak_beda", "hilang"] as const;
 
 export async function POST(request: Request, { params }: Params) {
   return jalankan(async () => {
@@ -28,7 +28,10 @@ export async function POST(request: Request, { params }: Params) {
     const mentah = body?.kondisi_fisik;
     const kondisi = typeof mentah === "string" && mentah ? mentah : null;
     if (kondisi && !(KONDISI_KEMBALI as readonly string[]).includes(kondisi)) {
-      throw new GalatApi("Kondisi pengembalian harus \"layak\" atau \"rusak_ringan\".", 400);
+      throw new GalatApi(
+        "Kondisi pengembalian harus layak, rusak_ringan, rusak_beda, atau hilang.",
+        400,
+      );
     }
 
     // Opsional: salinan fisik yang diterima, dipakai untuk menautkan pinjaman

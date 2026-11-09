@@ -17,7 +17,7 @@ interface Params {
 }
 
 /** Kondisi fisik yang boleh ditetapkan petugas saat memvalidasi. */
-const KONDISI = ["layak", "rusak_ringan"] as const;
+const KONDISI = ["layak", "rusak_ringan", "rusak_beda", "hilang"] as const;
 
 export async function POST(request: Request, { params }: Params) {
   return jalankan(async () => {
@@ -29,7 +29,7 @@ export async function POST(request: Request, { params }: Params) {
     const kondisi = typeof mentah === "string" ? mentah : "";
     if (!(KONDISI as readonly string[]).includes(kondisi)) {
       throw new GalatApi(
-        'Kondisi buku harus "layak" atau "rusak_ringan" saat memvalidasi pengembalian.',
+        "Kondisi buku harus layak, rusak_ringan, rusak_beda, atau hilang saat memvalidasi pengembalian.",
         400,
       );
     }

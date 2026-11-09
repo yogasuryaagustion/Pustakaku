@@ -60,8 +60,13 @@ export interface AjuanKembali {
   peminjamanId: string;
   anggotaId: string;
   status: StatusAjuanKembali;
-  /** Kondisi yang ditetapkan petugas saat memvalidasi (layak/rusak ringan). */
-  kondisiDivalidasi: "layak" | "rusak_ringan" | null;
+  /** Kondisi yang ditetapkan petugas saat memvalidasi. */
+  kondisiDivalidasi:
+    | "layak"
+    | "rusak_ringan"
+    | "rusak_beda"
+    | "hilang"
+    | null;
   catatan: string;
   dibuatPada: string; // ISO timestamp
   diprosesPada: string | null; // ISO timestamp

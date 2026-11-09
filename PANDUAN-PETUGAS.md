@@ -59,8 +59,12 @@ habis, buku tidak muncul di daftar pilihan — bukan aplikasi yang rusak.
 ### Menerima pengembalian
 1. Cari peminjaman lewat kotak pencarian (judul, nama anggota, atau kode).
 2. Tekan **Proses Kembali**, lalu pilih kondisi buku:
-   - **Layak** → kembali ke rak dan bisa dipinjam lagi.
-   - **Rusak ringan** → dicatat rusak, tidak ditawarkan untuk dipinjam.
+   - **Layak** → status `tersedia`, kembali ke rak dan bisa dipinjam lagi.
+   - **Rusak ringan** → status `rusak`, tidak ditawarkan untuk dipinjam.
+   - **Rusak berbeda** → status `rusak`; buku yang kembali tidak sesuai catatan
+     (edisi/judul lain), jadi dipisahkan dari rak.
+   - **Hilang** → status `hilang`; buku tidak kembali. Stok katalog baru
+     menyusut saat **Perbaiki Selisih** dijalankan di halaman inventaris.
 3. Simpan. Denda keterlambatan langsung dihitung sesuai Pengaturan.
 
 Bila pinjaman lama belum tertaut ke salinan fisik, muncul pilihan **Salinan yang
@@ -74,8 +78,8 @@ sampai petugas memeriksa bukunya:
 1. Di **Peminjaman & Pengembalian**, baris pinjaman itu bertanda
    **“Diajukan kembali”**.
 2. Setelah buku benar-benar diterima, tekan **Proses Kembali** dan pilih kondisi
-   **Layak** atau **Rusak ringan**. Pilihan itulah validasi petugas, dan tercatat
-   pada pengajuan anggota.
+   **Layak**, **Rusak ringan**, **Rusak berbeda**, atau **Hilang**. Pilihan itulah
+   validasi petugas, dan tercatat pada pengajuan anggota.
 3. Bila buku belum diserahkan, abaikan dulu — anggota bisa mengajukan ulang, dan
    pinjaman tetap aktif sampai divalidasi.
 

@@ -20,7 +20,15 @@ export type Hasil = { ok: boolean; pesan: string };
 export type KunciData = "buku" | "anggota" | "peminjaman";
 
 /** Kondisi fisik yang boleh dicatat petugas saat menerima pengembalian. */
-export type KondisiKembali = "layak" | "rusak_ringan";
+export type KondisiKembali = "layak" | "rusak_ringan" | "rusak_beda" | "hilang";
+
+/** Ringkasan efek tiap kondisi pengembalian, dipakai untuk pesan ke petugas. */
+export const PESAN_KONDISI_KEMBALI: Record<KondisiKembali, string> = {
+  layak: "buku kembali ke rak dan bisa dipinjam lagi",
+  rusak_ringan: "salinan ditandai rusak ringan dan tidak ditawarkan lagi",
+  rusak_beda: "salinan ditandai rusak berbeda dan tidak ditawarkan lagi",
+  hilang: "salinan ditandai hilang; stok menyusut saat Perbaiki Selisih dijalankan",
+};
 
 const SEMUA_KUNCI: KunciData[] = ["buku", "anggota", "peminjaman"];
 
@@ -528,9 +536,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
               body: { kondisi_fisik: kondisi },
             },
           ),
-        kondisi === "rusak_ringan"
-          ? "Pengembalian divalidasi: buku rusak ringan dan tidak ditawarkan lagi."
-          : "Pengembalian divalidasi: buku layak kembali ke rak.",
+        `Pengembalian divalidasi: ${PESAN_KONDISI_KEMBALI[kondisi]}.`,
         ["buku", "peminjaman"],
       ),
     [],

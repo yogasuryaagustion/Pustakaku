@@ -6,6 +6,7 @@ import {
   useLibrary,
   useHelper,
   hariTerlambat,
+  PESAN_KONDISI_KEMBALI,
   type KondisiKembali,
 } from "@/lib/library-context";
 import { useBoleh } from "@/lib/auth";
@@ -44,7 +45,10 @@ function statusBadge(
   return { label: "Sedang Dipinjam", tone: "green" };
 }
 
-/** Pilihan kondisi saat pengembalian — server hanya menerima dua nilai ini. */
+/**
+ * Pilihan kondisi saat pengembalian. Status salinan mengikuti aturan:
+ * layak → tersedia, rusak_ringan/rusak_beda → rusak, hilang → hilang.
+ */
 const PILIHAN_KONDISI: Array<{
   nilai: KondisiKembali;
   judul: string;
@@ -53,12 +57,22 @@ const PILIHAN_KONDISI: Array<{
   {
     nilai: "layak",
     judul: "Layak",
-    ket: "Kembali ke rak dan bisa dipinjam lagi.",
+    ket: "Status tersedia — kembali ke rak dan bisa dipinjam lagi.",
   },
   {
     nilai: "rusak_ringan",
     judul: "Rusak ringan",
-    ket: "Disimpan sebagai rusak dan tidak ditawarkan untuk dipinjam.",
+    ket: "Status rusak — tidak ditawarkan untuk dipinjam.",
+  },
+  {
+    nilai: "rusak_beda",
+    judul: "Rusak berbeda",
+    ket: "Status rusak — buku yang kembali tidak sesuai catatan (edisi/judul lain).",
+  },
+  {
+    nilai: "hilang",
+    judul: "Hilang",
+    ket: "Status hilang — buku tidak kembali; stok menyusut saat Perbaiki Selisih dijalankan.",
   },
 ];
 
@@ -884,7 +898,9 @@ export default function SirkulasiPage() {
                 Kondisi salinan yang diterima
               </p>
               <p className="mt-0.5 text-xs text-slate-500">
-                Salinan rusak ringan tidak akan ditawarkan untuk dipinjam lagi.
+                Kondisi selain layak membuat salinan tidak ditawarkan untuk
+                dipinjam lagi; hilang juga menyusutkan stok saat Perbaiki
+                Selisih dijalankan.
               </p>
 
               {!konfirmasiKembali.nomorInventaris && salinanBuku.length > 0 && (
@@ -987,11 +1003,9 @@ export default function SirkulasiPage() {
 
                   if (hasil.ok) {
                     toast.sukses(
-                      kondisiKembali === "rusak_ringan" && punyaSalinan
-                        ? `Pengembalian "${judul}" dicatat — salinan ditandai rusak ringan.`
-                        : kondisiKembali === "rusak_ringan"
-                          ? `Pengembalian "${judul}" dicatat — judul ini belum punya salinan fisik, kondisi belum tercatat.`
-                          : `Pengembalian "${judul}" berhasil dicatat.`,
+                      !punyaSalinan
+                        ? `Pengembalian "${judul}" dicatat — judul ini belum punya salinan fisik, kondisi belum tercatat.`
+                        : `Pengembalian "${judul}" dicatat — ${PESAN_KONDISI_KEMBALI[kondisiKembali]}.`,
                     );
                   } else {
                     toast.gagal(hasil.pesan);

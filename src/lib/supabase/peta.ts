@@ -103,6 +103,9 @@ export interface BarisAjuanKembali {
   diproses_pada: string | null;
 }
 
+/** Kondisi validasi pengembalian yang dikenali UI. */
+const KONDISI_AJUAN = ["layak", "rusak_ringan", "rusak_beda", "hilang"];
+
 /** Pengajuan pengembalian anggota → bentuk yang dipakai UI. */
 export function keAjuanKembali(r: BarisAjuanKembali): AjuanKembali {
   return {
@@ -110,10 +113,9 @@ export function keAjuanKembali(r: BarisAjuanKembali): AjuanKembali {
     peminjamanId: r.peminjaman_id,
     anggotaId: r.anggota_id,
     status: r.status as StatusAjuanKembali,
-    kondisiDivalidasi:
-      r.kondisi_divalidasi === "layak" || r.kondisi_divalidasi === "rusak_ringan"
-        ? r.kondisi_divalidasi
-        : null,
+    kondisiDivalidasi: KONDISI_AJUAN.includes(r.kondisi_divalidasi ?? "")
+      ? (r.kondisi_divalidasi as AjuanKembali["kondisiDivalidasi"])
+      : null,
     catatan: r.catatan ?? "",
     dibuatPada: r.dibuat_pada,
     diprosesPada: r.diproses_pada,
