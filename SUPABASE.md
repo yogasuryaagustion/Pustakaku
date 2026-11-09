@@ -191,12 +191,19 @@ menyentuh data sekolah.
 | Region | ap-south-1 (sama dengan produksi) |
 | Paket | free |
 | Super Admin | `admin@staging.perpus.id` (sandinya ada di `.env.staging.local`) |
+| Akun anggota uji | `anggota.uji@staging.perpus.id` — sudah terkonfirmasi, kartu `AGT-0002` |
 
 Sudah dikerjakan: 21 migrasi diterapkan berurutan tanpa galat, 11 tabel publik
 dengan RLS aktif (40 kebijakan), baris `pengaturan_sistem` bawaan ada, akun Super
 Admin terkonfirmasi bisa login, dan data tiruan awal terisi — 3 buku, 9 salinan,
 5 anggota (4 tiruan + 1 kartu otomatis milik akun admin), 2 peminjaman (1 sudah
 dikembalikan dengan kondisi `layak`, 1 masih aktif).
+
+Auth staging sudah disiapkan untuk uji lokal: Site URL `http://localhost:3000`,
+Redirect URLs `http://localhost:3000` dan `http://localhost:3000/**`, dan
+"Confirm email" dimatikan (auto-konfirmasi) supaya `/register` bisa langsung masuk
+tanpa SMTP. Pendaftaran uji sudah dibuktikan: akun baru langsung mendapat sesi,
+profil `user`, dan kartu anggota dari trigger.
 
 Kredensial staging (URL, anon/publishable key, sandi super admin, sandi database)
 ada di `.env.staging.local` — berkas ini di-ignore git, jangan di-commit dan jangan
@@ -205,12 +212,10 @@ simpan berkas itu.
 
 ### 8.2 Yang masih perlu dilakukan di dasbor staging
 
-1. **Authentication → URL Configuration**: Site URL `http://localhost:3000`,
-   tambahkan `http://localhost:3000/**` di Redirect URLs.
-2. **Authentication → Providers → Email**: matikan "Confirm email" selama uji lokal
-   supaya pendaftaran dari `/register` bisa langsung masuk tanpa SMTP.
-3. **Project Settings → Database → Backups**: aktifkan backup otomatis (paket
+1. **Project Settings → Database → Backups**: aktifkan backup otomatis (paket
    berbayar) sebelum proyek ini dipakai untuk uji yang berarti.
+2. Sebelum rilis, kembalikan "Confirm email" ke aktif dan isi Site URL staging
+   dengan domain staging sungguhan (bukan `localhost`).
 
 ### 8.3 Menjalankan aplikasi terhadap staging
 
