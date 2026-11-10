@@ -157,6 +157,10 @@ export function PinjamanSaya({
   const [tab, setTab] = useState<Tab>(tabAwal);
   const [bukuDipilih, setBukuDipilih] = useState("");
 
+  // Lama pinjam khusus transaksi ini. Mulai dari standar Pengaturan, tetapi
+  // anggota boleh menyesuaikan tanpa mengubah pengaturan global.
+  const [lamaPinjam, setLamaPinjam] = useState(sistem.lamaPinjam);
+
   const [konfirmasi, setKonfirmasi] =
     useState<KonfirmasiPinjaman | null>(null);
 
@@ -166,21 +170,25 @@ export function PinjamanSaya({
   const [sedangProsesId, setSedangProsesId] =
     useState<string | null>(null);
 
-  // Tanggal peminjaman dan jatuh tempo otomatis.
+  // Tanggal peminjaman dan jatuh tempo otomatis mengikuti lama pinjam terpilih.
   const { hariIni, jatuhTempo } = useMemo(() => {
     const kini = new Date();
 
     const tempo = new Date(
       kini.getFullYear(),
       kini.getMonth(),
-      kini.getDate() + sistem.lamaPinjam
+      kini.getDate() + (lamaPinjam || 0)
     );
 
     return {
       hariIni: tanggalLokal(kini),
       jatuhTempo: tanggalLokal(tempo),
     };
-  }, [sistem.lamaPinjam]);
+  }, [lamaPinjam]);
+
+  // Batas 1–90 hari sama dengan validasi API dan database.
+  const lamaValid =
+    Number.isInteger(lamaPinjam) && lamaPinjam >= 1 && lamaPinjam <= 90;
 
   const anggotaId = sedangMasuk?.anggotaId;
 
@@ -260,10 +268,16 @@ export function PinjamanSaya({
       return;
     }
 
+    if (!lamaValid) {
+      toast.gagal("Lama pinjam harus antara 1 dan 90 hari.");
+      return;
+    }
+
     const res = await pinjamBuku(
       bukuDipilih,
       anggotaId,
-      hariIni
+      hariIni,
+      lamaPinjam
     );
 
     if (res.ok) {
@@ -717,6 +731,57 @@ export function PinjamanSaya({
                   )}
                 </div>
 
+                {/* LAMA PINJAM — hanya berlaku untuk peminjaman ini */}
+                <div>
+                  <label
+                    htmlFor="lama-pinjam"
+                    className="mb-2 block text-sm font-medium text-slate-700"
+                  >
+                    Lama pinjam (hari)
+                  </label>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="lama-pinjam"
+                      type="number"
+                      className="input"
+                      min={1}
+                      max={90}
+                      step={1}
+                      value={lamaPinjam}
+                      onChange={(e) => {
+                        const nilai = Number(e.target.value);
+                        setLamaPinjam(Number.isFinite(nilai) ? nilai : 0);
+                      }}
+                      required
+                    />
+
+                    <div className="flex shrink-0 gap-1">
+                      {[7, 14, 30].map((hari) => (
+                        <button
+                          key={hari}
+                          type="button"
+                          className="btn btn-ghost px-2.5 py-1.5 text-xs"
+                          onClick={() => setLamaPinjam(hari)}
+                        >
+                          {hari} hr
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                    Standar dari pengaturan: {sistem.lamaPinjam} hari. Nilai di
+                    sini hanya berlaku untuk peminjaman ini.
+                  </p>
+
+                  {!lamaValid && (
+                    <p className="mt-1 text-xs text-rose-600">
+                      Lama pinjam harus antara 1 dan 90 hari.
+                    </p>
+                  )}
+                </div>
+
                 {/* INFORMASI JATUH TEMPO */}
                 <div className="rounded-xl border border-[var(--border)] bg-slate-50 p-4">
                   <div className="flex items-start gap-3">
@@ -742,6 +807,7 @@ export function PinjamanSaya({
                   className="w-full rounded-xl bg-[var(--brand-solid)] px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[var(--brand-solid-hover)] disabled:cursor-not-allowed disabled:opacity-50"
                   disabled={
                     !bukuDipilih ||
+                    !lamaValid ||
                     aktif.length >= sistem.maksPinjaman ||
                     !!sedangProsesId
                   }
@@ -756,7 +822,6 @@ export function PinjamanSaya({
                 )}
 
                 <p className="text-xs leading-relaxed text-slate-400">
-                  Lama pinjam {sistem.lamaPinjam} hari.
                   Pengembalian tetap mengikuti prosedur verifikasi
                   perpustakaan.
                 </p>
