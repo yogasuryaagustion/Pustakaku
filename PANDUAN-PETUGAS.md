@@ -56,6 +56,14 @@ sebagai konfirmasi. Gunakan tombol yang sama untuk mencatat kunjungan berikutnya
 4. Simpan. Sistem membuat kode pinjam dan menghitung tanggal jatuh tempo dari
    lama pinjam yang dipilih. Pengaturan tidak berubah karena transaksi ini.
 
+Anggota juga bisa memilih lama pinjam sendiri saat meminjam dari **Pinjaman
+Saya** di panel anggota (form **Pinjam Buku**): input 1–90 hari plus tombol
+cepat 7/14/30, dan tanggal jatuh tempo ikut menyesuaikan. Pilihan itu hanya
+berlaku untuk transaksi tersebut, tidak mengubah Pengaturan, dan tetap tunduk
+pada pemeriksaan stok, batas pinjaman aktif, serta denda tertunggak. Tidak ada
+nilai khusus untuk anggota — bila mereka butuh di luar 1–90 hari, ubah dulu
+lama pinjam standar di **Pengaturan** atau catat pinjaman lewat halaman ini.
+
 Batas jumlah judul per anggota dan sisa stok diperiksa otomatis. Kalau stok
 habis, buku tidak muncul di daftar pilihan — bukan aplikasi yang rusak.
 

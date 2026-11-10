@@ -81,7 +81,7 @@ export default function BantuanPage() {
     },
     {
       t: `Berapa lama durasi peminjaman?`,
-      j: `Setiap peminjaman berlaku ${sistem.lamaPinjam} hari sejak tanggal peminjaman. Jatuh tempo dihitung otomatis dan ditampilkan pada daftar pinjaman Anda.`,
+      j: `Standarnya ${sistem.lamaPinjam} hari sejak tanggal peminjaman. Saat meminjam lewat form Pinjam Buku di Pinjaman Saya, Anda boleh memilih sendiri 1–90 hari (tombol cepat 7/14/30); jatuh tempo langsung menyesuaikan dan pilihan itu hanya berlaku untuk peminjaman tersebut.`,
     },
     {
       t: "Bagaimana jika terlambat mengembalikan?",
@@ -260,6 +260,7 @@ export default function BantuanPage() {
           <ul className="mt-3 space-y-2.5 text-sm text-[var(--muted)]">
             <li>
               Lama pinjam: <span className="font-semibold text-[var(--foreground)]">{sistem.lamaPinjam} hari</span> per judul
+              (standar; bisa dipilih 1–90 hari saat meminjam sendiri)
             </li>
             <li>
               Denda keterlambatan:{" "}
