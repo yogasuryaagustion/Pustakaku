@@ -655,7 +655,7 @@ export default function HalamanInventaris() {
                       <div className="flex flex-wrap gap-2">
                         <Link
                           href={`/inventaris/eksemplar?buku=${r.buku_id}`}
-                          className="text-sm font-semibold text-[var(--brand)] hover:underline"
+                          className="text-sm font-semibold text-[var(--brand-ink)] hover:underline"
                         >
                           Salinan
                         </Link>

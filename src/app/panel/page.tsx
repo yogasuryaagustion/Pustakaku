@@ -47,7 +47,7 @@ export default function PanelPage() {
 
             <Link
               href="/katalog"
-              className="mt-5 inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-[var(--brand)] transition hover:bg-[var(--brand-soft)]"
+              className="mt-5 inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-[var(--brand-ink)] transition hover:bg-[var(--brand-soft)]"
             >
               Jelajahi katalog
               <ArrowRight size={16} />
@@ -92,14 +92,14 @@ export default function PanelPage() {
         <div className="card lg:col-span-2">
           <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-4">
             <div className="flex items-center gap-2">
-              <span className="grid h-7 w-7 place-items-center rounded-md bg-[var(--brand-soft)] text-[var(--brand)]">
+              <span className="grid h-7 w-7 place-items-center rounded-md bg-[var(--brand-soft)] text-[var(--brand-ink)]">
                 <BookMarked size={15} />
               </span>
               <h2 className="font-bold">Aktivitas Peminjaman</h2>
             </div>
             <Link
               href="/panel/pinjaman"
-              className="text-sm font-semibold text-[var(--brand)] hover:underline"
+              className="text-sm font-semibold text-[var(--brand-ink)] hover:underline"
             >
               Lihat semua →
             </Link>
@@ -122,7 +122,7 @@ export default function PanelPage() {
                     className="flex items-center justify-between gap-3 py-3.5"
                   >
                     <div className="flex min-w-0 items-center gap-3">
-                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[var(--brand-soft)] text-[var(--brand)]">
+                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[var(--brand-soft)] text-[var(--brand-ink)]">
                         <BookOpen size={17} />
                       </span>
                       <div className="min-w-0">
@@ -193,7 +193,7 @@ export default function PanelPage() {
                 href={menu.href}
                 className="flex items-center gap-3 rounded-lg px-2.5 py-2.5 transition-colors hover:bg-[var(--brand-soft)]/50"
               >
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[var(--brand-soft)] text-[var(--brand)]">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[var(--brand-soft)] text-[var(--brand-ink)]">
                   {menu.ikon}
                 </span>
                 <span className="min-w-0 flex-1">

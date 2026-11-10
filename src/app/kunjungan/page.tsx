@@ -436,7 +436,7 @@ export default function MonitoringKunjunganPage() {
                   }}
                   className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
                     rentang === r.id
-                      ? "bg-[var(--brand)] text-white shadow-[var(--sh-1)]"
+                      ? "bg-[var(--brand-solid)] text-white shadow-[var(--sh-1)]"
                       : "border border-[var(--border)] bg-white text-slate-600 hover:bg-slate-50"
                   }`}
                 >
@@ -573,7 +573,9 @@ export default function MonitoringKunjunganPage() {
                           <div className="flex items-center gap-3">
                             <span
                               className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg text-xs font-bold text-white ${
-                                i % 2 === 0 ? "grad-brand" : "bg-emerald-600"
+                                i % 2 === 0
+                                  ? "grad-brand"
+                                  : "bg-[var(--brand-solid)]"
                               }`}
                               aria-hidden
                             >

@@ -404,7 +404,7 @@ export default function HalamanDataEksemplar() {
                         <div className="flex flex-wrap gap-3">
                           <button
                             type="button"
-                            className="text-sm font-semibold text-[var(--brand)] hover:underline"
+                            className="text-sm font-semibold text-[var(--brand-ink)] hover:underline"
                             onClick={() => bukaUbah(e)}
                           >
                             Ubah

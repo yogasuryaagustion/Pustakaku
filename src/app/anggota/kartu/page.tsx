@@ -20,7 +20,24 @@ function tanggal(iso: string): string {
   return Number.isNaN(date.getTime()) ? iso : FORMAT_TANGGAL.format(date);
 }
 
+/** Warna aksen aktif (tema admin) sebagai RGB untuk jsPDF. */
+function warnaBrand(): [number, number, number] {
+  const mentah = getComputedStyle(document.documentElement)
+    .getPropertyValue("--brand")
+    .trim();
+  const cocok = /^#?([0-9a-f]{6})$/i.exec(mentah);
+  const n = cocok ? parseInt(cocok[1], 16) : 0x35bb82;
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
 async function unduhPdf(kartu: Anggota, namaPerpustakaan: string, qr: string) {
+  const brand = warnaBrand();
+  // Latar lembut untuk avatar inisial — aksen dicampur putih.
+  const brandMuda = brand.map((v) => Math.round(v + (255 - v) * 0.88)) as [
+    number,
+    number,
+    number,
+  ];
   // jsPDF (~300 KB) hanya dimuat saat tombol Unduh ditekan — bukan sejak
   // halaman dibuka, karena pratinjau kartu tidak membutuhkannya.
   const { jsPDF } = await import("jspdf");
@@ -30,14 +47,14 @@ async function unduhPdf(kartu: Anggota, namaPerpustakaan: string, qr: string) {
     format: [UKURAN_KARTU.lebar, UKURAN_KARTU.tinggi],
     compress: true,
   });
-  pdf.setFillColor(15, 118, 110);
+  pdf.setFillColor(...brand);
   pdf.roundedRect(0, 0, UKURAN_KARTU.lebar, UKURAN_KARTU.tinggi, 2, 2, "F");
   pdf.setFillColor(255, 255, 255);
   pdf.roundedRect(3, 3, UKURAN_KARTU.lebar - 6, UKURAN_KARTU.tinggi - 6, 2, 2, "F");
-  pdf.setFillColor(15, 118, 110);
+  pdf.setFillColor(...brand);
   pdf.rect(3, 3, 2, UKURAN_KARTU.tinggi - 6, "F");
 
-  pdf.setTextColor(15, 118, 110);
+  pdf.setTextColor(...brand);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(12);
   pdf.text(namaPerpustakaan.slice(0, 32), 9, 11);
@@ -50,17 +67,17 @@ async function unduhPdf(kartu: Anggota, namaPerpustakaan: string, qr: string) {
     if (kartu.foto?.startsWith("data:image/")) {
       pdf.addImage(kartu.foto, "JPEG", 9, 19, 17, 17, undefined, "FAST");
     } else {
-      pdf.setFillColor(226, 244, 240);
+      pdf.setFillColor(...brandMuda);
       pdf.circle(17.5, 27.5, 8.5, "F");
-      pdf.setTextColor(15, 118, 110);
+      pdf.setTextColor(...brand);
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(15);
       pdf.text(kartu.nama.trim().charAt(0).toUpperCase() || "?", 17.5, 30, { align: "center" });
     }
   } catch {
-    pdf.setFillColor(226, 244, 240);
+    pdf.setFillColor(...brandMuda);
     pdf.circle(17.5, 27.5, 8.5, "F");
-    pdf.setTextColor(15, 118, 110);
+    pdf.setTextColor(...brand);
     pdf.setFontSize(14);
     pdf.text(kartu.nama.trim().charAt(0).toUpperCase() || "?", 17.5, 30, { align: "center" });
   }
@@ -75,7 +92,7 @@ async function unduhPdf(kartu: Anggota, namaPerpustakaan: string, qr: string) {
   pdf.text("NOMOR ANGGOTA", 30, 30);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(10);
-  pdf.setTextColor(15, 118, 110);
+  pdf.setTextColor(...brand);
   pdf.text(kartu.nomorAnggota, 30, 35);
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(7);
@@ -84,7 +101,7 @@ async function unduhPdf(kartu: Anggota, namaPerpustakaan: string, qr: string) {
   pdf.text(`Bergabung: ${tanggal(kartu.bergabungPada)}`, 30, 46);
 
   pdf.addImage(qr, "PNG", 67, 15, 14, 14, undefined, "FAST");
-  pdf.setTextColor(15, 118, 110);
+  pdf.setTextColor(...brand);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(7);
   pdf.text(statusAnggota(kartu).toUpperCase(), 74, 34, { align: "center" });

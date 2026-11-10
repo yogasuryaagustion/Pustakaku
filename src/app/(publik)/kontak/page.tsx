@@ -57,7 +57,7 @@ export default function HalamanKontak() {
             className="card card-raised flex flex-col justify-between gap-4 p-6"
           >
             <div>
-              <div className="text-xs font-bold uppercase tracking-wider text-[var(--brand)]">
+              <div className="text-xs font-bold uppercase tracking-wider text-[var(--brand-ink)]">
                 {k.label}
               </div>
               <div className="mt-2 break-words text-base font-semibold text-slate-900">
@@ -67,7 +67,7 @@ export default function HalamanKontak() {
             <a
               href={k.href}
               {...(k.eksternal ? { target: "_blank", rel: "noreferrer noopener" } : {})}
-              className="btn w-full justify-center border border-[var(--brand)]/40 text-[var(--brand)] hover:bg-[var(--brand)] hover:text-white"
+              className="btn w-full justify-center border border-[var(--brand)]/40 text-[var(--brand-ink)] hover:bg-[var(--brand-solid)] hover:text-white"
             >
               {k.aksi}
             </a>

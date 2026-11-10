@@ -50,8 +50,11 @@ sebagai konfirmasi. Gunakan tombol yang sama untuk mencatat kunjungan berikutnya
 1. Buka **Peminjaman & Pengembalian** → tombol **Pinjam Buku**.
 2. Pilih buku (hanya yang salinannya tersedia) dan pilih anggota (hanya yang
    aktif).
-3. Simpan. Sistem membuat kode pinjam dan menghitung tanggal jatuh tempo dari
-   Pengaturan.
+3. Periksa **Lama pinjam (hari)**. Nilainya dimulai dari standar Pengaturan,
+   tetapi bisa diubah untuk peminjaman ini saja (tombol cepat 7/14/30 atau
+   ketik 1–90). Tanggal **Jatuh tempo** di bawahnya ikut menyesuaikan.
+4. Simpan. Sistem membuat kode pinjam dan menghitung tanggal jatuh tempo dari
+   lama pinjam yang dipilih. Pengaturan tidak berubah karena transaksi ini.
 
 Batas jumlah judul per anggota dan sisa stok diperiksa otomatis. Kalau stok
 habis, buku tidak muncul di daftar pilihan — bukan aplikasi yang rusak.
@@ -66,6 +69,30 @@ habis, buku tidak muncul di daftar pilihan — bukan aplikasi yang rusak.
    - **Hilang** → status `hilang`; buku tidak kembali. Stok katalog baru
      menyusut saat **Perbaiki Selisih** dijalankan di halaman inventaris.
 3. Simpan. Denda keterlambatan langsung dihitung sesuai Pengaturan.
+
+### Menerima pembayaran denda (boleh dicicil)
+Denda tercatat per pinjaman saat buku dikembalikan. Bila anggota membayar:
+
+1. Cari baris pinjaman bersangkutan di **Peminjaman & Pengembalian** — kolom
+   tindakan menampilkan **Bayar Rp…** selama dendanya belum lunas.
+2. Tekan tombol itu untuk membuka **Denda Pinjaman**: total denda, jumlah yang
+   sudah dibayar, sisa, dan **riwayat pembayaran** pinjaman tersebut.
+3. Isi **Nominal diterima** (boleh sebagian dari sisa) dan catatan bila perlu
+   (mis. “cicilan pertama”), lalu tekan **Catat pembayaran**. Tombol
+   **Lunasi sisa** memakai jalur yang sama untuk melunasi sekaligus.
+4. Setiap penerimaan tersimpan sebagai baris riwayat (nominal, catatan, waktu)
+   dan masuk jejak aktivitas. Baris berubah menjadi **Denda lunas** hanya setelah
+   sisanya habis.
+
+Anggota melihat riwayat cicilannya sendiri di panel: **Peminjaman Saya** (atau
+**Riwayat**) → buka *Riwayat pembayaran denda* pada pinjaman yang berdenda.
+Daftar itu hanya memuat pembayaran miliknya, bukan milik anggota lain.
+
+Selama masih ada sisa denda, sistem **menolak peminjaman baru** untuk anggota
+itu (pesannya menyebut nominal yang harus dilunasi) — cicilan sebagian belum
+membuka blokir. Tombol **Catat Peminjaman** juga dinonaktifkan bila anggota yang
+dipilih masih berutang denda. Aturan ini tidak membedakan jenis pinjaman; lunasi
+sampai habis dulu, baru boleh meminjam.
 
 Bila pinjaman lama belum tertaut ke salinan fisik, muncul pilihan **Salinan yang
 Anda terima**. Pilih nomor inventaris yang tertulis di buku — tanpa itu, pilihan
@@ -88,6 +115,8 @@ tanpa menunggu pengajuan anggota.
 
 ### Memperpanjang
 Tombol **Perpanjang** pada baris peminjaman menambah durasi sesuai Pengaturan.
+Perpanjangan tidak memadamkan denda yang sudah tercatat, dan anggota yang masih
+berdenda tetap tidak bisa meminjam judul baru.
 
 ### Di ponsel
 Di layar kecil, daftar peminjaman tampil sebagai kartu (bukan tabel), dengan

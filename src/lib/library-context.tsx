@@ -112,8 +112,12 @@ function perbaruiStatusSiap() {
  * Memuat satu entitas dari API.
  * Request yang sedang berjalan digunakan kembali untuk mencegah fetch ganda.
  */
-async function muatSatuData(kunci: KunciData): Promise<void> {
-  if (dataTersedia.has(kunci)) return;
+async function muatSatuData(
+  kunci: KunciData,
+  /** Abaikan cache — dipakai penyegaran latar tanpa memunculkan status memuat. */
+  paksa = false,
+): Promise<void> {
+  if (!paksa && dataTersedia.has(kunci)) return;
 
   const requestBerjalan = dataSedangDimuat.get(kunci);
   if (requestBerjalan) return requestBerjalan;
@@ -231,6 +235,15 @@ function muatUlang(kunci?: KunciData[]) {
   void muatData(target);
 }
 
+/**
+ * Segarkan data di latar belakang tanpa mengosongkan cache lebih dulu.
+ * Status `siap` tetap true, jadi daftar tidak berkedip ke layar memuat saat
+ * pengguna berpindah halaman.
+ */
+function segarkanData(kunci: KunciData[]) {
+  void Promise.all(kunci.map((key) => muatSatuData(key, true)));
+}
+
 /** Khusus katalog publik di landing page. */
 async function muatKatalogPublik(): Promise<void> {
   await muatSatuData("buku");
@@ -316,6 +329,8 @@ interface LibraryState {
     bukuId: string,
     anggotaId: string,
     tanggalPinjam?: string,
+    /** Lama pinjam khusus transaksi ini; kosong = standar dari Pengaturan. */
+    lamaHari?: number,
   ) => Promise<Hasil>;
 
   kembalikanBuku: (
@@ -342,6 +357,16 @@ interface LibraryState {
     peminjamanId: string,
     tambahHari?: number,
   ) => Promise<Hasil>;
+
+  /** Petugas menerima pembayaran denda penuh (pelunasan sisa sekaligus). */
+  lunasiDenda: (peminjamanId: string) => Promise<Hasil>;
+
+  /** Petugas menerima pembayaran denda sebagian (cicilan). */
+  bayarDenda: (
+    peminjamanId: string,
+    nominal: number,
+    catatan?: string,
+  ) => Promise<Hasil>;
 }
 
 const LibraryContext = createContext<LibraryState | null>(null);
@@ -361,6 +386,17 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
 
   const toast = useToast();
   const terlihat = useRef<string | null>(null);
+
+  // Data pinjaman bisa berubah dari luar panel (petugas, anggota lain). Karena
+  // provider hidup di seluruh aplikasi, cache sempat basi; segarkan tiap kali
+  // pengguna berpindah halaman di dalam panel.
+  const rutePanelSebelumnya = useRef(pathname);
+  useEffect(() => {
+    if (rutePanelSebelumnya.current === pathname) return;
+    rutePanelSebelumnya.current = pathname;
+
+    if (pathname.startsWith("/panel")) segarkanData(["peminjaman"]);
+  }, [pathname]);
 
   useEffect(() => {
     if (s.galat && terlihat.current !== s.galat) {
@@ -469,7 +505,12 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
   );
 
   const pinjamBuku = useCallback(
-    (bukuId: string, anggotaId: string, tanggalPinjam?: string) =>
+    (
+      bukuId: string,
+      anggotaId: string,
+      tanggalPinjam?: string,
+      lamaHari?: number,
+    ) =>
       jalankan(
         () =>
           apiFetch<{ peminjaman: Peminjaman }>("/api/peminjaman", {
@@ -478,6 +519,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
               bukuId,
               anggotaId,
               tanggalPinjam,
+              lamaHari,
             },
           }),
         "Peminjaman dicatat.",
@@ -559,6 +601,37 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  const lunasiDenda = useCallback(
+    (peminjamanId: string) =>
+      jalankan(
+        () =>
+          apiFetch<{ peminjaman: Peminjaman }>(
+            `/api/peminjaman/${peminjamanId}/lunasi-denda`,
+            { method: "POST" },
+          ),
+        "Denda dilunasi.",
+        ["peminjaman"],
+      ),
+    [],
+  );
+
+  const bayarDenda = useCallback(
+    (peminjamanId: string, nominal: number, catatan?: string) =>
+      jalankan(
+        () =>
+          apiFetch<{ peminjaman: Peminjaman }>(
+            `/api/peminjaman/${peminjamanId}/bayar-denda`,
+            {
+              method: "POST",
+              body: { nominal, catatan: catatan ?? null },
+            },
+          ),
+        "Pembayaran denda dicatat.",
+        ["peminjaman"],
+      ),
+    [],
+  );
+
   const perpanjangPinjam = useCallback(
     (peminjamanId: string, tambahHari?: number) =>
       jalankan(
@@ -608,6 +681,8 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       verifikasiKembali,
       tolakKembali,
       perpanjangPinjam,
+      lunasiDenda,
+      bayarDenda,
     }),
     [
       s,
@@ -624,6 +699,8 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       verifikasiKembali,
       tolakKembali,
       perpanjangPinjam,
+      lunasiDenda,
+      bayarDenda,
     ],
   );
 

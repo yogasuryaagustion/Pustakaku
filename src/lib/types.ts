@@ -36,6 +36,14 @@ export interface Anggota {
 
 export type StatusPinjam = "Dipinjam" | "Dikembalikan" | "Terlambat";
 
+/** Satu penerimaan pembayaran denda (bisa sebagian/cicilan). */
+export interface PembayaranDenda {
+  id: string;
+  nominal: number; // rupiah
+  catatan: string;
+  dibuatPada: string; // ISO datetime
+}
+
 export interface Peminjaman {
   id: string;
   kodePinjam: string;
@@ -45,7 +53,13 @@ export interface Peminjaman {
   tanggalKembali: string; // ISO date (target)
   tanggalKembaliAktual: string | null; // ISO date
   status: StatusPinjam;
-  denda: number; // rupiah
+  denda: number; // rupiah per pinjaman
+  /** Bagian denda yang sudah dilunasi; 0 berarti belum dibayar. */
+  dendaDibayar: number;
+  /** Waktu pelunasan denda (ISO datetime), null selama masih ada sisa. */
+  dendaDibayarPada: string | null;
+  /** Riwayat penerimaan denda, terbaru lebih dulu. */
+  pembayaranDenda?: PembayaranDenda[];
   catatan: string;
   /** Eksemplar fisik yang dipinjam (null bila judul belum didata fisiknya). */
   eksemplarId?: string | null;

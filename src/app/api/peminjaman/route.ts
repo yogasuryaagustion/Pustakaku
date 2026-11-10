@@ -21,7 +21,9 @@ export async function GET() {
     const { data, error } = await k.supabase
       .from("peminjaman")
       // Sertakan nomor inventaris salinan fisik yang dipinjam (bila ada).
-      .select("*,eksemplar_buku(nomor_inventaris)")
+      .select(
+        "*,eksemplar_buku(nomor_inventaris),pembayaran_denda(id,nominal,catatan,dibuat_pada)",
+      )
       .order("created_at", { ascending: false })
       .order("kode_pinjam", { ascending: true });
     if (error) throw dariSupabase(error);
@@ -39,11 +41,23 @@ export async function POST(request: Request) {
     if (!bukuId || !anggotaId) throw new GalatApi("Buku dan anggota harus dipilih.");
     const tgl = body?.tanggalPinjam ? tanggal(body.tanggalPinjam, "Tanggal pinjam") : undefined;
 
+    // Lama pinjam opsional: bila kosong, database memakai nilai standar dari
+    // Pengaturan Sistem. Rentang 1–90 hari juga diperiksa ulang di sana.
+    let lamaHari: number | null = null;
+    if (body?.lamaHari !== undefined && body?.lamaHari !== null && body?.lamaHari !== "") {
+      const angka = Number(body.lamaHari);
+      if (!Number.isInteger(angka) || angka < 1 || angka > 90) {
+        throw new GalatApi("Lama pinjam harus antara 1 dan 90 hari.");
+      }
+      lamaHari = angka;
+    }
+
     // Validasi izin, stok, batas pinjaman, dan penomoran → atomik di database.
     const { data, error } = await k.supabase.rpc("pinjam_buku", {
       p_buku_id: bukuId,
       p_anggota_id: anggotaId,
       p_tanggal_pinjam: tgl ?? null,
+      p_lama_hari: lamaHari,
     });
     if (error) throw dariSupabase(error);
 

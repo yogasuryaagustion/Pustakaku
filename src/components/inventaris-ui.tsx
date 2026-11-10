@@ -33,8 +33,8 @@ export function NavigasiInventaris() {
             aria-current={aktif ? "page" : undefined}
             className={
               aktif
-                ? "rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-semibold text-white"
-                : "rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-[var(--brand)] hover:text-[var(--brand)]"
+                ? "rounded-full bg-[var(--brand-solid)] px-4 py-2 text-sm font-semibold text-white"
+                : "rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-[var(--brand)] hover:text-[var(--brand-ink)]"
             }
           >
             {t.label}

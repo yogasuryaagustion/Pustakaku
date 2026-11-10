@@ -677,7 +677,7 @@ function KepalaMigrasi({ jumlahKunci }: { jumlahKunci: number }) {
         server memvalidasi ulang seluruh baris dan melewati data yang sudah ada.
       </p>
       <div className="mt-3 flex flex-wrap gap-2 text-xs">
-        <span className="rounded-full bg-[var(--brand-soft)] px-2.5 py-1 font-semibold text-[var(--brand)]">
+        <span className="rounded-full bg-[var(--brand-soft)] px-2.5 py-1 font-semibold text-[var(--brand-ink)]">
           Halaman khusus Super Admin (gerbang peran)
         </span>
         <span className="rounded-full bg-slate-100 px-2.5 py-1 font-semibold text-slate-600">

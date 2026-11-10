@@ -56,13 +56,13 @@ export default function PublikLayout({ children }: { children: React.ReactNode }
           <nav className="flex items-center gap-1 text-sm font-medium">
             <Link
               href="/"
-              className="rounded-full px-3 py-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-[var(--brand)]"
+              className="rounded-full px-3 py-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-[var(--brand-ink)]"
             >
               Beranda
             </Link>
             <Link
               href="/katalog"
-              className="hidden rounded-full px-3 py-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-[var(--brand)] sm:block"
+              className="hidden rounded-full px-3 py-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-[var(--brand-ink)] sm:block"
             >
               Katalog
             </Link>
@@ -82,13 +82,13 @@ export default function PublikLayout({ children }: { children: React.ReactNode }
             dilindungi.
           </span>
           <span className="flex flex-wrap items-center justify-center gap-3">
-            <Link href="/kebijakan-privasi" className="transition-colors hover:text-[var(--brand)]">
+            <Link href="/kebijakan-privasi" className="transition-colors hover:text-[var(--brand-ink)]">
               Kebijakan Privasi
             </Link>
-            <Link href="/syarat-ketentuan" className="transition-colors hover:text-[var(--brand)]">
+            <Link href="/syarat-ketentuan" className="transition-colors hover:text-[var(--brand-ink)]">
               Syarat &amp; Ketentuan
             </Link>
-            <Link href="/kontak" className="transition-colors hover:text-[var(--brand)]">
+            <Link href="/kontak" className="transition-colors hover:text-[var(--brand-ink)]">
               Kontak
             </Link>
           </span>

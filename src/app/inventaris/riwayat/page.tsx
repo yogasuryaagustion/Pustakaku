@@ -171,7 +171,7 @@ export default function HalamanRiwayatOpname() {
                       <div className="flex flex-wrap gap-3">
                         <button
                           type="button"
-                          className="text-sm font-semibold text-[var(--brand)] hover:underline"
+                          className="text-sm font-semibold text-[var(--brand-ink)] hover:underline"
                           onClick={() => void bukaDetail(s)}
                         >
                           Detail

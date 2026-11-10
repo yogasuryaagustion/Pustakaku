@@ -44,7 +44,7 @@ function Sakelar({
       onClick={onUbah}
       className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] ${
         terkunci ? "cursor-not-allowed opacity-60" : "cursor-pointer"
-      } ${nyala ? "bg-[var(--brand)]" : "bg-slate-200"}`}
+      } ${nyala ? "bg-[var(--brand-solid)]" : "bg-slate-200"}`}
     >
       <span
         className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
@@ -309,7 +309,7 @@ export default function KontrolAksesPage() {
         </p>
 
         <div className="mt-3 flex flex-wrap gap-2 text-xs">
-          <span className="rounded-full bg-[var(--brand-soft)] px-2.5 py-1 font-semibold text-[var(--brand)]">
+          <span className="rounded-full bg-[var(--brand-soft)] px-2.5 py-1 font-semibold text-[var(--brand-ink)]">
             Default-deny — izin tak dicentang berarti ditolak
           </span>
 

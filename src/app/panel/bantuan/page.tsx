@@ -190,7 +190,7 @@ export default function BantuanPage() {
                   <span
                     aria-hidden
                     className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[var(--muted)] transition-transform ${
-                      buka === i ? "rotate-45 bg-[var(--brand-soft)] text-[var(--brand)]" : ""
+                      buka === i ? "rotate-45 bg-[var(--brand-soft)] text-[var(--brand-ink)]" : ""
                     }`}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -211,14 +211,14 @@ export default function BantuanPage() {
         <ol className="mt-4 space-y-4">
           {PANDUAN.map((p) => (
             <li key={p.langkah} className="flex gap-4">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--brand-soft)] text-sm font-bold text-[var(--brand)]">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--brand-soft)] text-sm font-bold text-[var(--brand-ink)]">
                 {p.langkah}
               </span>
               <div className="min-w-0">
                 <div className="font-semibold">{p.judul}</div>
                 <p className="mt-0.5 text-sm text-[var(--muted)]">{p.isi}</p>
                 {p.href && (
-                  <Link href={p.href} className="mt-1 inline-block text-sm font-semibold text-[var(--brand)] hover:underline">
+                  <Link href={p.href} className="mt-1 inline-block text-sm font-semibold text-[var(--brand-ink)] hover:underline">
                     {p.labelTautan} →
                   </Link>
                 )}
@@ -234,20 +234,20 @@ export default function BantuanPage() {
           <h2 className="font-bold">Hubungi Kami</h2>
           <ul className="mt-3 space-y-2.5 text-sm text-[var(--muted)]">
             <li className="flex items-start gap-2.5">
-              <svg className="mt-0.5 shrink-0 text-[var(--brand)]" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <svg className="mt-0.5 shrink-0 text-[var(--brand-ink)]" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
                 <circle cx="12" cy="10" r="3" />
               </svg>
               Jl. Cihampelas No. 15, Bandung
             </li>
             <li className="flex items-start gap-2.5">
-              <svg className="mt-0.5 shrink-0 text-[var(--brand)]" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <svg className="mt-0.5 shrink-0 text-[var(--brand-ink)]" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0122 16.92z" />
               </svg>
               (022) 123-4567
             </li>
             <li className="flex items-start gap-2.5">
-              <svg className="mt-0.5 shrink-0 text-[var(--brand)]" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <svg className="mt-0.5 shrink-0 text-[var(--brand-ink)]" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                 <path d="M22 6l-10 7L2 6" />
               </svg>

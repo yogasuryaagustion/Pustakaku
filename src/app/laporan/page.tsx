@@ -656,7 +656,7 @@ export default function LaporanPage() {
               }}
               className={`shrink-0 border-b-2 px-4 py-3 text-xs font-bold transition ${
                 tab === item.id
-                  ? "border-[#00665c] text-[#00665c]"
+                  ? "border-[var(--brand-ink)] text-[var(--brand-ink)]"
                   : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-800"
               }`}
             >
@@ -757,7 +757,7 @@ export default function LaporanPage() {
                         ? "bg-emerald-50 text-emerald-600"
                         : item.tone === "rose"
                           ? "bg-rose-50 text-rose-600"
-                          : "bg-teal-50 text-[#00665c]"
+                          : "bg-teal-50 text-[var(--brand-ink)]"
                   }`}
                 >
                   {item.icon}
@@ -770,7 +770,7 @@ export default function LaporanPage() {
           <section className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,.04)]">
             <div className="flex flex-col gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50 text-lg text-[#00665c]">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50 text-lg text-[var(--brand-ink)]">
                   ▥
                 </span>
                 <div>
@@ -814,7 +814,7 @@ export default function LaporanPage() {
 
                         <div className="h-2 overflow-hidden rounded-full bg-slate-100">
                           <div
-                            className="h-full rounded-full bg-[#00665c]"
+                            className="h-full rounded-full bg-teal-900"
                             style={{
                               width: `${(k.eksemplar / maxEksemplar) * 100}%`,
                             }}
@@ -865,11 +865,11 @@ export default function LaporanPage() {
                   <div className="mb-3 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
                     <div className="flex gap-4">
                       <span className="inline-flex items-center gap-1.5">
-                        <i className="h-2.5 w-2.5 rounded-sm bg-[#00665c]" />
+                        <i className="h-2.5 w-2.5 rounded-sm bg-teal-900" />
                         Peminjaman Baru
                       </span>
                       <span className="inline-flex items-center gap-1.5">
-                        <i className="h-2.5 w-2.5 rounded-sm bg-emerald-400" />
+                        <i className="h-2.5 w-2.5 rounded-sm bg-teal-600" />
                         Pengembalian Selesai
                       </span>
                     </div>
@@ -887,7 +887,7 @@ export default function LaporanPage() {
                         <div className="flex h-32 w-full items-end justify-center gap-1">
                           <div
                             title={`${item.pinjam} peminjaman`}
-                            className="w-3.5 rounded-t-sm bg-[#00665c] transition-all"
+                            className="w-3.5 rounded-t-sm bg-teal-900 transition-all"
                             style={{
                               height: `${Math.max(
                                 5,
@@ -897,7 +897,7 @@ export default function LaporanPage() {
                           />
                           <div
                             title={`${item.kembali} pengembalian`}
-                            className="w-3.5 rounded-t-sm bg-emerald-400 transition-all"
+                            className="w-3.5 rounded-t-sm bg-teal-600 transition-all"
                             style={{
                               height: `${Math.max(
                                 5,
@@ -1008,7 +1008,7 @@ export default function LaporanPage() {
                 <button
                   onClick={cetakPdf}
                   disabled={!bolehEkspor || !generatorSiap}
-                  className="inline-flex min-h-9 items-center gap-2 rounded-xl bg-[#00665c] px-3.5 text-xs font-bold text-white transition hover:bg-[#004d45] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex min-h-9 items-center gap-2 rounded-xl bg-teal-900 px-3.5 text-xs font-bold text-white transition hover:bg-[var(--brand-solid-hover)] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   ▣ Cetak PDF
                 </button>
@@ -1268,7 +1268,7 @@ export default function LaporanPage() {
 
                       <div className="h-2 overflow-hidden rounded-full bg-slate-100">
                         <div
-                          className="h-full rounded-full bg-[#00665c]"
+                          className="h-full rounded-full bg-teal-900"
                           style={{
                             width: `${
                               (k.eksemplar / maxEksemplar) * 100

@@ -383,7 +383,7 @@ function KatalogKonten() {
       {/* HEADER KONTEN — judul sudah tampil di header AppShell. */}
       <KepalaHalaman
         remah={
-          <span className="inline-flex items-center gap-1.5 text-[var(--brand)]">
+          <span className="inline-flex items-center gap-1.5 text-[var(--brand-ink)]">
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--brand)]" />
             Koleksi perpustakaan
           </span>
@@ -395,7 +395,7 @@ function KatalogKonten() {
             <button
               type="button"
               onClick={bukaTambah}
-              className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--brand)] px-5 py-3 text-sm font-semibold text-white shadow-md shadow-teal-900/10 transition hover:-translate-y-0.5 hover:bg-[var(--brand-hover)] focus:outline-none focus:ring-4 focus:ring-[var(--brand-soft)]"
+              className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--brand-solid)] px-5 py-3 text-sm font-semibold text-white shadow-md shadow-teal-900/10 transition hover:-translate-y-0.5 hover:bg-[var(--brand-solid-hover)] focus:outline-none focus:ring-4 focus:ring-[var(--brand-soft)]"
             >
               <Ikon d={IKON.tambah} size={18} />
               Tambah Judul Baru

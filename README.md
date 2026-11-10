@@ -33,6 +33,7 @@ Langkah lengkapnya ada di [`SUPABASE.md`](./SUPABASE.md) bagian 3–5.
 | `npm run build` | Build produksi |
 | `npm run start` | Menjalankan hasil build |
 | `npm run lint` | ESLint |
+| `npm run test` | Uji aturan inventaris (node:test, tanpa dependensi tambahan) |
 | `npx tsc --noEmit -p tsconfig.json` | Pemeriksaan tipe |
 
 ## Catatan penting
@@ -40,5 +41,10 @@ Langkah lengkapnya ada di [`SUPABASE.md`](./SUPABASE.md) bagian 3–5.
 - **Satu instalasi melayani satu perpustakaan.** Aplikasi belum multi-tenant;
   untuk beberapa sekolah gunakan satu proyek Supabase dan satu deployment per
   sekolah.
-- Belum ada tes otomatis/CI. Sebelum rilis, jalankan `tsc`, `lint`, `build`, dan
-  daftar periksa staging di `SUPABASE.md` bagian 8.
+- Tes otomatis: `npm run test` menjalankan uji unit aturan selisih inventaris
+  (rusak dihitung, hilang dikecualikan). Uji fungsi database
+  `rekonsiliasi_stok_inventaris()` ada di `supabase/tests/rekonsiliasi_stok.sql`
+  dan dijalankan manual dengan `psql "$DATABASE_URL" -f
+  supabase/tests/rekonsiliasi_stok.sql` — skrip itu berakhir `ROLLBACK` sehingga
+  data tidak berubah. Belum ada CI. Sebelum rilis, jalankan `test`, `tsc`, `lint`,
+  `build`, dan daftar periksa staging di `SUPABASE.md` bagian 8.

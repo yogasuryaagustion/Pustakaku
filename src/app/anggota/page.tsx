@@ -646,7 +646,7 @@ export default function AnggotaPage() {
 
             <Link
               href="/anggota/tambah"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--brand)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--brand-hover)]"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--brand-solid)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--brand-solid-hover)]"
             >
               {ikon("M12 5v14 M5 12h14", 17)}
               Tambah Anggota
@@ -710,7 +710,7 @@ export default function AnggotaPage() {
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
               Sedang Meminjam Buku
             </p>
-            <span className="grid h-10 w-10 place-items-center rounded-2xl bg-cyan-50 text-cyan-600">
+            <span className="grid h-10 w-10 place-items-center rounded-2xl bg-[var(--brand-soft)] text-[var(--brand-ink)]">
               {ikon(
                 "M4 19.5A2.5 2.5 0 016.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z",
                 20
@@ -795,13 +795,15 @@ export default function AnggotaPage() {
               const jumlah = jumlahDipinjam.get(a.id) || 0;
               const akun = cariAkunAnggota(a.id);
 
+              // Palet hijau pekat: variasi antar-anggota tetap ada, tetapi
+              // semuanya cukup gelap untuk inisial putih di atasnya.
               const warnaAvatar = [
-                "bg-teal-600",
-                "bg-cyan-600",
-                "bg-emerald-600",
+                "bg-[var(--brand-solid)]",
                 "bg-teal-700",
-                "bg-cyan-700",
-                "bg-emerald-700",
+                "bg-[var(--brand-solid-hover)]",
+                "bg-teal-900",
+                "bg-emerald-800",
+                "bg-teal-800",
               ][index % 6];
 
               return (

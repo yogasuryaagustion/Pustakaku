@@ -257,6 +257,8 @@ export const SEED_PEMINJAMAN: Peminjaman[] = [
     tanggalKembaliAktual: null,
     status: "Dipinjam",
     denda: 0,
+    dendaDibayar: 0,
+    dendaDibayarPada: null,
     catatan: "",
   },
   {
@@ -269,6 +271,8 @@ export const SEED_PEMINJAMAN: Peminjaman[] = [
     tanggalKembaliAktual: null,
     status: "Dipinjam",
     denda: 0,
+    dendaDibayar: 0,
+    dendaDibayarPada: null,
     catatan: "Sudah lewat tempo.",
   },
   {
@@ -281,6 +285,8 @@ export const SEED_PEMINJAMAN: Peminjaman[] = [
     tanggalKembaliAktual: hariLalu(14),
     status: "Dikembalikan",
     denda: 4000,
+    dendaDibayar: 0,
+    dendaDibayarPada: null,
     catatan: "Terlambat 2 hari.",
   },
   {
@@ -293,6 +299,8 @@ export const SEED_PEMINJAMAN: Peminjaman[] = [
     tanggalKembaliAktual: null,
     status: "Dipinjam",
     denda: 0,
+    dendaDibayar: 0,
+    dendaDibayarPada: null,
     catatan: "",
   },
   {
@@ -305,6 +313,8 @@ export const SEED_PEMINJAMAN: Peminjaman[] = [
     tanggalKembaliAktual: hariLalu(11),
     status: "Dikembalikan",
     denda: 0,
+    dendaDibayar: 0,
+    dendaDibayarPada: null,
     catatan: "Tepat waktu.",
   },
 ];

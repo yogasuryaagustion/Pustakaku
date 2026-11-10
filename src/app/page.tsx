@@ -88,7 +88,7 @@ function KartuKoleksi({ b }: { b: BukuPilihan }) {
           <span className="text-[11px] font-semibold text-[var(--muted)]">
             {b.kategori}
           </span>
-          <span className="text-[11px] font-semibold rounded-full bg-[var(--brand-soft)] text-[var(--brand)] px-2 py-0.5">
+          <span className="text-[11px] font-semibold rounded-full bg-[var(--brand-soft)] text-[var(--brand-ink)] px-2 py-0.5">
             {b.pinjam > 0 ? `${b.pinjam}x dipinjam` : "Baru"}
           </span>
         </div>
@@ -357,8 +357,8 @@ export default function LandingPage() {
                   onClick={id ? (e) => keSection(e, id) : undefined}
                   className={`relative whitespace-nowrap rounded-full px-3 py-2 transition-all duration-300 ${
                     aktif
-                      ? "bg-teal-50 text-[var(--brand)]"
-                      : "text-slate-600 hover:bg-slate-50 hover:text-[var(--brand)]"
+                      ? "bg-teal-50 text-[var(--brand-ink)]"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-[var(--brand-ink)]"
                   }`}
                 >
                   {n.label}
@@ -378,7 +378,7 @@ export default function LandingPage() {
             <Link
               href="/katalog"
               aria-label="Cari di katalog"
-              className="hidden h-9 w-9 place-items-center rounded-full border border-[var(--border)] bg-white/80 text-slate-600 transition-all duration-200 hover:border-[var(--brand)]/40 hover:bg-teal-50 hover:text-[var(--brand)] sm:grid"
+              className="hidden h-9 w-9 place-items-center rounded-full border border-[var(--border)] bg-white/80 text-slate-600 transition-all duration-200 hover:border-[var(--brand)]/40 hover:bg-teal-50 hover:text-[var(--brand-ink)] sm:grid"
             >
               <svg
                 width="16"
@@ -552,7 +552,7 @@ export default function LandingPage() {
             <Link
               href="/login"
               onClick={() => setMenuTerbuka(false)}
-              className="flex min-h-11 items-center justify-center rounded-xl bg-[var(--brand)] px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:brightness-110"
+              className="flex min-h-11 items-center justify-center rounded-xl bg-[var(--brand-solid)] px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:brightness-110"
             >
               {bolehDaftar ? "Masuk / Daftar" : "Masuk"}
             </Link>
@@ -609,7 +609,7 @@ export default function LandingPage() {
             <form
               action="/katalog"
               method="get"
-              className="landing-search mt-8 flex w-full max-w-2xl items-center gap-3 rounded-2xl border border-teal-900/15 bg-white p-2 shadow-[0_12px_40px_rgba(15,118,110,0.08)] transition-all focus-within:border-teal-600/50 focus-within:shadow-[0_12px_40px_rgba(15,118,110,0.14)]"
+              className="landing-search mt-8 flex w-full max-w-2xl items-center gap-3 rounded-[1rem] border border-teal-900/10 bg-white p-2 shadow-[0_12px_40px_color-mix(in_srgb,var(--brand)_8%,transparent)] transition-all focus-within:border-teal-600/50 focus-within:shadow-[0_12px_40px_color-mix(in_srgb,var(--brand)_14%,transparent)]"
             >
               <svg
                 className="ml-2 shrink-0 text-teal-800"
@@ -640,7 +640,7 @@ export default function LandingPage() {
 
               <button
                 type="submit"
-                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--brand)] px-4 py-3 text-sm font-bold text-white shadow-md transition-all hover:-translate-y-0.5 hover:brightness-110 sm:px-5"
+                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--brand-solid)] px-4 py-3 text-sm font-bold text-white shadow-md transition-all hover:-translate-y-0.5 hover:brightness-110 sm:px-5"
               >
                 <span>Eksplorasi</span>
                 <svg
@@ -875,7 +875,7 @@ export default function LandingPage() {
       >
         <div className="absolute inset-0 bg-white" aria-hidden />
         <Reveal className="relative z-10 max-w-2xl">
-          <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand)]">
+          <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand-ink)]">
             Fitur Unggulan
           </span>
           <h2 className="judul-editorial mt-2 text-3xl lg:text-4xl tracking-tight">
@@ -1266,7 +1266,7 @@ export default function LandingPage() {
       <section id="testimoni" className="relative bg-white">
         <div className="min-h-[100svh] w-full max-w-6xl mx-auto px-5 py-20 flex flex-col justify-center">
           <Reveal className="relative z-10 max-w-2xl">
-            <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand)]">
+            <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand-ink)]">
               Testimoni
             </span>
             <h2 className="judul-editorial mt-2 text-3xl lg:text-4xl tracking-tight">
@@ -1289,7 +1289,7 @@ export default function LandingPage() {
                   >
                     <svg
                       aria-hidden
-                      className="absolute -top-3 left-6 h-10 w-10 rotate-6 text-[var(--brand)]/15"
+                      className="absolute -top-3 left-6 h-10 w-10 rotate-6 text-[var(--brand-ink)]/15"
                       viewBox="0 0 24 24"
                       fill="currentColor"
                     >

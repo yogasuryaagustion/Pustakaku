@@ -389,7 +389,7 @@ export function LaporanKunjungan() {
                 key={m}
                 onClick={() => setModeGrafik(m)}
                 className={`rounded-md px-3 py-1.5 text-xs font-semibold capitalize transition-colors ${
-                  modeGrafik === m ? "bg-white text-[var(--brand)] shadow-sm" : "text-slate-600"
+                  modeGrafik === m ? "bg-white text-[var(--brand-ink)] shadow-sm" : "text-slate-600"
                 }`}
               >
                 {m}

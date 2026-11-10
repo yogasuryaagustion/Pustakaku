@@ -109,7 +109,7 @@ const BAB: { judul: string; isi: React.ReactNode }[] = [
         Penggunaan data pribadi Anda diatur dalam{" "}
         <Link
           href="/kebijakan-privasi"
-          className="font-semibold text-[var(--brand)] underline underline-offset-2 hover:text-teal-600"
+          className="font-semibold text-[var(--brand-ink)] underline underline-offset-2 hover:text-teal-600"
         >
           Kebijakan Privasi
         </Link>

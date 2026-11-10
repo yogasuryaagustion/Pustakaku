@@ -242,7 +242,7 @@ export default function RegisterPage() {
 
       <div
         aria-hidden
-        className="pointer-events-none absolute right-1/3 top-1/3 h-64 w-64 rounded-full bg-cyan-50/70 blur-3xl"
+        className="pointer-events-none absolute right-1/3 top-1/3 h-64 w-64 rounded-full bg-teal-100/70 blur-3xl"
       />
 
       {/* Card utama */}
@@ -466,7 +466,7 @@ export default function RegisterPage() {
             <div className="w-full">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-2.5">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#00665c] text-white">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[var(--brand-solid)] text-white">
                     <svg
                       width="18"
                       height="18"
@@ -482,26 +482,26 @@ export default function RegisterPage() {
                     </svg>
                   </span>
 
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#00665c]">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand-ink)]">
                     Daftar Anggota
                   </span>
                 </div>
 
                 <div className="flex shrink-0 items-center gap-2 text-xs font-semibold text-slate-500">
                   <span>
-                    Langkah <span className="text-[#00665c]">{step}</span> dari
+                    Langkah <span className="text-[var(--brand-ink)]">{step}</span> dari
                     2
                   </span>
 
                   <span className="flex gap-1.5" aria-hidden="true">
                     <span
                       className={`h-2 w-6 rounded-full ${
-                        step === 1 ? "bg-[#00665c]" : "bg-emerald-200"
+                        step === 1 ? "bg-[var(--brand-solid)]" : "bg-emerald-200"
                       }`}
                     />
                     <span
                       className={`h-2 w-6 rounded-full ${
-                        step === 2 ? "bg-[#00665c]" : "bg-slate-200"
+                        step === 2 ? "bg-[var(--brand-solid)]" : "bg-slate-200"
                       }`}
                     />
                   </span>
@@ -562,7 +562,7 @@ export default function RegisterPage() {
                   }}
                   className={`rounded-lg px-3 py-2 text-xs font-bold transition-colors ${
                     step === 1
-                      ? "bg-white text-[#00665c] shadow-sm"
+                      ? "bg-white text-[var(--brand-ink)] shadow-sm"
                       : "text-slate-400"
                   }`}
                   aria-current={step === 1 ? "step" : undefined}
@@ -578,7 +578,7 @@ export default function RegisterPage() {
                   disabled={step === 1}
                   className={`rounded-lg px-3 py-2 text-xs font-bold transition-colors ${
                     step === 2
-                      ? "bg-white text-[#00665c] shadow-sm"
+                      ? "bg-white text-[var(--brand-ink)] shadow-sm"
                       : "text-slate-400"
                   }`}
                   aria-current={step === 2 ? "step" : undefined}
@@ -600,7 +600,7 @@ export default function RegisterPage() {
                       </span>
 
                       <div className="mt-1 flex items-center gap-4">
-                        <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full border border-[var(--border)] bg-[var(--brand-soft)] text-[var(--brand)] pendek:h-14 pendek:w-14">
+                        <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full border border-[var(--border)] bg-[var(--brand-soft)] text-[var(--brand-ink)] pendek:h-14 pendek:w-14">
                           {foto ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
@@ -793,7 +793,7 @@ export default function RegisterPage() {
                           setPesan(null);
                           setStep(1);
                         }}
-                        className="mt-1 font-semibold text-[var(--brand)] hover:underline"
+                        className="mt-1 font-semibold text-[var(--brand-ink)] hover:underline"
                       >
                         Ubah data diri
                       </button>
@@ -892,7 +892,7 @@ export default function RegisterPage() {
                 Sudah punya akun?{" "}
                 <Link
                   href="/login"
-                  className="font-semibold text-[var(--brand)] hover:underline"
+                  className="font-semibold text-[var(--brand-ink)] hover:underline"
                 >
                   Masuk di sini
                 </Link>

@@ -13,6 +13,11 @@ import { useBoleh } from "@/lib/auth";
 import type { Peminjaman } from "@/lib/types";
 import type { BarisEksemplar } from "@/lib/supabase/peta";
 import { useSistem } from "@/lib/sistem";
+import {
+  pesanNominalDenda,
+  sisaDenda,
+  totalDendaTertunggak,
+} from "@/lib/denda";
 import { KepalaHalaman } from "@/components/kepala-halaman";
 import {
   Modal,
@@ -85,6 +90,8 @@ export default function SirkulasiPage() {
     pinjamBuku,
     kembalikanBuku,
     perpanjangPinjam,
+    lunasiDenda,
+    bayarDenda,
   } = useLibrary();
 
   const { cariBuku, cariAnggota, stokTersedia, ajuanMenunggu } = useHelper();
@@ -99,6 +106,9 @@ export default function SirkulasiPage() {
     bukuId: "",
     anggotaId: "",
   });
+  // Lama pinjam untuk transaksi ini saja. Dimulai dari standar Pengaturan,
+  // tetapi petugas boleh memendekkan/memanjangkan tanpa mengubah pengaturan.
+  const [lamaPinjam, setLamaPinjam] = useState(sistem.lamaPinjam);
   const [konfirmasiKembali, setKonfirmasiKembali] =
     useState<Peminjaman | null>(null);
   const [kondisiKembali, setKondisiKembali] =
@@ -107,6 +117,13 @@ export default function SirkulasiPage() {
   // benar-benar diterima agar kondisi fisiknya tercatat di inventaris.
   const [salinanKembali, setSalinanKembali] = useState("");
   const [salinanBuku, setSalinanBuku] = useState<BarisEksemplar[]>([]);
+
+  // Denda & cicilan: modal dibuka per pinjaman. Yang disimpan hanya id, agar
+  // riwayat selalu memakai data terbaru dari konteks setelah pembayaran.
+  const [dendaId, setDendaId] = useState<string | null>(null);
+  const [nominalBayar, setNominalBayar] = useState("");
+  const [catatanBayar, setCatatanBayar] = useState("");
+  const [sedangBayar, setSedangBayar] = useState(false);
 
   useEffect(() => {
     if (!konfirmasiKembali || konfirmasiKembali.nomorInventaris) return;
@@ -133,6 +150,32 @@ export default function SirkulasiPage() {
       batal = true;
     };
   }, [konfirmasiKembali]);
+
+  /** Jatuh tempo bila dipinjam hari ini dengan lama pinjam terpilih. */
+  const jatuhTempo = useMemo(() => {
+    const tanggal = new Date();
+    tanggal.setDate(tanggal.getDate() + (lamaPinjam || 0));
+    return tanggal.toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  }, [lamaPinjam]);
+
+  const dendaAktif = useMemo(
+    () => peminjaman.find((p) => p.id === dendaId) ?? null,
+    [peminjaman, dendaId],
+  );
+  const sisaDendaAktif = dendaAktif
+    ? sisaDenda(dendaAktif.denda, dendaAktif.dendaDibayar)
+    : 0;
+
+  // Tunggakan anggota terpilih — ditampilkan sebelum menyimpan, karena
+  // database juga menolak peminjaman selama denda belum dilunasi.
+  const tertunggakAnggota = useMemo(
+    () => totalDendaTertunggak(peminjaman, formPinjam.anggotaId),
+    [peminjaman, formPinjam.anggotaId],
+  );
 
   const bukuTersedia = useMemo(
     () => buku.filter((b) => stokTersedia(b.id) > 0),
@@ -189,12 +232,59 @@ export default function SirkulasiPage() {
     });
   }, [peminjaman, tab, q, cariBuku, cariAnggota]);
 
+  /** Buka modal denda untuk satu pinjaman; nominal awal = sisa denda. */
+  function bukaDenda(p: Peminjaman) {
+    setDendaId(p.id);
+    setNominalBayar(String(sisaDenda(p.denda, p.dendaDibayar)));
+    setCatatanBayar("");
+  }
+
+  async function kirimPembayaranDenda(nominal: number) {
+    if (!dendaAktif) return;
+    const galat = pesanNominalDenda(nominal, sisaDendaAktif);
+    if (galat) {
+      toast.gagal(galat);
+      return;
+    }
+
+    setSedangBayar(true);
+    const hasil = await bayarDenda(
+      dendaAktif.id,
+      nominal,
+      catatanBayar.trim() || undefined,
+    );
+    setSedangBayar(false);
+
+    if (hasil.ok) {
+      toast.sukses(`Pembayaran ${rupiah(nominal)} dicatat.`);
+      setDendaId(null);
+      setNominalBayar("");
+      setCatatanBayar("");
+    } else {
+      toast.gagal(hasil.pesan);
+    }
+  }
+
   async function submitPinjam(e: React.FormEvent) {
     e.preventDefault();
 
+    if (!Number.isInteger(lamaPinjam) || lamaPinjam < 1 || lamaPinjam > 90) {
+      toast.gagal("Lama pinjam harus antara 1 dan 90 hari.");
+      return;
+    }
+
+    if (tertunggakAnggota > 0) {
+      toast.gagal(
+        `Anggota ini masih memiliki denda tertunggak ${rupiah(tertunggakAnggota)}. Lunasi denda terlebih dahulu.`,
+      );
+      return;
+    }
+
     const res = await pinjamBuku(
       formPinjam.bukuId,
-      formPinjam.anggotaId
+      formPinjam.anggotaId,
+      undefined,
+      lamaPinjam
     );
 
     if (res.ok) {
@@ -244,7 +334,7 @@ export default function SirkulasiPage() {
       {/* Kepala halaman — judul sudah tampil di header AppShell. */}
       <KepalaHalaman
         remah={
-          <span className="inline-flex items-center gap-2 text-[var(--brand)]">
+          <span className="inline-flex items-center gap-2 text-[var(--brand-ink)]">
             <span className="h-4 w-1 rounded-full bg-[var(--brand)]" />
             Operasional perpustakaan
           </span>
@@ -253,8 +343,11 @@ export default function SirkulasiPage() {
         aksi={
           bolehKelola && (
             <button
-              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--brand)] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--brand-hover)] focus:outline-none focus:ring-4 focus:ring-[var(--brand-soft)]"
-              onClick={() => setOpenPinjam(true)}
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--brand-solid)] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--brand-solid-hover)] focus:outline-none focus:ring-4 focus:ring-[var(--brand-soft)]"
+              onClick={() => {
+                setLamaPinjam(sistem.lamaPinjam);
+                setOpenPinjam(true);
+              }}
             >
               <svg
                 width="18"
@@ -606,21 +699,36 @@ export default function SirkulasiPage() {
                               </span>
                             )}
 
-                            {!masihAktif && (
-                              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400">
-                                <svg
-                                  width="14"
-                                  height="14"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                >
-                                  <path d="m5 12 4 4L19 6" />
-                                </svg>
-                                Buku Sudah Kembali
-                              </span>
-                            )}
+                            {!masihAktif &&
+                              (p.denda > 0 && sisaDenda(p.denda, p.dendaDibayar) > 0 ? (
+                                bolehKelola ? (
+                                  <button
+                                    className="whitespace-nowrap rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 focus:outline-none focus:ring-4 focus:ring-rose-100"
+                                    title="Catat pembayaran denda (boleh dicicil)"
+                                    onClick={() => bukaDenda(p)}
+                                  >
+                                    Bayar {rupiah(sisaDenda(p.denda, p.dendaDibayar))}
+                                  </button>
+                                ) : (
+                                  <span className="text-xs font-semibold text-rose-600">
+                                    Denda {rupiah(sisaDenda(p.denda, p.dendaDibayar))} belum lunas
+                                  </span>
+                                )
+                              ) : (
+                                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400">
+                                  <svg
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                  >
+                                    <path d="m5 12 4 4L19 6" />
+                                  </svg>
+                                  {p.denda > 0 ? "Denda lunas" : "Buku Sudah Kembali"}
+                                </span>
+                              ))}
                           </div>
                         </td>
                       </tr>
@@ -710,10 +818,25 @@ export default function SirkulasiPage() {
                           <dt className="text-slate-400">Denda</dt>
                           <dd className="text-right font-medium text-rose-600">
                             {rupiah(p.denda)}
+                            {sisaDenda(p.denda, p.dendaDibayar) === 0
+                              ? " · lunas"
+                              : ` · sisa ${rupiah(sisaDenda(p.denda, p.dendaDibayar))}`}
                           </dd>
                         </>
                       )}
                     </dl>
+
+                    {!masihAktif &&
+                      p.denda > 0 &&
+                      sisaDenda(p.denda, p.dendaDibayar) > 0 &&
+                      bolehKelola && (
+                        <button
+                          className="btn mt-3 w-full !py-2 text-xs !bg-rose-50 !text-rose-700"
+                          onClick={() => bukaDenda(p)}
+                        >
+                          Bayar denda {rupiah(sisaDenda(p.denda, p.dendaDibayar))}
+                        </button>
+                      )}
 
                     {masihAktif && bolehKelola && (
                       <div className="mt-3 flex gap-2">
@@ -822,10 +945,61 @@ export default function SirkulasiPage() {
             </select>
           </div>
 
+          <div>
+            <label className="label" htmlFor="lama-pinjam">
+              Lama pinjam (hari)
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                id="lama-pinjam"
+                type="number"
+                className="input"
+                min={1}
+                max={90}
+                step={1}
+                required
+                value={lamaPinjam}
+                onChange={(e) => {
+                  const nilai = Number(e.target.value);
+                  setLamaPinjam(Number.isFinite(nilai) ? nilai : 0);
+                }}
+              />
+              <div className="flex shrink-0 gap-1">
+                {[7, 14, 30].map((hari) => (
+                  <button
+                    key={hari}
+                    type="button"
+                    className="btn btn-ghost px-2.5 py-1.5 text-xs"
+                    onClick={() => setLamaPinjam(hari)}
+                  >
+                    {hari} hr
+                  </button>
+                ))}
+              </div>
+            </div>
+            <p className="mt-1 text-xs text-[var(--text-secondary)]">
+              Standar dari pengaturan: {sistem.lamaPinjam} hari. Nilai di sini
+              hanya berlaku untuk peminjaman ini.
+            </p>
+          </div>
+
+          {tertunggakAnggota > 0 && (
+            <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
+              <p className="font-semibold">
+                Anggota ini masih memiliki denda tertunggak{" "}
+                {rupiah(tertunggakAnggota)}.
+              </p>
+              <p className="mt-1 text-xs">
+                Lunasi denda lewat tombol <strong>Lunasi</strong> pada baris
+                pinjaman bersangkutan. Peminjaman baru ditolak sampai dendanya
+                lunas.
+              </p>
+            </div>
+          )}
+
           <div className="rounded-xl border border-teal-100 bg-teal-50 p-3 text-sm text-teal-900">
             <p>
-              Lama pinjam:{" "}
-              <strong>{sistem.lamaPinjam} hari</strong>
+              Jatuh tempo: <strong>{jatuhTempo}</strong>
             </p>
             <p className="mt-1">
               Denda keterlambatan:{" "}
@@ -841,7 +1015,11 @@ export default function SirkulasiPage() {
             >
               Batal
             </button>
-            <button type="submit" className="btn btn-primary">
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={tertunggakAnggota > 0}
+            >
               Catat Peminjaman
             </button>
           </div>
@@ -1015,6 +1193,180 @@ export default function SirkulasiPage() {
                 Ya, Kembalikan
               </button>
             </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Denda & riwayat pembayaran (boleh dicicil) */}
+      <Modal
+        open={!!dendaAktif}
+        onClose={() => setDendaId(null)}
+        title="Denda Pinjaman"
+        width="max-w-lg"
+      >
+        {dendaAktif && (
+          <div className="space-y-4 text-sm">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5">
+              <p className="text-xs text-slate-500">
+                {dendaAktif.kodePinjam} ·{" "}
+                {cariBuku(dendaAktif.bukuId)?.judul ?? "-"} ·{" "}
+                {cariAnggota(dendaAktif.anggotaId)?.nama ?? "-"}
+              </p>
+              <dl className="mt-2 grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <dt className="text-[11px] uppercase tracking-wide text-slate-400">
+                    Denda
+                  </dt>
+                  <dd className="font-semibold text-slate-800">
+                    {rupiah(dendaAktif.denda)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-[11px] uppercase tracking-wide text-slate-400">
+                    Dibayar
+                  </dt>
+                  <dd className="font-semibold text-emerald-700">
+                    {rupiah(dendaAktif.dendaDibayar)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-[11px] uppercase tracking-wide text-slate-400">
+                    Sisa
+                  </dt>
+                  <dd className="font-semibold text-rose-600">
+                    {rupiah(sisaDendaAktif)}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+
+            <div>
+              <p className="label">Riwayat pembayaran</p>
+              {(dendaAktif.pembayaranDenda ?? []).length === 0 ? (
+                <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                  Belum ada pembayaran untuk pinjaman ini.
+                </p>
+              ) : (
+                <ul className="divide-y divide-slate-100 rounded-lg border border-slate-200">
+                  {(dendaAktif.pembayaranDenda ?? []).map((b) => (
+                    <li
+                      key={b.id}
+                      className="flex items-start justify-between gap-3 px-3 py-2"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-xs text-slate-500">
+                          {new Date(b.dibuatPada).toLocaleString("id-ID", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                        {b.catatan && (
+                          <p className="truncate text-xs text-slate-600" title={b.catatan}>
+                            {b.catatan}
+                          </p>
+                        )}
+                      </div>
+                      <span className="shrink-0 text-sm font-semibold text-emerald-700">
+                        {rupiah(b.nominal)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {sisaDendaAktif > 0 ? (
+              <form
+                className="space-y-3"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void kirimPembayaranDenda(Number(nominalBayar));
+                }}
+              >
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="label" htmlFor="nominal-denda">
+                      Nominal diterima (Rp)
+                    </label>
+                    <input
+                      id="nominal-denda"
+                      type="number"
+                      className="input"
+                      min={1}
+                      max={sisaDendaAktif}
+                      step={1}
+                      required
+                      value={nominalBayar}
+                      onChange={(e) => setNominalBayar(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="label" htmlFor="catatan-denda">
+                      Catatan (opsional)
+                    </label>
+                    <input
+                      id="catatan-denda"
+                      type="text"
+                      className="input"
+                      maxLength={200}
+                      placeholder="mis. cicilan pertama"
+                      value={catatanBayar}
+                      onChange={(e) => setCatatanBayar(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap justify-end gap-2">
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={() => setDendaId(null)}
+                  >
+                    Tutup
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    disabled={sedangBayar}
+                    onClick={async () => {
+                      const hasil = await lunasiDenda(dendaAktif.id);
+                      if (hasil.ok) {
+                        toast.sukses(
+                          `Sisa denda ${rupiah(sisaDendaAktif)} dilunasi.`,
+                        );
+                        setDendaId(null);
+                      } else {
+                        toast.gagal(hasil.pesan);
+                      }
+                    }}
+                  >
+                    Lunasi sisa
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={sedangBayar}
+                  >
+                    {sedangBayar ? "Menyimpan..." : "Catat pembayaran"}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                <p className="text-sm font-medium text-emerald-800">
+                  Denda pinjaman ini sudah lunas.
+                </p>
+                <button
+                  className="btn btn-ghost"
+                  onClick={() => setDendaId(null)}
+                >
+                  Tutup
+                </button>
+              </div>
+            )}
           </div>
         )}
       </Modal>

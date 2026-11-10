@@ -85,11 +85,23 @@ export interface BarisPeminjaman {
   tanggal_kembali_aktual: string | null;
   status: string;
   denda: number;
+  /** Kolom migrasi 202611100002 — opsional agar pemanggil lama tetap sah. */
+  denda_dibayar?: number | null;
+  denda_dibayar_pada?: string | null;
   catatan: string;
+  /** Embed opsional tabel pembayaran_denda (migrasi 202611100003). */
+  pembayaran_denda?: BarisPembayaranDenda[] | null;
   eksemplar_id?: string | null;
   /** Diisi fungsi RPC pinjam/kembali, atau hasil embed `eksemplar_buku`. */
   nomor_inventaris?: string | null;
   eksemplar_buku?: { nomor_inventaris: string } | null;
+}
+
+export interface BarisPembayaranDenda {
+  id: string;
+  nominal: number;
+  catatan: string | null;
+  dibuat_pada: string;
 }
 
 export interface BarisAjuanKembali {
@@ -247,6 +259,16 @@ export function kePeminjaman(r: BarisPeminjaman): Peminjaman {
     tanggalKembaliAktual: r.tanggal_kembali_aktual,
     status: r.status as StatusPinjam,
     denda: r.denda,
+    dendaDibayar: r.denda_dibayar ?? 0,
+    dendaDibayarPada: r.denda_dibayar_pada ?? null,
+    pembayaranDenda: (r.pembayaran_denda ?? [])
+      .map((b) => ({
+        id: b.id,
+        nominal: b.nominal,
+        catatan: b.catatan ?? "",
+        dibuatPada: b.dibuat_pada,
+      }))
+      .sort((a, b) => (a.dibuatPada < b.dibuatPada ? 1 : -1)),
     catatan: r.catatan,
     eksemplarId: r.eksemplar_id ?? null,
     nomorInventaris: r.nomor_inventaris ?? r.eksemplar_buku?.nomor_inventaris ?? null,

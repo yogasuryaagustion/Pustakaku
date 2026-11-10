@@ -28,7 +28,17 @@ const IKON_JEJAK: Record<JenisJejak, string> = {
 };
 
 // Warna segmen donat distribusi kategori (fallback bila vari tema kurang).
-const WARNA_KATEGORI = ["var(--brand)", "#0ea5e9", "#f59e0b", "#10b981", "#8b5cf6", "#f43f5e"];
+// Donut kategori memakai satu keluarga hijau (gelap → terang) supaya senada
+// dengan tema; urutannya berselang-seling agar potongan sebelah-menyebelah
+// tetap bisa dibedakan.
+const WARNA_KATEGORI = [
+  "#2a9c6c",
+  "#18523a",
+  "#4dcb93",
+  "#1d6748",
+  "#237f58",
+  "#0b2f21",
+];
 
 // Waktu relatif singkat untuk feed aktivitas ("baru saja", "3 jam lalu", …).
 function relatif(iso: string): string {
@@ -170,7 +180,7 @@ export default function DashboardAdminPage() {
         <div className="lg:col-span-2 card">
           <div className="px-5 py-4 border-b border-[var(--border)] flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="grid h-7 w-7 place-items-center rounded-md bg-[var(--brand-soft)] text-[var(--brand)]">
+              <span className="grid h-7 w-7 place-items-center rounded-md bg-[var(--brand-soft)] text-[var(--brand-ink)]">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <path d="M4 20h16M7 16V9M12 16V5M17 16v-4" />
                 </svg>
@@ -202,7 +212,7 @@ export default function DashboardAdminPage() {
                           width="34"
                           height={h}
                           rx="5"
-                          fill="var(--brand)"
+                          fill="var(--brand-solid)"
                           opacity={t.kini ? 1 : 0.45}
                           className={kurangiGerak ? undefined : "batang-tumbuh"}
                           style={
@@ -247,7 +257,7 @@ export default function DashboardAdminPage() {
             ) : (
               jejakTerkini.map((j) => (
                 <div key={j.id} className="flex gap-3">
-                  <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[var(--brand-soft)] text-[var(--brand)]">
+                  <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[var(--brand-soft)] text-[var(--brand-ink)]">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                       <path d={IKON_JEJAK[j.jenis]} />
                     </svg>
@@ -274,7 +284,7 @@ export default function DashboardAdminPage() {
         <div className="lg:col-span-2 card">
           <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
             <h2 className="font-bold">Peminjaman Terbaru</h2>
-            <Link href="/sirkulasi" className="text-sm font-semibold text-[var(--brand)] hover:underline">
+            <Link href="/sirkulasi" className="text-sm font-semibold text-[var(--brand-ink)] hover:underline">
               Lihat semua →
             </Link>
           </div>
@@ -321,7 +331,7 @@ export default function DashboardAdminPage() {
           <div className="card">
             <div className="px-5 py-4 border-b border-[var(--border)] flex items-center justify-between">
               <h2 className="font-bold">Buku Populer</h2>
-              <Link href="/katalog" className="text-sm font-semibold text-[var(--brand)] hover:underline">
+              <Link href="/katalog" className="text-sm font-semibold text-[var(--brand-ink)] hover:underline">
                 Katalog →
               </Link>
             </div>
@@ -337,7 +347,7 @@ export default function DashboardAdminPage() {
                     </div>
                     <div className="mt-1.5 h-2 w-full rounded-full bg-slate-100">
                       <div
-                        className="h-2 rounded-full bg-[var(--brand)]"
+                        className="h-2 rounded-full bg-[var(--brand-solid)]"
                         style={{ width: `${Math.max(8, (n / maxPopuler) * 100)}%` }}
                       />
                     </div>

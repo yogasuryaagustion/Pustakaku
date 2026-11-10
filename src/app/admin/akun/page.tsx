@@ -182,12 +182,16 @@ export default function HalamanAkun() {
     } else {
       toast.gagal(res.pesan);
     }
-  }  const warnaAvatar = [
-    "bg-emerald-600",
-    "bg-teal-600",
-    "bg-cyan-600",
-    "bg-slate-600",
-    "bg-sky-700",
+  }
+
+  // Avatar inisial memakai palet hijau pekat (bukan warna acak) supaya senada
+  // dengan tombol solid; variasi tetap ada lewat tingkat gelapnya.
+  const warnaAvatar = [
+    "bg-[var(--brand-solid)]",
+    "bg-teal-700",
+    "bg-[var(--brand-solid-hover)]",
+    "bg-teal-900",
+    "bg-emerald-800",
   ];
 
   // Ubah peran akun yang sudah ada (hanya Super Admin yang sampai ke sini).
@@ -299,7 +303,7 @@ export default function HalamanAkun() {
         </article>
 
         <article className="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-cyan-50 text-cyan-700">
+          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[var(--brand-soft)] text-[var(--brand-ink)]">
             <Ikon nama="shield" ukuran={23} />
           </div>
           <div>

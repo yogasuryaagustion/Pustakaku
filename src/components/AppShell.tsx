@@ -174,7 +174,7 @@ function Logo() {
 
   return (
     <div className="flex min-w-0 items-center gap-3">
-      <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#087F72] shadow-sm">
+      <div className="grid h-11 w-11 shrink-0 place-items-center rounded-[0.875rem] bg-[var(--brand)] shadow-[var(--sh-1)]">
         <svg
           width="29"
           height="29"
@@ -191,13 +191,14 @@ function Logo() {
           />
           <path
             d="M28 8.5C23.5 7 19.5 8 16 11V26C19.5 23 23.5 22 28 23.5V8.5Z"
-            fill="#D7F3EC"
+            fill="white"
+            fillOpacity="0.72"
           />
 
           {/* Simbol P */}
           <path
             d="M11 20V12.5H17.5C20 12.5 21.5 14 21.5 16C21.5 18 20 19.5 17.5 19.5H13"
-            stroke="#087F72"
+            style={{ stroke: "var(--brand)" }}
             strokeWidth="2.2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -206,7 +207,7 @@ function Logo() {
           {/* Garis tengah buku */}
           <path
             d="M16 11V26"
-            stroke="#087F72"
+            style={{ stroke: "var(--brand)" }}
             strokeWidth="1.2"
             strokeOpacity="0.65"
           />
@@ -244,31 +245,22 @@ function NavItem({
       aria-current={active ? "page" : undefined}
       title={collapsed ? label : undefined}
       className={`
-        group relative flex min-h-[46px] items-center rounded-xl
-        transition-all duration-200 ease-out
+        group relative flex min-h-[44px] items-center rounded-[0.75rem]
+        transition-colors duration-200 ease-out
         ${collapsed ? "justify-center px-2" : "gap-3 px-3"}
         ${
           active
-            ? "bg-[#E7F5F2] text-[#087F72]"
-            : "text-slate-500 hover:bg-slate-50 hover:text-[#087F72]"
+            ? "bg-[color-mix(in_srgb,var(--brand)_12%,transparent)] text-[var(--brand-ink)]"
+            : "text-[var(--text-secondary)] hover:bg-[var(--surface-soft)] hover:text-[var(--foreground)]"
         }
       `}
     >
-      {/* Indikator menu aktif */}
-      {active && (
-        <span className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r-full bg-[#087F72]" />
-      )}
-
       {/* Area ikon */}
       <span
         className={`
-          grid h-9 w-9 shrink-0 place-items-center rounded-lg
-          transition-all duration-200
-          ${
-            active
-              ? "bg-white text-[#087F72] shadow-sm"
-              : "text-current group-hover:bg-white"
-          }
+          grid h-9 w-9 shrink-0 place-items-center rounded-[0.625rem]
+          transition-colors duration-200
+          ${active ? "text-[var(--brand-ink)]" : "text-current"}
         `}
       >
         <svg
@@ -295,7 +287,7 @@ function NavItem({
 
       {/* Penanda menu aktif */}
       {!collapsed && active && (
-        <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#087F72]" />
+        <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[var(--brand)]" />
       )}
     </Link>
   );
@@ -347,7 +339,7 @@ function Sidebar({
 
   return (
     <aside
-      className={`sticky top-4 flex h-[calc(100vh-2rem)] shrink-0 flex-col overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--sh-3)] transition-[width] duration-300 ${
+      className={`sticky top-4 flex h-[calc(100vh-2rem)] shrink-0 flex-col overflow-hidden rounded-[1.5rem] border border-[color-mix(in_srgb,var(--border)_70%,transparent)] bg-[var(--surface)] shadow-[var(--sh-2)] backdrop-blur-xl transition-[width] duration-300 ${
         collapsed ? "w-[88px]" : "w-[260px]"
       }`}
     >
@@ -366,7 +358,7 @@ function Sidebar({
           onClick={onToggle}
           title={collapsed ? "Perluas sidebar" : "Ciutkan sidebar"}
           aria-label={collapsed ? "Perluas sidebar" : "Ciutkan sidebar"}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-soft)] hover:text-[#087F72]"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.625rem] text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-soft)] hover:text-[var(--brand-ink)]"
         >
           <PanelLeftClose
             size={21}
@@ -489,7 +481,7 @@ function StatusPill() {
       <span className="hidden sm:inline">{buku.length} buku</span>
       <span className="hidden sm:inline">·</span>
       <span className="hidden sm:inline">{anggota.length} anggota</span>
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-soft)] text-[var(--brand)] px-2.5 py-1 font-semibold">
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-soft)] text-[var(--brand-ink)] px-2.5 py-1 font-semibold">
         <span className="h-1.5 w-1.5 rounded-full bg-[var(--brand)]" />
         {aktif} dipinjam
       </span>
@@ -858,7 +850,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         <header className="border-b border-[var(--border)] bg-white/90 backdrop-blur sticky top-0 z-40">
           <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between gap-4">
             <Link href="/" className="flex items-center gap-2.5">
-              <div className="h-9 w-9 rounded-lg bg-[var(--brand)] text-white grid place-items-center">
+              <div className="h-9 w-9 rounded-lg bg-[var(--brand-solid)] text-white grid place-items-center">
                 <svg
                   width="20"
                   height="20"
@@ -881,10 +873,10 @@ function Shell({ children }: { children: React.ReactNode }) {
               </div>
             </Link>
             <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
-              <Link href="/" className="hover:text-[var(--brand)]">
+              <Link href="/" className="hover:text-[var(--brand-ink)]">
                 Beranda
               </Link>
-              <Link href="/katalog" className="hover:text-[var(--brand)]">
+              <Link href="/katalog" className="hover:text-[var(--brand-ink)]">
                 Katalog Buku
               </Link>
             </nav>
@@ -956,7 +948,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 
       <div className="flex-1 flex flex-col min-w-0">
         <header className="sticky top-0 z-30 shrink-0 px-4 pt-4 sm:px-6">
-          <div className="flex min-h-[72px] items-center justify-between gap-4 rounded-2xl border border-[var(--border)] bg-white px-4 shadow-[var(--sh-2)] sm:px-6">
+          <div className="flex min-h-[68px] items-center justify-between gap-4 rounded-[1rem] border border-[color-mix(in_srgb,var(--border)_70%,transparent)] bg-[var(--surface)] px-4 shadow-[var(--sh-1)] backdrop-blur-xl sm:px-6">
             {/* Judul halaman */}
             <div className="flex min-w-0 items-center gap-3">
               <h1 className="truncate text-lg font-bold tracking-tight">
@@ -1011,10 +1003,10 @@ function Shell({ children }: { children: React.ReactNode }) {
               key={n.href}
               href={n.href}
               aria-current={pathname === n.href ? "page" : undefined}
-              className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                 pathname === n.href
-                  ? "bg-[var(--brand)] text-white shadow-[var(--sh-1)]"
-                  : "text-slate-600 hover:bg-slate-100"
+                  ? "bg-[var(--brand-solid)] text-white shadow-[var(--sh-1)]"
+                  : "text-[var(--text-secondary)] hover:bg-[var(--surface-soft)]"
               }`}
             >
               {n.label}

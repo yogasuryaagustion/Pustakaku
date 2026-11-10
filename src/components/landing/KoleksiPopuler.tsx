@@ -28,13 +28,15 @@ function tanggalHariIni() {
 function CoverBuku({ buku }: { buku: Buku }) {
   const [gambarGagal, setGambarGagal] = useState(false);
 
+  // Sampul pengganti memakai keluarga hijau gelap saja; variasi didapat dari
+  // tingkat gelap dan paduan teal–emerald, bukan warna asing di luar palet.
   const warna = [
     "from-teal-600 to-emerald-800",
     "from-slate-800 to-teal-950",
-    "from-cyan-700 to-slate-900",
+    "from-teal-700 to-slate-900",
     "from-emerald-700 to-slate-900",
     "from-slate-700 to-emerald-950",
-    "from-amber-800 to-slate-900",
+    "from-teal-800 to-slate-900",
   ];
 
   const indeksWarna =
@@ -256,7 +258,7 @@ export default function KoleksiPopuler() {
                 ? "border-emerald-200 bg-emerald-50 text-emerald-700"
                 : jenisPesan === "gagal"
                   ? "border-red-200 bg-red-50 text-red-700"
-                  : "border-blue-200 bg-blue-50 text-blue-700"
+                  : "border-teal-200 bg-teal-50 text-teal-700"
             }`}
           >
             {pesan}

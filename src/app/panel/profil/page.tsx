@@ -146,7 +146,7 @@ function TabButton({
       onClick={onClick}
       className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition ${
         aktif
-          ? "bg-[var(--brand)] text-white shadow-sm"
+          ? "bg-[var(--brand-solid)] text-white shadow-sm"
           : "text-slate-600 hover:bg-teal-50 hover:text-teal-800"
       }`}
     >
@@ -221,7 +221,7 @@ function Toggle({
       aria-checked={aktif}
       onClick={() => onChange(!aktif)}
       className={`relative h-6 w-11 shrink-0 rounded-full transition ${
-        aktif ? "bg-[var(--brand)]" : "bg-slate-300"
+        aktif ? "bg-[var(--brand-solid)]" : "bg-slate-300"
       }`}
     >
       <span
@@ -757,7 +757,7 @@ function KontenProfil({
                     className="h-16 w-16 rounded-2xl border border-slate-100 object-cover"
                   />
                 ) : (
-                  <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[var(--brand)] text-xl font-bold text-white">
+                  <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[var(--brand-solid)] text-xl font-bold text-white">
                     {inisial || "A"}
                   </div>
                 )}
@@ -853,7 +853,7 @@ function KontenProfil({
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-[var(--brand)] px-6 py-3 text-xs font-semibold text-white shadow-sm transition hover:bg-[var(--brand-hover)]"
+                  className="rounded-xl bg-[var(--brand-solid)] px-6 py-3 text-xs font-semibold text-white shadow-sm transition hover:bg-[var(--brand-solid-hover)]"
                 >
                   Simpan Perubahan
                 </button>
@@ -1049,7 +1049,7 @@ function KontenProfil({
               <button
                 type="submit"
                 disabled={prosesSandi}
-                className="rounded-xl bg-[var(--brand)] px-6 py-3 text-xs font-semibold text-white shadow-sm transition hover:bg-[var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-xl bg-[var(--brand-solid)] px-6 py-3 text-xs font-semibold text-white shadow-sm transition hover:bg-[var(--brand-solid-hover)] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {prosesSandi ? "Memproses..." : "Perbarui Kata Sandi"}
               </button>

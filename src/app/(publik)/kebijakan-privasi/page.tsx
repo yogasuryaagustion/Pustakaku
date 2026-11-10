@@ -85,14 +85,14 @@ const BAB: { judul: string; isi: React.ReactNode }[] = [
         Anda. Kirimkan permintaan ke{" "}
         <a
           href="mailto:info@pustakaku.id"
-          className="font-semibold text-[var(--brand)] underline underline-offset-2 hover:text-teal-600"
+          className="font-semibold text-[var(--brand-ink)] underline underline-offset-2 hover:text-teal-600"
         >
           info@pustakaku.id
         </a>{" "}
         atau melalui halaman{" "}
         <Link
           href="/kontak"
-          className="font-semibold text-[var(--brand)] underline underline-offset-2 hover:text-teal-600"
+          className="font-semibold text-[var(--brand-ink)] underline underline-offset-2 hover:text-teal-600"
         >
           Kontak
         </Link>

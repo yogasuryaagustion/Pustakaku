@@ -131,7 +131,7 @@ export function StatCard({
   ikon?: string;
 }) {
   const tones: Record<string, string> = {
-    brand: "bg-[var(--brand-soft)] text-[var(--brand)]",
+    brand: "bg-[var(--brand-soft)] text-[var(--brand-ink)]",
     amber: "bg-amber-100 text-amber-700",
     rose: "bg-rose-100 text-rose-700",
     sky: "bg-sky-100 text-sky-700",

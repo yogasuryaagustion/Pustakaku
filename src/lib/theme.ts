@@ -89,24 +89,27 @@ export function hexValid(v: unknown): v is string {
 // (Sinkron dengan :root di globals.css.)
 // ---------------------------------------------------------------------------
 
+// Gaya Cupertino: biru sistem iOS (#007AFF) di atas permukaan berkelompok.
 export const TEMA_DEFAULT: TemaForm = {
-  brand: "#0f766e",
-  aksen: ["#5eead4", "#14b8a6", "#059669"],
-  latar: ["#f0fdfa", "#ffffff", "#ecfeff"],
-  cta: ["#0f766e", "#14b8a6", "#38bdf8"],
+  brand: "#35bb82",
+  aksen: ["#6fd6a9", "#35bb82", "#1f7a55"],
+  latar: ["#f3fcf7", "#ffffff", "#eaf8f1"],
+  cta: ["#35bb82", "#2fae78", "#6fd6a9"],
   netral: {
-    background: "#f6f7f9",
-    foreground: "#1a2233",
+    background: "#f2f2f7",
+    foreground: "#1c1c1e",
     card: "#ffffff",
-    muted: "#64748b",
-    border: "#e2e8f0",
+    muted: "#8e8e93",
+    border: "#e5e5ea",
   },
 };
 
 // Palet preset — mengganti warna dasar SEKALIGUS menurunkan seluruh gradien
 // secara harmonis (satu keluarga analog di sekitar warna dasar).
 export const PRESET: { nama: string; brand: string }[] = [
-  { nama: "Teal (baku)", brand: "#0f766e" },
+  { nama: "Hijau (baku)", brand: "#35bb82" },
+  { nama: "Biru iOS", brand: "#007aff" },
+  { nama: "Teal", brand: "#0f766e" },
   { nama: "Biru", brand: "#2563eb" },
   { nama: "Hijau", brand: "#15803d" },
   { nama: "Ungu", brand: "#7c3aed" },
