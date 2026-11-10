@@ -319,19 +319,6 @@ function Sidebar({
       (!n.izin || cekIzin(kebijakan, peran, n.izin)) &&
       (!n.hanyaPeran || n.hanyaPeran.includes(peran)),
   );
-  console.log("[DEBUG SIDEBAR]", {
-    peran,
-    izinAnggota: cekIzin(kebijakan, peran, "anggota.lihat"),
-    nilaiMatriks: kebijakan.izin?.[peran]?.["anggota.lihat"],
-    menuManajemenPengguna: NAV.some(
-      (n) => n.href === "/anggota" && n.izin === "anggota.lihat",
-    ),
-    hasilFilter: items.map((n) => ({
-      href: n.href,
-      label: n.label,
-    })),
-  });
-
   const labelGrup = (n: (typeof NAV)[number]) =>
     peran === "user" && n.grupUser ? n.grupUser : n.grup;
 
