@@ -126,6 +126,19 @@ Lakukan berkala, misalnya setiap akhir semester:
    stok katalog sesuai rak. Lakukan hanya setelah rak benar-benar dihitung ulang.
 4. **Riwayat Hitung** menyimpan catatan siapa mengoreksi apa dan kapan.
 
+**Hilang dan rusak diperlakukan berbeda saat Perbaiki Selisih:**
+
+| Kondisi salinan | Dihitung sebagai barang di rak? | Tindakan Perbaiki Selisih |
+| --- | --- | --- |
+| `hilang` | Tidak | Salinan dihapus dari koleksi, stok katalog ikut turun |
+| `rusak` (termasuk rusak ringan dan rusak berbeda) | Ya | Tidak disentuh; salinan tetap ada dan tetap tidak ditawarkan untuk dipinjam |
+
+Jadi salinan **hilang** tidak lagi muncul di daftar salinan setelah diperbaiki,
+sedangkan salinan **rusak** tetap tercatat sampai Anda memperbaikinya sendiri
+(misalnya setelah buku diganti atau dibuang lewat menu salinan). Selama salinan
+rusak masih ada, angka selisih tetap 0 — jangan menghapusnya lewat Perbaiki
+Selisih.
+
 ## 7. Laporan
 
 **Laporan** berisi laporan buku, laporan peminjaman, dan tunggakan. Setiap
