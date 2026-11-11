@@ -67,36 +67,9 @@ const SOSIAL: { label: string; d: string; href: string | null }[] = [
 
 const rupiahRb = (n: number) => "Rp" + new Intl.NumberFormat("id-ID").format(n);
 
-// Kartu buku deret "Koleksi Populer" — dipakai di marquee horizontal
-// (deret diduplikasi di markup agar putaran loop mulus, lihat .marquee-*).
+// Buku untuk komposisi sampul hero: jumlah peminjaman aktif ikut disimpan agar
+// urutan sampul mengikuti buku yang paling sering dipinjam.
 type BukuPilihan = Buku & { pinjam: number };
-function KartuKoleksi({ b }: { b: BukuPilihan }) {
-  return (
-    // Margin kanan seragam di SEMUA kartu (termasuk terakhir salinan):
-    // lebar track = 2 × N × (190+16) sehingga translateX(-50%) = tepat
-    // satu salinan penuh → putaran loop mulus, tanpa jeda maupun lompat.
-    <div
-      className="card card-raised w-[190px] shrink-0 overflow-hidden"
-      style={{ marginRight: "1rem" }}
-    >
-      <SampulBuku buku={b} className="h-32 w-full" rounded="" />
-      <div className="p-3">
-        <div className="font-semibold text-sm leading-tight line-clamp-2">
-          {b.judul}
-        </div>
-        <div className="text-xs text-[var(--muted)] truncate">{b.penulis}</div>
-        <div className="mt-2 flex items-center justify-between">
-          <span className="text-[11px] font-semibold text-[var(--muted)]">
-            {b.kategori}
-          </span>
-          <span className="text-[11px] font-semibold rounded-full bg-[var(--brand-soft)] text-[var(--brand-ink)] px-2 py-0.5">
-            {b.pinjam > 0 ? `${b.pinjam}x dipinjam` : "Baru"}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 const fiturRincian = (s: SistemPengaturan) => [
   {

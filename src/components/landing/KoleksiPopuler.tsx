@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useLibrary, useHelper } from "@/lib/library-context";
 import { useAuth, useBoleh } from "@/lib/auth";
 import type { Buku } from "@/lib/types";
@@ -58,10 +60,15 @@ function CoverBuku({ buku }: { buku: Buku }) {
     <div
       className={`relative flex aspect-[3/3.3] w-full flex-col justify-end overflow-hidden rounded-lg bg-gradient-to-br ${warna[indeksWarna]} p-3 shadow-inner`}
     >
+      {/* Sampul bisa berasal dari URL luar, jadi unoptimized dipakai: host-nya
+          tidak diketahui sehingga tidak bisa didaftarkan di remotePatterns. */}
       {buku.gambar && !gambarGagal ? (
-        <img
+        <Image
           src={buku.gambar}
           alt={`Sampul ${buku.judul}`}
+          fill
+          unoptimized
+          sizes="(max-width: 640px) 46vw, 22vw"
           className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
           onError={() => setGambarGagal(true)}
         />
@@ -129,6 +136,7 @@ export default function KoleksiPopuler() {
 
   const { sedangMasuk, siap: authSiap } = useAuth();
   const bolehPinjam = useBoleh("katalog.pinjam");
+  const router = useRouter();
 
   const [kategoriAktif, setKategoriAktif] = useState("Semua");
   const [sedangPinjam, setSedangPinjam] = useState<string | null>(null);
@@ -178,7 +186,7 @@ export default function KoleksiPopuler() {
     }
 
     if (!sedangMasuk) {
-      window.location.href = `/login?redirect=${encodeURIComponent("/")}`;
+      router.push(`/login?redirect=${encodeURIComponent("/")}`);
       return;
     }
 
