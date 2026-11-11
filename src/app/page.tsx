@@ -899,9 +899,13 @@ export default function LandingPage() {
         <div className="relative z-10 mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {fiturRincian(sistem).map((f, i) => (
             <Reveal key={f.judul} delay={(i % 3) * 0.08}>
-              <div className="group card card-raised h-full p-6">
+              {/* Flex kolom + tinggi teks yang dikunci: tanpa itu kartu dengan
+                  penjelasan dua baris menyisakan ruang bawah lebih lega
+                  daripada kartu tiga baris, sehingga barisannya terlihat
+                  pincang meski tinggi kartunya sama. */}
+              <div className="group card card-raised flex h-full flex-col p-6">
                 <div
-                  className="h-11 w-11 rounded-xl text-white grid place-items-center shadow-sm transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3"
+                  className="h-11 w-11 shrink-0 rounded-xl text-white grid place-items-center shadow-sm transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3"
                   style={grad(i)}
                 >
                   <svg
@@ -917,8 +921,14 @@ export default function LandingPage() {
                     <path d={f.ikon} />
                   </svg>
                 </div>
-                <h3 className="mt-4 font-bold">{f.judul}</h3>
-                <p className="mt-1.5 text-sm text-slate-600">{f.teks}</p>
+                <h3 className="mt-4 text-base font-bold leading-6">
+                  {f.judul}
+                </h3>
+                {/* min-h-15 = tiga baris teks 20 px; kartu yang teksnya hanya
+                    dua baris tetap memakai tinggi yang sama. */}
+                <p className="mt-1.5 line-clamp-3 min-h-15 text-pretty text-sm text-slate-600">
+                  {f.teks}
+                </p>
               </div>
             </Reveal>
           ))}
