@@ -307,8 +307,10 @@ export default function LandingPage() {
       .slice(0, 6);
   }, [bukuKatalog, dipinjamBuku]);
 
+  // Kelas cupertino memberi lapisan gaya Apple (latar #f5f5f7, kartu blur,
+  // sudut besar, tombol pil) tanpa mengubah kelas tiap elemen di dalamnya.
   return (
-    <div className="landing-page min-h-screen bg-[var(--background)]">
+    <div className="landing-page cupertino min-h-screen bg-[var(--background)]">
       {/* Navbar publik */}
       <header
         className={`fixed top-3 inset-x-0 z-50 px-3 sm:px-5 transition-all duration-300 ${
@@ -897,13 +899,16 @@ export default function LandingPage() {
         id="fitur"
         className="relative max-w-6xl mx-auto px-5 py-20 min-h-[100svh] flex flex-col justify-center"
       >
-        <div className="absolute inset-0 bg-white" aria-hidden />
         <Reveal className="relative z-10 max-w-2xl">
           <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand-ink)]">
             Fitur Unggulan
           </span>
-          <h2 className="judul-editorial mt-2 text-3xl lg:text-4xl tracking-tight">
-            Kenapa memilih {sistem.nama}?
+          {/* Judul section fitur memakai efek yang sama dengan judul hero:
+              isi huruf putih, sisi kedalaman bertangga, dan nama sistem di
+              frasa bertanda gradien merek. */}
+          <h2 className="teks-kedalaman judul-editorial mt-2 text-balance text-3xl tracking-tight lg:text-4xl">
+            Kenapa memilih{" "}
+            <span className="landing-gradient-text italic">{sistem.nama}?</span>
           </h2>
           <p className="mt-3 text-slate-600">
             Dari penataan koleksi sampai penagihan denda — {sistem.nama} menutup
@@ -985,8 +990,11 @@ export default function LandingPage() {
               Alur Praktis 3 Menit
             </span>
 
-            <h2 className="judul-editorial mt-4 text-3xl leading-tight tracking-tight text-slate-950 sm:text-4xl lg:text-[44px]">
-              3 Langkah Mudah Memulai Baca
+            {/* Judul section cara kerja: efek depth text yang sama dengan judul
+                hero/fitur/testimoni, dengan frasa penutup bergradien merek. */}
+            <h2 className="teks-kedalaman judul-editorial mt-4 text-balance text-3xl leading-tight tracking-tight sm:text-4xl lg:text-[44px]">
+              3 Langkah Mudah{" "}
+              <span className="landing-gradient-text italic">Memulai Baca</span>
             </h2>
 
             <p className="mx-auto mt-3 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
@@ -1105,8 +1113,11 @@ export default function LandingPage() {
               Informasi Perpustakaan
             </span>
 
-            <h2 className="judul-editorial mt-7 text-3xl leading-tight tracking-tight text-slate-950 sm:text-4xl lg:text-[44px]">
-              Jam Layanan & Aturan Peminjaman
+            {/* Efek depth text yang sama; isi huruf putih diatur kelas
+                teks-kedalaman sehingga warna gelap lama tidak dipakai lagi. */}
+            <h2 className="teks-kedalaman judul-editorial mt-7 text-balance text-3xl leading-tight tracking-tight sm:text-4xl lg:text-[44px]">
+              <span className="landing-gradient-text italic">Jam Layanan</span>{" "}
+              &amp; Aturan Peminjaman
             </h2>
 
             <p className="mt-5 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
@@ -1303,8 +1314,11 @@ export default function LandingPage() {
             <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand-ink)]">
               Testimoni
             </span>
-            <h2 className="judul-editorial mt-2 text-3xl lg:text-4xl tracking-tight">
-              Kata mereka yang sudah memakai
+            {/* Sama seperti judul hero dan fitur: isi huruf putih dengan sisi
+                kedalaman bertangga, frasa penutup memakai gradien merek. */}
+            <h2 className="teks-kedalaman judul-editorial mt-2 text-balance text-3xl tracking-tight lg:text-4xl">
+              Kata mereka yang{" "}
+              <span className="landing-gradient-text italic">sudah memakai</span>
             </h2>
           </Reveal>
           {/* Deret ulasan; key + anim-naik membuat kartu fade-up ulang
@@ -1412,8 +1426,11 @@ export default function LandingPage() {
               Tanya Jawab
             </span>
 
-            <h2 className="judul-editorial mt-7 max-w-lg text-3xl leading-tight tracking-tight text-slate-950 sm:text-4xl lg:text-[44px]">
-              Pertanyaan yang Sering Diajukan
+            {/* Efek depth text yang sama; warna teks gelap lama dilepas karena
+                isi huruf kini diatur putih oleh kelas teks-kedalaman. */}
+            <h2 className="teks-kedalaman judul-editorial mt-7 max-w-lg text-balance text-3xl leading-tight tracking-tight sm:text-4xl lg:text-[44px]">
+              Pertanyaan yang{" "}
+              <span className="landing-gradient-text italic">Sering Diajukan</span>
             </h2>
 
             <p className="mt-5 max-w-lg text-sm leading-7 text-slate-600 sm:text-base">

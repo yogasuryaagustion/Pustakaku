@@ -1188,14 +1188,168 @@ html {
    alas. Semua offset memakai em supaya kedalamannya ikut skala ukuran judul —
    total sisi ≈ 8,4 px pada 66 px dan 4,6 px pada 36 px. Warna sisi dicampur
    dari warna merek agar tetap senada saat tema diubah admin. */
+/* === Lapisan Cupertino untuk landing page ================================
+   Gaya Apple: latar abu terang (#f5f5f7), permukaan putih tembus pandang
+   dengan blur, sudut besar, bayangan berlapis lembut, dan tombol pil dengan
+   dorongan halus. Semua di-scope ke .cupertino supaya halaman panel, admin,
+   dan sirkulasi tidak ikut berubah. */
+.cupertino {
+  --cpt-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --cpt-edge: rgba(15, 23, 42, 0.06);
+  --cpt-shadow:
+    0 1px 2px rgba(16, 24, 40, 0.04),
+    0 10px 30px -14px rgba(16, 24, 40, 0.18);
+
+  /* Satu warna hijau untuk seluruh landing: semua aksen memakai warna tombol
+     Masuk/Daftar (#21835a, yaitu --brand-solid). Token skala teal/emerald yang
+     dipakai halaman ini dipetakan ke sana supaya teal dan emerald tidak lagi
+     tampil sebagai dua hijau berbeda. Hanya tint paling muda (latar chip) dan
+     satu langkah terang (teks di atas latar gelap) yang tetap lebih muda agar
+     tetap terbaca. */
+  --brand: #21835a;
+  --brand-solid: #21835a;
+  --brand-solid-hover: #1b6b4a;
+  --brand-ink: #21835a;
+  --brand-light: #21835a;
+  --brand-soft: color-mix(in srgb, #21835a 10%, #ffffff);
+  --teks-mid: #21835a;
+  --teks-end: #21835a;
+
+  --color-teal-50: #eaf5f0;
+  --color-teal-100: #d8ece2;
+  --color-teal-200: #b0d8c4;
+  --color-teal-400: #63b193;
+  --color-teal-600: #21835a;
+  --color-teal-700: #21835a;
+  --color-teal-800: #21835a;
+  --color-teal-900: #21835a;
+  --color-teal-950: #21835a;
+
+  --color-emerald-50: #edf7f2;
+  --color-emerald-100: #dcefe4;
+  --color-emerald-200: #bfe1d0;
+  --color-emerald-300: #8ecdb2;
+  --color-emerald-400: #5fb798;
+  --color-emerald-500: #21835a;
+  --color-emerald-700: #21835a;
+  --color-emerald-800: #21835a;
+  --color-emerald-950: #21835a;
+
+  background: #f5f5f7;
+  letter-spacing: -0.012em;
+}
+
+/* Latar halaman: utilitas bg-[var(--background)] pada elemen yang sama menang
+   lebih dulu, jadi latar abu Cupertino perlu selektor dua kelas. */
+.cupertino.landing-page {
+  background: #f5f5f7;
+}
+
+/* Samakan latar semua section dengan latar halaman: sebelumnya section berlatar
+   putih sementara halaman abu, sehingga terbentuk garis-garis putih-abu.
+   Hero dikecualikan karena latarnya memakai pendar merek sendiri, dan
+   !important diperlukan untuk menimpa aturan section putih yang sudah ada. */
+.cupertino.landing-page section:not(.landing-hero) {
+  background: #f5f5f7 !important;
+}
+
+/* Judul Cupertino lebih rapat tracking-nya dan bobot tebalnya lebih tegas. */
+.cupertino h1,
+.cupertino h2,
+.cupertino h3 {
+  letter-spacing: -0.028em;
+}
+
+/* Permukaan kaca: kartu tidak lagi putih pekat, melainkan putih tembus
+   pandang dengan saturasi blur seperti panel Control Center. */
+.cupertino .card,
+.cupertino .card-raised {
+  border-radius: 26px;
+  border: 1px solid var(--cpt-edge);
+  background: rgba(255, 255, 255, 0.78);
+  -webkit-backdrop-filter: blur(20px) saturate(1.7);
+  backdrop-filter: blur(20px) saturate(1.7);
+  box-shadow: var(--cpt-shadow);
+  transition:
+    transform 0.35s var(--cpt-ease),
+    box-shadow 0.35s var(--cpt-ease),
+    background-color 0.35s var(--cpt-ease);
+}
+
+.cupertino .card-raised:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 2px 4px rgba(16, 24, 40, 0.05),
+    0 22px 45px -18px rgba(16, 24, 40, 0.26);
+}
+
+/* Tombol pil dengan kilau tipis di tepi atas dan dorongan saat ditekan. */
+.cupertino .btn {
+  border-radius: 999px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 1px 2px rgba(16, 24, 40, 0.08);
+  transition:
+    transform 0.28s var(--cpt-ease),
+    filter 0.28s var(--cpt-ease),
+    box-shadow 0.28s var(--cpt-ease);
+}
+
+.cupertino .btn:hover {
+  transform: translateY(-1px);
+}
+
+.cupertino .btn:active {
+  transform: translateY(0) scale(0.985);
+}
+
+.cupertino .input {
+  border-radius: 18px;
+  border-color: var(--cpt-edge);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: inset 0 1px 2px rgba(16, 24, 40, 0.05);
+}
+
+/* Kolom pencarian hero: sudut lebih besar dan kaca yang lebih tebal. */
+.cupertino .landing-search {
+  border-radius: 24px;
+  border-color: var(--cpt-edge);
+  background: rgba(255, 255, 255, 0.82);
+  -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  backdrop-filter: blur(18px) saturate(1.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 1px 2px rgba(16, 24, 40, 0.05),
+    0 18px 40px -22px rgba(16, 24, 40, 0.28);
+}
+
+/* Hero memakai latar abu khas Cupertino, bukan putih rata. */
+.cupertino .landing-hero {
+  background:
+    radial-gradient(
+      900px 480px at 10% -10%,
+      color-mix(in srgb, var(--brand) 12%, transparent),
+      transparent 62%
+    ),
+    radial-gradient(
+      820px 460px at 92% -6%,
+      color-mix(in srgb, var(--brand-light) 16%, transparent),
+      transparent 60%
+    ),
+    #f5f5f7;
+}
+
 .teks-kedalaman {
   /* Versi huruf putih: isi huruf putih, sisi kedalaman bertangga dari hijau
-     merek ke putih. Catatan penting: putih hanya terbaca di atas latar gelap /
-     berwarna; di atas latar putih section beranda judul ini nyaris hilang,
-     hanya tersisa sisi hijau dan alasnya. */
+     merek ke putih. Lapis paling belakang (--sisi-bawah, dua bayangan terjauh)
+     sengaja memakai tinta gelap agar tebal huruf punya tepi tegas di ujungnya,
+     bukan memudar ke putih dan hilang di atas latar section yang putih.
+     Catatan: isi huruf putih tetap hanya terbaca penuh di atas latar gelap. */
   --sisi-atas: color-mix(in srgb, var(--brand-solid) 70%, #ffffff);
   --sisi-tengah: color-mix(in srgb, var(--brand-solid) 35%, #ffffff);
-  --sisi-bawah: color-mix(in srgb, var(--brand-solid) 15%, #ffffff);
+  --sisi-bawah: #020617;
   color: #ffffff;
   text-shadow:
     0.016em 0.016em 0 var(--sisi-atas),

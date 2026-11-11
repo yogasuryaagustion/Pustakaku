@@ -7,7 +7,19 @@ import { useSistem } from "@/lib/sistem";
 import { useToast } from "@/components/toast";
 import { apiFetch } from "@/lib/api";
 import { Modal, rupiah, tanggalPanjang } from "@/components/ui";
+import { Stepper, type TahapStepper } from "@/components/stepper";
 import { totalDendaTertunggak } from "@/lib/denda";
+
+type LangkahTransaksi = "anggota" | "buku" | "ringkasan" | "bukti";
+
+// Empat tahap form pinjam; dipakai Stepper di atas isi modal agar status
+// langkah (selesai / aktif / belum) terbaca seragam.
+const TAHAPAN: Array<TahapStepper<LangkahTransaksi>> = [
+  { id: "anggota", label: "Anggota" },
+  { id: "buku", label: "Buku" },
+  { id: "ringkasan", label: "Ringkasan" },
+  { id: "bukti", label: "Bukti" },
+];
 
 type Item = {
   eksemplarId: string;
@@ -44,9 +56,7 @@ export function PeminjamanBarcode({
   const sistem = useSistem();
   const toast = useToast();
 
-  const [langkah, setLangkah] = useState<"anggota" | "buku" | "ringkasan" | "bukti">(
-    "anggota",
-  );
+  const [langkah, setLangkah] = useState<LangkahTransaksi>("anggota");
   const [kodeKartu, setKodeKartu] = useState("");
   const [anggotaId, setAnggotaId] = useState("");
   const [anggota, setAnggota] = useState<Anggota | null>(null);
@@ -246,43 +256,19 @@ export function PeminjamanBarcode({
 
   return (
     <Modal open={open} onClose={onClose} title="Transaksi Peminjaman" width="max-w-2xl">
-      {/* Langkah indikator */}
-      <div className="mb-4 flex items-center gap-2 text-xs font-semibold">
-        {["anggota", "buku", "ringkasan", "bukti"].map((l, i) => {
-          const aktif = langkah === l;
-          const selesai =
-            ["anggota", "buku", "ringkasan", "bukti"].indexOf(langkah) > i;
-          return (
-            <div key={l} className="flex items-center gap-2">
-              <span
-                className={`grid h-6 w-6 place-items-center rounded-full text-[11px] ${
-                  aktif
-                    ? "bg-[var(--brand)] text-white"
-                    : selesai
-                      ? "bg-emerald-500 text-white"
-                      : "bg-slate-200 text-slate-500"
-                }`}
-              >
-                {i + 1}
-              </span>
-              <span
-                className={`hidden sm:inline ${
-                  aktif ? "text-[var(--brand-ink)]" : "text-slate-400"
-                }`}
-              >
-                {l === "anggota"
-                  ? "Anggota"
-                  : l === "buku"
-                    ? "Buku"
-                    : l === "ringkasan"
-                      ? "Ringkasan"
-                      : "Bukti"}
-              </span>
-              {i < 3 && <span className="text-slate-300">›</span>}
-            </div>
-          );
-        })}
-      </div>
+      {/* Tahapan transaksi memakai komponen bersama: satu sumber status
+          langkah, lengkap dengan garis progres dan penanda aria-current. */}
+      <Stepper
+        className="mb-4"
+        tahap={TAHAPAN}
+        aktif={langkah}
+        bolehPilih={(id) =>
+          id === "anggota" ||
+          (id === "buku" && Boolean(anggota)) ||
+          (id === "ringkasan" && Boolean(anggota) && cart.length > 0)
+        }
+        onPilih={(id) => setLangkah(id)}
+      />
 
       {langkah === "anggota" && (
         <div className="space-y-4">          <div className="rounded-xl border border-[var(--brand)]/20 bg-[var(--brand-soft)]/40 p-3">

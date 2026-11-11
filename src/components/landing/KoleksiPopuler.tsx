@@ -220,7 +220,7 @@ export default function KoleksiPopuler() {
   }
 
   return (
-    <section id="koleksi" className="bg-[#f7faf9] py-14 sm:py-16">
+    <section id="koleksi" className="py-14 sm:py-16">
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-5">
         {/* Header */}
         <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
@@ -230,8 +230,13 @@ export default function KoleksiPopuler() {
               Katalog Terlengkap
             </span>
 
-            <h2 className="judul-editorial mt-3 text-2xl tracking-tight text-slate-900 sm:text-3xl">
-              Koleksi Buku Terpopuler
+            {/* Efek depth text yang sama dengan judul section lain di landing:
+                isi putih, sisi bertangga, frasa penutup bergradien merek. */}
+            <h2 className="teks-kedalaman judul-editorial mt-3 text-balance text-2xl tracking-tight sm:text-3xl">
+              Koleksi{" "}
+              <span className="landing-gradient-text italic">
+                Buku Terpopuler
+              </span>
             </h2>
 
             <p className="mt-2 text-xs leading-6 text-slate-500 sm:text-sm">
