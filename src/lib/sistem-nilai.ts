@@ -13,6 +13,8 @@ export type SistemPengaturan = {
   lamaPinjam: number;
   /** Denda keterlambatan per hari (rupiah). */
   dendaPerHari: number;
+  /** Denda penggantian saat buku dinyatakan hilang (rupiah). */
+  dendaHilang: number;
   /** Batas maksimal buku yang boleh dipinjam satu anggota. */
   maksPinjaman: number;
   /**
@@ -20,10 +22,27 @@ export type SistemPengaturan = {
    * Token: {tahun}, {bulan}, {urut} (boleh {urut:3} untuk 3 digit).
    */
   formatInventaris: string;
+  /**
+   * Bentuk kode pada label eksemplar yang dipakai sebagai pilihan awal saat
+   * mencetak: "qr" (pemindai 2D) atau "code128" (barcode gun).
+   */
+  formatLabel: FormatLabel;
 };
+
+export type FormatLabel = "qr" | "code128";
+
+/** Pilihan bentuk label yang sah, urut sesuai tampilan di layar. */
+export const FORMAT_LABEL_SAH: readonly FormatLabel[] = ["qr", "code128"];
+
+export function formatLabelSah(nilai: unknown): nilai is FormatLabel {
+  return typeof nilai === "string" && FORMAT_LABEL_SAH.includes(nilai as FormatLabel);
+}
 
 /** Pola bawaan nomor inventaris. */
 export const FORMAT_INVENTARIS_BAWAAN = "INV-{tahun}-{urut}";
+
+/** Denda penggantian bawaan untuk salinan yang dinyatakan hilang. */
+export const DENDA_HILANG_BAWAAN = 75_000;
 
 // Default = konstanta klasik di types.ts.
 export const SISTEM_DEFAULT: SistemPengaturan = {
@@ -31,8 +50,10 @@ export const SISTEM_DEFAULT: SistemPengaturan = {
   tagline: "Sistem Perpustakaan",
   lamaPinjam: LAMA_PINJAM_HARI,
   dendaPerHari: DENDA_PER_HARI,
+  dendaHilang: DENDA_HILANG_BAWAAN,
   maksPinjaman: 5,
   formatInventaris: FORMAT_INVENTARIS_BAWAAN,
+  formatLabel: "qr",
 };
 
 /** Pola dianggap sah bila memuat {urut} dan hanya memakai aksara aman. */
@@ -77,11 +98,15 @@ export function normalisasiSistem(raw: unknown): SistemPengaturan {
     tagline: teks(o.tagline, SISTEM_DEFAULT.tagline),
     lamaPinjam: angka(o.lamaPinjam, SISTEM_DEFAULT.lamaPinjam, 1, 90),
     dendaPerHari: angka(o.dendaPerHari, SISTEM_DEFAULT.dendaPerHari, 0, 1_000_000),
+    dendaHilang: angka(o.dendaHilang, SISTEM_DEFAULT.dendaHilang, 0, 10_000_000),
     maksPinjaman: angka(o.maksPinjaman, SISTEM_DEFAULT.maksPinjaman, 1, 50),
     formatInventaris:
       typeof o.formatInventaris === "string" && formatInventarisSah(o.formatInventaris.trim())
         ? o.formatInventaris.trim()
         : SISTEM_DEFAULT.formatInventaris,
+    formatLabel: formatLabelSah(o.formatLabel)
+      ? o.formatLabel
+      : SISTEM_DEFAULT.formatLabel,
   };
 }
 

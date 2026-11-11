@@ -6,6 +6,7 @@ import {
   GalatApi,
   jalankan,
   json,
+  kolomBelumAda,
   konteksRoute,
 } from "@/lib/supabase/konteks";
 import { catatJejakServer } from "@/lib/supabase/jejak";
@@ -31,12 +32,28 @@ export async function PUT(request: Request, { params }: Params) {
     if (errSebelum) throw dariSupabase(errSebelum);
     if (!sebelum) throw new GalatApi("Buku tidak ditemukan.", 404);
 
-    const { data, error } = await k.supabase
+    const baris = dariBuku(patch);
+
+    let { data, error } = await k.supabase
       .from("buku")
-      .update(dariBuku(patch))
+      .update(baris)
       .eq("id", id)
       .select("*")
       .single();
+
+    // Kolom harga baru ada setelah migrasi denda buku hilang; tanpa migrasi
+    // perubahan lain tetap disimpan.
+    if (kolomBelumAda(error) && "harga" in baris) {
+      const tanpaHarga = { ...baris };
+      delete tanpaHarga.harga;
+      ({ data, error } = await k.supabase
+        .from("buku")
+        .update(tanpaHarga)
+        .eq("id", id)
+        .select("*")
+        .single());
+    }
+
     if (error) throw dariSupabase(error);
 
     const buku = keBuku(data as BarisBuku);

@@ -5,6 +5,7 @@ import {
   dariSupabase,
   jalankan,
   json,
+  kolomBelumAda,
   konteksPublik,
   konteksRoute,
 } from "@/lib/supabase/konteks";
@@ -70,11 +71,26 @@ export async function POST(request: Request) {
     const k = await konteksRoute({ wajibMasuk: true, wajibIzin: "katalog.kelola" });
     const isi = sahkanBukuBody(await bacaBody(request), { wajibSemua: true });
 
-    const { data, error } = await k.supabase
+    const baris = dariBuku(isi);
+
+    let { data, error } = await k.supabase
       .from("buku")
-      .insert(dariBuku(isi))
+      .insert(baris)
       .select("*")
       .single();
+
+    // Database yang belum menjalankan migrasi denda buku hilang belum punya
+    // kolom harga; simpan buku tanpa harga agar input tetap berhasil.
+    if (kolomBelumAda(error) && "harga" in baris) {
+      const tanpaHarga = { ...baris };
+      delete tanpaHarga.harga;
+      ({ data, error } = await k.supabase
+        .from("buku")
+        .insert(tanpaHarga)
+        .select("*")
+        .single());
+    }
+
     if (error) throw dariSupabase(error);
 
     const buku = keBuku(data as BarisBuku);

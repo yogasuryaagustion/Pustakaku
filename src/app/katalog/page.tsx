@@ -31,6 +31,7 @@ const KOSONG_FORM = {
   rak: "",
   stok: "1",
   deskripsi: "",
+  harga: "",
   gambar: "",
 };
 
@@ -303,6 +304,7 @@ function KatalogKonten() {
       rak: item.rak,
       stok: String(item.stok),
       deskripsi: item.deskripsi,
+      harga: item.harga ? String(item.harga) : "",
       gambar: item.gambar ?? "",
     });
 
@@ -322,6 +324,7 @@ function KatalogKonten() {
       rak: form.rak.trim(),
       stok: Math.max(0, Number(form.stok) || 0),
       deskripsi: form.deskripsi.trim(),
+      harga: Math.max(0, Number(form.harga) || 0),
       gambar: form.gambar.trim() || null,
     };
 
@@ -899,21 +902,30 @@ function KatalogKonten() {
       >
         <form
           onSubmit={simpan}
-          className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+          className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
         >
           {!editId && (
-            <section className="sm:col-span-2 rounded-2xl border border-teal-100 bg-teal-50/60 p-4">
-              <div className="mb-3">
-                <h3 className="text-sm font-bold text-teal-950">
-                  Cari Data Buku Otomatis
-                </h3>
-                <p className="mt-1 text-xs leading-5 text-teal-800/80">
-                  Cari berdasarkan judul atau ISBN. Data yang ditemukan dapat
-                  digunakan untuk mengisi formulir, termasuk URL sampul.
-                </p>
-              </div>
+            <details className="group rounded-xl border border-teal-100 bg-teal-50/60 p-3 sm:col-span-2 lg:col-span-3">
+              <summary className="flex cursor-pointer list-none items-start justify-between gap-3 [&::-webkit-details-marker]:hidden">
+                <div>
+                  <h3 className="text-sm font-bold text-teal-950">
+                    Cari Data Buku Otomatis
+                  </h3>
+                  <p className="mt-1 text-xs leading-5 text-teal-800/80">
+                    Cari berdasarkan judul atau ISBN. Data yang ditemukan dapat
+                    digunakan untuk mengisi formulir, termasuk URL sampul.
+                  </p>
+                </div>
 
-              <div className="flex flex-col gap-2 sm:flex-row">
+                <span className="shrink-0 rounded-lg border border-teal-200 bg-white px-3 py-1.5 text-xs font-semibold text-teal-900 group-open:hidden">
+                  Buka
+                </span>
+                <span className="hidden shrink-0 rounded-lg border border-teal-200 bg-white px-3 py-1.5 text-xs font-semibold text-teal-900 group-open:inline">
+                  Tutup
+                </span>
+              </summary>
+
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                 <input
                   className="input min-w-0 flex-1 bg-white"
                   value={kataKunciBuku}
@@ -941,7 +953,7 @@ function KatalogKonten() {
               )}
 
               {hasilPencarianBuku.length > 0 && (
-                <div className="mt-3 max-h-72 space-y-2 overflow-y-auto">
+                <div className="mt-3 max-h-56 space-y-2 overflow-y-auto">
                   {hasilPencarianBuku.map((item, index) => (
                     <article
                       key={`${item.googleBooksId || item.isbn || item.judul}-${index}`}
@@ -997,10 +1009,10 @@ function KatalogKonten() {
                   ))}
                 </div>
               )}
-            </section>
+            </details>
           )}
 
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-2 lg:col-span-3">
             <label className="label">Judul Buku *</label>
             <input
               className="input"
@@ -1093,18 +1105,35 @@ function KatalogKonten() {
             />
           </div>
 
-          <div className="sm:col-span-2">
+          <div>
+            <label className="label">Harga Buku (Rp)</label>
+            <input
+              className="input"
+              type="number"
+              min="0"
+              step="1000"
+              value={form.harga}
+              onChange={(e) => setForm({ ...form, harga: e.target.value })}
+              placeholder="Kosongkan bila belum diketahui"
+            />
+            <p className="mt-1 text-xs text-slate-400">
+              Dipakai sebagai denda penggantian bila salinan dinyatakan hilang
+              saat pengembalian.
+            </p>
+          </div>
+
+          <div className="sm:col-span-2 lg:col-span-2">
             <label className="label">Deskripsi Buku</label>
             <textarea
               className="input"
-              rows={3}
+              rows={2}
               value={form.deskripsi}
               onChange={(e) => setForm({ ...form, deskripsi: e.target.value })}
               placeholder="Deskripsi singkat tentang buku"
             />
           </div>
 
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-2 lg:col-span-3">
             <label className="label">URL Gambar Sampul</label>
 
             <div className="flex items-start gap-3">
@@ -1114,7 +1143,7 @@ function KatalogKonten() {
                   penulis: form.penulis,
                   gambar: form.gambar,
                 }}
-                className="h-24 w-[68px] shrink-0"
+                className="h-20 w-[56px] shrink-0"
                 tampilkanJudul={false}
               />
 
@@ -1135,7 +1164,7 @@ function KatalogKonten() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 border-t border-[var(--border)] pt-4 sm:col-span-2">
+          <div className="flex justify-end gap-2 border-t border-[var(--border)] pt-3 sm:col-span-2 lg:col-span-3">
             <button
               type="button"
               className="btn btn-ghost"

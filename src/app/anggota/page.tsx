@@ -1,9 +1,10 @@
 
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import { KepalaHalaman } from "@/components/kepala-halaman";
+import { ConfirmDialog, Modal, useKunciScroll } from "@/components/ui";
+import { PratinjauKartuAnggota } from "@/components/kartu-anggota";
 import type { FormEvent } from "react";
 import { useLibrary } from "@/lib/library-context";
 import {
@@ -29,6 +30,7 @@ type AnggotaData = {
   tanggalBergabung?: string;
   tanggalDaftar?: string;
   createdAt?: string;
+  foto?: string | null;
 };
 
 type ModeTampilan = "grid" | "tabel";
@@ -152,6 +154,7 @@ export default function AnggotaPage() {
     anggota,
     peminjaman,
     siap,
+    tambahAnggota,
     ubahAnggota,
     hapusAnggota,
   } = useLibrary();
@@ -214,6 +217,35 @@ export default function AnggotaPage() {
   judul: string;
   pesan: string;
 } | null>(null);
+
+  // Formulir tambah anggota tampil sebagai popup, bukan halaman terpisah.
+  const [modalTambah, setModalTambah] = useState(false);
+  const [sedangTambah, setSedangTambah] = useState(false);
+  const [pesanTambah, setPesanTambah] = useState("");
+
+  const [formTambah, setFormTambah] = useState({
+    nama: "",
+    email: "",
+    telepon: "",
+    alamat: "",
+    jenis: "Umum" as JenisAnggota,
+    aktif: true,
+  });
+
+  // Dialog konfirmasi hapus akun login (pengganti window.confirm).
+  const [konfirmasiHapusAkun, setKonfirmasiHapusAkun] = useState(false);
+
+  // Popup hapus data anggota dan popup kartu anggota.
+  const [hapusAnggotaTarget, setHapusAnggotaTarget] =
+    useState<AnggotaData | null>(null);
+  const [kartuAnggota, setKartuAnggota] = useState<AnggotaData | null>(null);
+
+  // Tiga modal di halaman ini dibuat mandiri (bukan lewat <Modal>), jadi kunci
+  // scroll latar dipasang langsung. Dialog popup tambah anggota & konfirmasi
+  // hapus akun sudah terkunci lewat komponen <Modal>.
+  useKunciScroll(
+    Boolean(anggotaPilihan || anggotaEdit || modalAkun || notifikasi)
+  );
 
   const daftarAnggota = anggota as AnggotaData[];
 
@@ -312,6 +344,82 @@ export default function AnggotaPage() {
       jenis: (a.jenis || a.kategori || "Umum") as JenisAnggota,
       aktif: a.aktif,
     });
+  }
+
+  // Membuka popup tambah anggota dengan formulir kosong.
+  function bukaTambahAnggota() {
+    setFormTambah({
+      nama: "",
+      email: "",
+      telepon: "",
+      alamat: "",
+      jenis: "Umum",
+      aktif: true,
+    });
+    setPesanTambah("");
+    setModalTambah(true);
+  }
+
+  function tutupTambah() {
+    setModalTambah(false);
+    setPesanTambah("");
+  }
+
+  // Menyimpan anggota baru dari popup tanpa berpindah halaman.
+  async function simpanTambah(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    if (sedangTambah) return;
+
+    setPesanTambah("");
+
+    if (formTambah.nama.trim().length < 3) {
+      setPesanTambah("Nama anggota minimal 3 karakter.");
+      return;
+    }
+
+    if (
+      formTambah.email.trim() &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formTambah.email.trim())
+    ) {
+      setPesanTambah("Format email tidak valid.");
+      return;
+    }
+
+    setSedangTambah(true);
+
+    try {
+      const hasil = await tambahAnggota({
+        nama: formTambah.nama.trim(),
+        email: formTambah.email.trim().toLowerCase(),
+        telepon: formTambah.telepon.trim(),
+        alamat: formTambah.alamat.trim(),
+        jenis: formTambah.jenis,
+        aktif: formTambah.aktif,
+      });
+
+      if (!hasil.ok) {
+        setPesanTambah(hasil.pesan || "Gagal menambahkan anggota.");
+        return;
+      }
+
+      tutupTambah();
+
+      setNotifikasi({
+        judul: "Anggota Berhasil Ditambahkan",
+        pesan:
+          hasil.pesan ||
+          `Anggota "${formTambah.nama.trim()}" berhasil ditambahkan.`,
+      });
+    } catch (error) {
+      setPesanTambah(
+        error instanceof Error
+          ? error.message
+          : "Terjadi kesalahan saat menyimpan anggota."
+      );
+    } finally {
+      setSedangTambah(false);
+    }
   }
 
   // Membuka modal kelola akun.
@@ -497,15 +605,10 @@ export default function AnggotaPage() {
     }
   }
 
-  // Menghapus akun tanpa menghapus data anggota.
+  // Menghapus akun tanpa menghapus data anggota. Dipanggil dari dialog
+  // konfirmasi (Batal/Hapus) supaya tidak memakai window.confirm.
   async function prosesHapusAkun() {
     if (!akunEdit || !superAdmin || sedangProsesAkun) return;
-
-    const yakin = window.confirm(
-      `Hapus akun ${akunEdit.email}?\n\nData anggota yang terhubung tidak akan dihapus. Penghapusan akun tidak dapat dibatalkan.`
-    );
-
-    if (!yakin) return;
 
     setSedangProsesAkun(true);
 
@@ -521,9 +624,11 @@ export default function AnggotaPage() {
       setAkunEdit(null);
       setTargetAkunAnggota(null);
 
-      window.alert(
-        hasil.pesan || "Akun berhasil dihapus. Data anggota tetap tersimpan."
-      );
+      // Pesan sukses memakai teks tetap agar seragam dengan permintaan UI.
+      setNotifikasi({
+        judul: "Akun Berhasil Dihapus",
+        pesan: "Akun berhasil dihapus. Data anggota tetap tersimpan.",
+      });
     } catch (error) {
       console.error("Gagal menghapus akun:", error);
       window.alert("Terjadi kesalahan saat menghapus akun.");
@@ -532,8 +637,8 @@ export default function AnggotaPage() {
     }
   }
 
-  // Menghapus anggota setelah pemeriksaan pinjaman.
-  async function konfirmasiHapus(a: AnggotaData) {
+  // Membuka popup konfirmasi hapus setelah pemeriksaan pinjaman dan akun.
+  function mintaHapusAnggota(a: AnggotaData) {
     if (sedangMenghapus) return;
 
     const jumlahPinjaman = jumlahDipinjam.get(a.id) || 0;
@@ -552,23 +657,29 @@ export default function AnggotaPage() {
       return;
     }
 
-    const yakin = window.confirm(
-      `Apakah kamu yakin ingin menghapus anggota "${a.nama}" dengan nomor ${nomorKartu(a)}?\n\nTindakan ini tidak dapat dibatalkan.`
-    );
+    setHapusAnggotaTarget(a);
+  }
 
-    if (!yakin) return;
+  // Menghapus data anggota setelah pengguna memilih Hapus di popup.
+  async function prosesHapusAnggota() {
+    if (!hapusAnggotaTarget || sedangMenghapus) return;
+
+    const nama = hapusAnggotaTarget.nama;
 
     setSedangMenghapus(true);
 
     try {
-      const hasil = await hapusAnggota(a.id);
+      const hasil = await hapusAnggota(hapusAnggotaTarget.id);
 
       if (!hasil.ok) {
         window.alert(hasil.pesan || "Gagal menghapus anggota.");
         return;
       }
 
-      window.alert(hasil.pesan || "Anggota berhasil dihapus.");
+      setNotifikasi({
+        judul: "Anggota Berhasil Dihapus",
+        pesan: hasil.pesan || `Data anggota "${nama}" berhasil dihapus.`,
+      });
     } catch (error) {
       console.error("Gagal menghapus anggota:", error);
       window.alert("Terjadi kesalahan saat menghapus anggota.");
@@ -644,13 +755,14 @@ export default function AnggotaPage() {
               Ekspor CSV
             </button>
 
-            <Link
-              href="/anggota/tambah"
+            <button
+              type="button"
+              onClick={bukaTambahAnggota}
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--brand-solid)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--brand-solid-hover)]"
             >
               {ikon("M12 5v14 M5 12h14", 17)}
               Tambah Anggota
-            </Link>
+            </button>
           </>
         }
       />
@@ -885,13 +997,9 @@ export default function AnggotaPage() {
                     <div className="flex flex-wrap items-center gap-2">
                       <button
                         type="button"
-                        onClick={() =>
-                          window.alert(
-                            `Kartu Anggota\n\nNama: ${a.nama}\nID: ${nomorKartu(a)}\nKategori: ${kategoriAnggota(a)}\nStatus: ${a.aktif ? "Aktif" : "Nonaktif"}`
-                          )
-                        }
+                        onClick={() => setKartuAnggota(a)}
                         className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-teal-800 transition hover:bg-teal-50"
-                        title="Lihat informasi kartu anggota"
+                        title="Lihat kartu anggota"
                       >
                         {ikon("M2 7h20v13H2z M2 11h20 M6 16h4", 15)}
                         Kartu
@@ -911,7 +1019,7 @@ export default function AnggotaPage() {
 
                       <button
                         type="button"
-                        onClick={() => void konfirmasiHapus(a)}
+                        onClick={() => mintaHapusAnggota(a)}
                         disabled={sedangMenghapus}
                         className="inline-flex items-center gap-1.5 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
                       >
@@ -1108,7 +1216,7 @@ export default function AnggotaPage() {
 
                           <button
                             type="button"
-                            onClick={() => void konfirmasiHapus(a)}
+                            onClick={() => mintaHapusAnggota(a)}
                             disabled={sedangMenghapus}
                             title="Hapus anggota"
                             className="rounded-lg bg-red-50 p-2 text-red-700 transition hover:bg-red-100 disabled:opacity-50"
@@ -1495,6 +1603,233 @@ export default function AnggotaPage() {
         </div>
       )}
 
+      {/* Popup Tambah Anggota — menggantikan halaman /anggota/tambah. */}
+      <Modal
+        open={modalTambah}
+        onClose={() => {
+          if (!sedangTambah) tutupTambah();
+        }}
+        title="Tambah Anggota Baru"
+        width="max-w-xl"
+      >
+        <form onSubmit={simpanTambah} className="space-y-4">
+          <p className="text-sm text-slate-500">
+            Masukkan informasi anggota untuk membuat kartu keanggotaan. Field
+            bertanda * wajib diisi.
+          </p>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+              Nama Lengkap *
+            </label>
+            <input
+              required
+              minLength={3}
+              maxLength={120}
+              value={formTambah.nama}
+              onChange={(e) =>
+                setFormTambah({ ...formTambah, nama: e.target.value })
+              }
+              placeholder="Masukkan nama lengkap"
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
+            />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                Email
+              </label>
+              <input
+                type="email"
+                maxLength={200}
+                value={formTambah.email}
+                onChange={(e) =>
+                  setFormTambah({ ...formTambah, email: e.target.value })
+                }
+                placeholder="nama@email.com"
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                Nomor Telepon
+              </label>
+              <input
+                type="tel"
+                maxLength={40}
+                value={formTambah.telepon}
+                onChange={(e) =>
+                  setFormTambah({ ...formTambah, telepon: e.target.value })
+                }
+                placeholder="08xxxxxxxxxx"
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                Jenis Anggota *
+              </label>
+              <select
+                value={formTambah.jenis}
+                onChange={(e) =>
+                  setFormTambah({
+                    ...formTambah,
+                    jenis: e.target.value as JenisAnggota,
+                  })
+                }
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-teal-500"
+              >
+                <option value="Pelajar">Pelajar</option>
+                <option value="Mahasiswa">Mahasiswa</option>
+                <option value="Umum">Umum</option>
+                <option value="Staf">Staf</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                Status Anggota
+              </label>
+              <select
+                value={formTambah.aktif ? "aktif" : "nonaktif"}
+                onChange={(e) =>
+                  setFormTambah({
+                    ...formTambah,
+                    aktif: e.target.value === "aktif",
+                  })
+                }
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-teal-500"
+              >
+                <option value="aktif">Aktif</option>
+                <option value="nonaktif">Nonaktif</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+              Alamat
+            </label>
+            <textarea
+              rows={2}
+              maxLength={500}
+              value={formTambah.alamat}
+              onChange={(e) =>
+                setFormTambah({ ...formTambah, alamat: e.target.value })
+              }
+              placeholder="Masukkan alamat anggota"
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
+            />
+          </div>
+
+          <div className="rounded-xl bg-teal-50 p-4">
+            <p className="text-sm font-semibold text-teal-900">
+              Nomor anggota otomatis
+            </p>
+            <p className="mt-1 text-sm text-teal-800">
+              Nomor kartu dibuat oleh sistem setelah data disimpan. Formulir ini
+              tidak membuat akun login Supabase Auth.
+            </p>
+          </div>
+
+          {pesanTambah && (
+            <div
+              role="alert"
+              className="rounded-xl bg-red-50 p-4 text-sm text-red-700"
+            >
+              {pesanTambah}
+            </div>
+          )}
+
+          <div className="flex flex-col-reverse gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              disabled={sedangTambah}
+              onClick={tutupTambah}
+              className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+            >
+              Batal
+            </button>
+
+            <button
+              type="submit"
+              disabled={sedangTambah}
+              className="rounded-xl bg-teal-800 px-5 py-3 text-sm font-semibold text-white transition hover:bg-teal-900 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {sedangTambah ? "Menyimpan..." : "Simpan Anggota"}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Popup kartu anggota — pratinjau ID-1 langsung dari kartu daftar. */}
+      <Modal
+        open={Boolean(kartuAnggota)}
+        onClose={() => setKartuAnggota(null)}
+        title="Kartu Anggota"
+        width="max-w-2xl"
+      >
+        {kartuAnggota && (
+          <>
+            <div className="mx-auto w-full max-w-[520px]">
+              <PratinjauKartuAnggota
+                anggota={{
+                  nama: kartuAnggota.nama,
+                  nomorAnggota: nomorKartu(kartuAnggota),
+                  jenis: kategoriAnggota(kartuAnggota),
+                  bergabungPada:
+                    kartuAnggota.tanggalBergabung ||
+                    kartuAnggota.tanggalDaftar ||
+                    kartuAnggota.createdAt,
+                  aktif: kartuAnggota.aktif,
+                  foto: kartuAnggota.foto ?? null,
+                }}
+              />
+            </div>
+
+            <p className="mt-4 text-center text-xs leading-5 text-slate-500">
+              Kartu berukuran ID-1. QR hanya memuat nomor anggota dan selalu
+              divalidasi ulang oleh server saat check-in.
+            </p>
+
+            <div className="mt-4 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setKartuAnggota(null)}
+                className="rounded-xl bg-teal-800 px-5 py-3 text-sm font-semibold text-white transition hover:bg-teal-900"
+              >
+                Tutup
+              </button>
+            </div>
+          </>
+        )}
+      </Modal>
+
+      {/* Konfirmasi hapus data anggota: Batal atau Hapus. */}
+      <ConfirmDialog
+        open={Boolean(hapusAnggotaTarget)}
+        onClose={() => setHapusAnggotaTarget(null)}
+        onConfirm={() => void prosesHapusAnggota()}
+        title="Hapus Data Anggota"
+        message={`Data anggota "${hapusAnggotaTarget?.nama ?? ""}" dengan nomor ${
+          hapusAnggotaTarget ? nomorKartu(hapusAnggotaTarget) : ""
+        } akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.`}
+        confirmLabel="Hapus"
+      />
+
+      {/* Konfirmasi hapus akun login: Batal atau Hapus. */}
+      <ConfirmDialog
+        open={konfirmasiHapusAkun}
+        onClose={() => setKonfirmasiHapusAkun(false)}
+        onConfirm={() => void prosesHapusAkun()}
+        title="Hapus Akun"
+        message={`Akun ${akunEdit?.email ?? ""} akan dihapus permanen. Kartu anggota yang terhubung tidak ikut terhapus, dan tindakan ini tidak dapat dibatalkan.`}
+        confirmLabel="Hapus"
+      />
+
       {/* Modal Kelola Akun */}
       {modalAkun && (
         <div
@@ -1718,7 +2053,7 @@ export default function AnggotaPage() {
 
                     <button
                       type="button"
-                      onClick={() => void prosesHapusAkun()}
+                      onClick={() => setKonfirmasiHapusAkun(true)}
                       disabled={sedangProsesAkun}
                       className="mt-3 w-full rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
                     >

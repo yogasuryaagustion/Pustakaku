@@ -565,12 +565,26 @@ export function PinjamanSaya({
                         )}
 
                         {p.denda > 0 && (
-                          <p className="mt-2 text-xs font-semibold text-rose-600">
-                            Denda: {rupiah(p.denda)}
-                            {sisaDenda(p.denda, p.dendaDibayar) === 0
-                              ? " · lunas"
-                              : ` · belum dibayar ${rupiah(sisaDenda(p.denda, p.dendaDibayar))}`}
-                          </p>
+                          <>
+                            <p className="mt-2 text-xs font-semibold text-rose-600">
+                              Denda: {rupiah(p.denda)}
+                              {sisaDenda(p.denda, p.dendaDibayar) === 0
+                                ? " · lunas"
+                                : ` · belum dibayar ${rupiah(sisaDenda(p.denda, p.dendaDibayar))}`}
+                            </p>
+
+                            {/* Denda penggantian buku hilang ditulis petugas
+                                pada catatan pinjaman — jelaskan agar nominal
+                                besar tidak disangka denda keterlambatan. */}
+                            {p.catatan
+                              ?.toLowerCase()
+                              .includes("buku dinyatakan hilang") && (
+                              <p className="mt-1 text-[11px] leading-5 text-slate-500">
+                                Termasuk denda penggantian buku hilang sesuai
+                                harga buku.
+                              </p>
+                            )}
+                          </>
                         )}
 
                         {/* Riwayat cicilan: anggota bisa memeriksa sendiri

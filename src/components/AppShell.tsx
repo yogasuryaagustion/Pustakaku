@@ -35,7 +35,7 @@ const JUDUL_SUB: Record<string, string> = {
   "/inventaris/opname": "Hitung Fisik Buku",
   "/inventaris/rekonsiliasi": "Perbaiki Selisih Stok",
   "/inventaris/riwayat": "Riwayat Hitung Fisik",
-  "/inventaris/label": "Cetak Label QR Buku",
+  "/inventaris/label": "Cetak Label Buku",
 };
 
 const NAV: {

@@ -20,7 +20,10 @@ import {
   type BarisEksemplar,
   type BarisInventarisPerBuku,
 } from "@/lib/supabase/peta";
-import { sahkanEksemplarBody } from "@/lib/supabase/validasi";
+import {
+  sahkanEksemplarBody,
+  sahkanJumlahEksemplar,
+} from "@/lib/supabase/validasi";
 import { kondisiDikenal, statusDikenal } from "@/lib/supabase/inventaris";
 
 const KOLOM_EKSEMPLAR =
@@ -54,11 +57,19 @@ export async function GET() {
   });
 }
 
-/** POST /api/eksemplar — tambah satu eksemplar (petugas: katalog.kelola). */
+/**
+ * POST /api/eksemplar — tambah satu atau beberapa eksemplar sekaligus
+ * (petugas: katalog.kelola).
+ *
+ * `jumlah` > 1 menyisipkan sekian salinan dalam satu transaksi database; setiap
+ * salinan mendapat nomor inventaris berurutan dari pola Pengaturan.
+ */
 export async function POST(request: Request) {
   return jalankan(async () => {
     const k = await konteksRoute({ wajibMasuk: true, wajibAdmin: true, wajibIzin: "katalog.kelola" });
-    const isi = sahkanEksemplarBody(await bacaBody(request));
+    const badan = await bacaBody(request);
+    const isi = sahkanEksemplarBody(badan);
+    const jumlah = sahkanJumlahEksemplar(badan?.jumlah);
 
     if (!isi.buku_id) throw new GalatApi("Buku wajib dipilih.", 400);
 
@@ -67,11 +78,20 @@ export async function POST(request: Request) {
     if (!statusDikenal(status)) throw new GalatApi("Status eksemplar tidak dikenal.", 400);
     if (!kondisiDikenal(kondisi)) throw new GalatApi("Kondisi fisik tidak dikenal.", 400);
 
+    // Nomor manual hanya masuk akal untuk satu salinan: kalau petugas meminta
+    // 5 salinan sekaligus, penomoran harus berurutan dari pola Pengaturan.
+    if (jumlah > 1 && isi.nomor_inventaris) {
+      throw new GalatApi(
+        "Nomor manual hanya untuk satu eksemplar. Kosongkan nomor agar dibuat otomatis berurutan.",
+        400,
+      );
+    }
+
     // Nomor kosong → database membuat nomor berikutnya sesuai pola di
     // Pengaturan, di dalam transaksi yang sama dengan penyisipan.
-    const { data, error } = await k.supabase.rpc("tambah_eksemplar", {
+    const { data, error } = await k.supabase.rpc("tambah_eksemplar_banyak", {
       p_buku_id: isi.buku_id,
-      p_nomor: isi.nomor_inventaris || null,
+      p_jumlah: jumlah,
       p_status: status,
       p_kondisi: kondisi,
       p_tanggal: isi.tanggal_pengadaan ?? null,
@@ -79,14 +99,23 @@ export async function POST(request: Request) {
     });
     if (error) throw dariSupabase(error);
 
-    const eksemplar = keEksemplar(data as BarisEksemplar);
+    // Fungsi database selalu mengembalikan larik, termasuk saat jumlah = 1.
+    const baris = (Array.isArray(data) ? data : [data]) as BarisEksemplar[];
+    const eksemplar = baris.map(keEksemplar);
+    if (eksemplar.length === 0) {
+      throw new GalatApi("Eksemplar gagal disimpan.", 500);
+    }
+
+    const pertama = eksemplar[0].nomor_inventaris;
+    const terakhir = eksemplar[eksemplar.length - 1].nomor_inventaris;
     await catatJejakServer(k, {
       jenis: "buku",
-      aksi: "Eksemplar ditambahkan",
-      objek: eksemplar.nomor_inventaris,
-      detail: `status ${eksemplar.status} · kondisi ${eksemplar.kondisi_fisik}`,
+      aksi: eksemplar.length > 1 ? "Eksemplar ditambahkan (banyak)" : "Eksemplar ditambahkan",
+      objek: eksemplar.length > 1 ? `${pertama} … ${terakhir}` : pertama,
+      detail:
+        `${eksemplar.length} salinan · status ${status} · kondisi ${kondisi}`,
     });
 
-    return json({ eksemplar }, 201);
+    return json({ eksemplar, jumlah: eksemplar.length }, 201);
   });
 }

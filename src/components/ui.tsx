@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { Buku } from "@/lib/types";
 
 // Komponen UI kecil yang dipakai lintas halaman.
@@ -181,6 +182,51 @@ export function Badge({ children, tone = "slate" }: { children: React.ReactNode;
   );
 }
 
+// === Kunci scroll latar ====================================================
+// Dialog menutup pandangan ke halaman di belakang, tetapi halaman itu masih
+// bisa digulir (roda mouse, sentuhan, tombol panah) sehingga latar bergerak —
+// terutama pada dialog yang isinya pendek. Penghitung dipakai agar dialog yang
+// bertumpuk (mis. konfirmasi di atas modal lain) tidak saling membuka kunci
+// lebih awal ketika salah satunya ditutup.
+let jumlahKunciScroll = 0;
+let overflowSemula = "";
+let paddingKananSemula = "";
+
+export function useKunciScroll(aktif: boolean) {
+  useEffect(() => {
+    if (!aktif) return;
+
+    const body = document.body;
+
+    if (jumlahKunciScroll === 0) {
+      overflowSemula = body.style.overflow;
+      paddingKananSemula = body.style.paddingRight;
+
+      // Lebar scrollbar diganti padding agar tata letak tidak melompat saat
+      // scrollbar hilang.
+      const lebarScrollbar =
+        window.innerWidth - document.documentElement.clientWidth;
+
+      body.style.overflow = "hidden";
+
+      if (lebarScrollbar > 0) {
+        body.style.paddingRight = `${lebarScrollbar}px`;
+      }
+    }
+
+    jumlahKunciScroll += 1;
+
+    return () => {
+      jumlahKunciScroll = Math.max(0, jumlahKunciScroll - 1);
+
+      if (jumlahKunciScroll === 0) {
+        body.style.overflow = overflowSemula;
+        body.style.paddingRight = paddingKananSemula;
+      }
+    };
+  }, [aktif]);
+}
+
 export function Modal({
   open,
   onClose,
@@ -194,6 +240,9 @@ export function Modal({
   children: React.ReactNode;
   width?: string;
 }) {
+  // Halaman di belakang dialog tidak boleh ikut bergulir.
+  useKunciScroll(open);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -205,10 +254,15 @@ export function Modal({
 
   if (!open) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-4 pt-16 tirai-masuk">
-      <div className={`card modal-masuk w-full ${width} shadow-2xl`}>
-        <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-4">
+  const dialog = (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-4 pt-8 tirai-masuk">
+      {/* Tinggi dialog dikunci ke viewport: header dan tombol aksi tetap di
+          tempat, dan pada layar pendek hanya isi dialog yang bergulir — bukan
+          seluruh halaman di belakangnya. */}
+      <div
+        className={`card modal-masuk flex max-h-[calc(100vh-3rem)] w-full flex-col ${width} shadow-2xl`}
+      >
+        <div className="flex shrink-0 items-center justify-between border-b border-[var(--border)] px-5 py-3">
           <h3 className="font-bold">{title}</h3>
           <button
             onClick={onClose}
@@ -220,10 +274,15 @@ export function Modal({
             </svg>
           </button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto p-5">{children}</div>
       </div>
     </div>
   );
+
+  // Dirender ke <body>: leluhur halaman memakai transform (animasi masuk),
+  // sehingga `fixed` akan mengikuti elemen itu dan dialog bisa keluar dari
+  // viewport sehingga harus digulir.
+  return createPortal(dialog, document.body);
 }
 
 export function ConfirmDialog({

@@ -52,12 +52,20 @@ export async function POST(request: Request) {
       lamaHari = angka;
     }
 
+    // Salinan spesifik hasil pindai barcode (opsional). Bila diisi, database
+    // meminjam salinan itu; bila kosong, dipilih salinan tersedia pertama.
+    const eksemplarId =
+      typeof body?.eksemplarId === "string" && body.eksemplarId
+        ? body.eksemplarId
+        : null;
+
     // Validasi izin, stok, batas pinjaman, dan penomoran → atomik di database.
     const { data, error } = await k.supabase.rpc("pinjam_buku", {
       p_buku_id: bukuId,
       p_anggota_id: anggotaId,
       p_tanggal_pinjam: tgl ?? null,
       p_lama_hari: lamaHari,
+      p_eksemplar_id: eksemplarId,
     });
     if (error) throw dariSupabase(error);
 

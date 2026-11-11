@@ -13,6 +13,9 @@ export interface Buku {
   rak: string;
   stok: number;
   deskripsi: string;
+  /** Harga buku (rupiah) — dasar denda penggantian bila salinan hilang.
+   *  0/undefined berarti pengelola belum mengisi harga. */
+  harga?: number;
   /** URL gambar sampul (opsional). Bila kosong/gagal dimuat, UI memakai
    *  sampul otomatis yang mencetak judul buku (lihat SampulBuku di ui.tsx). */
   gambar?: string | null;

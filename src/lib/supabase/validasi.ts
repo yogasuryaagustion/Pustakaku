@@ -78,6 +78,14 @@ export function sahkanBukuBody(body: Raw, { wajibSemua = false } = {}): Partial<
     out.stok = bilangan(o.stok, { nama: "Stok", min: 0, max: 100000, bawaan: wajibSemua ? 1 : undefined });
   }
   if (o.deskripsi !== undefined) out.deskripsi = teks(o.deskripsi, { nama: "Deskripsi", max: 5000 });
+  if (o.harga !== undefined || wajibSemua) {
+    out.harga = bilangan(o.harga, {
+      nama: "Harga buku",
+      min: 0,
+      max: 100_000_000,
+      bawaan: 0,
+    });
+  }
   if (o.gambar !== undefined) {
     out.gambar = o.gambar === null || o.gambar === "" ? null : teks(o.gambar, { nama: "Gambar", max: 2000 });
   }
@@ -151,6 +159,16 @@ export function sahkanEksemplarBody(body: Raw): Partial<BarisEksemplar> {
   }
   if (o.keterangan !== undefined) out.keterangan = teksOpsional(o.keterangan, 2000);
   return out;
+}
+
+/**
+ * Jumlah salinan yang ditambahkan sekaligus. Batas 50 sama dengan batas di
+ * fungsi database `tambah_eksemplar_banyak`; nilai kosong berarti 1 salinan
+ * supaya pemanggil lama tetap berjalan.
+ */
+export function sahkanJumlahEksemplar(v: unknown): number {
+  if (v === undefined || v === null || v === "") return 1;
+  return bilangan(v, { nama: "Jumlah eksemplar", min: 1, max: 50 });
 }
 
 /** Validasi payload pemeriksaan nomor inventaris. */

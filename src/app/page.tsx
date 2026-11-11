@@ -9,6 +9,7 @@ import { useLibrary } from "@/lib/library-context";
 import type { Buku } from "@/lib/types";
 import { useSistem, type SistemPengaturan } from "@/lib/sistem";
 import KoleksiPopuler from "@/components/landing/KoleksiPopuler";
+import PillNav from "@/components/PillNav";
 
 // Halaman publik — tampil tanpa sidebar (lihat PUBLIK di AppShell).
 // Konten "real": diambil langsung dari data seed (buku, anggota, peminjaman).
@@ -343,35 +344,42 @@ export default function LandingPage() {
             </span>
           </Link>
 
-          {/* Navigasi desktop: tetap horizontal pada layar besar */}
-          <nav className="hidden items-center gap-1 text-sm font-medium lg:flex">
-            {NAVLINK.map((n) => {
-              const id = n.href.split("#")[1] ?? null;
-              const aktif = id !== null && id === aktifSection;
-
-              return (
-                <Link
-                  key={n.label}
-                  href={n.href}
-                  aria-current={aktif ? "location" : undefined}
-                  onClick={id ? (e) => keSection(e, id) : undefined}
-                  className={`relative whitespace-nowrap rounded-full px-3 py-2 transition-all duration-300 ${
-                    aktif
-                      ? "bg-teal-50 text-[var(--brand-ink)]"
-                      : "text-slate-600 hover:bg-slate-50 hover:text-[var(--brand-ink)]"
-                  }`}
-                >
-                  {n.label}
-                  <span
-                    aria-hidden="true"
-                    className={`absolute inset-x-3 bottom-1 h-0.5 origin-center rounded-full bg-[var(--brand)] transition-transform duration-300 ${
-                      aktif ? "scale-x-100" : "scale-x-0"
-                    }`}
-                  />
-                </Link>
-              );
-            })}
-          </nav>
+          {/* Navigasi desktop: Pill Nav (react-bits) */}
+          <div className="hidden lg:flex">
+            <PillNav
+              items={NAVLINK.map((n) => ({ label: n.label, href: n.href }))}
+              activeHref={aktifSection ? `/#${aktifSection}` : undefined}
+              defaultActiveIndex={0}
+              theme="light"
+              size="md"
+              surface="glass"
+              layout="joined"
+              itemStyle="plain"
+              hoverEffect="fill"
+              indicator="dot"
+              highlightColor="var(--brand-solid)"
+              highlightTextColor="#ffffff"
+              textColor="var(--brand-ink)"
+              linkComponent={Link}
+              onItemClick={(item) => {
+                const id = item.href?.split("#")[1];
+                if (id) {
+                  const el = document.getElementById(id);
+                  if (el) {
+                    el.scrollIntoView({
+                      behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
+                        .matches
+                        ? "auto"
+                        : "smooth",
+                      block: "center",
+                    });
+                    window.history.replaceState(null, "", `/#${id}`);
+                  }
+                }
+              }}
+              ariaLabel="Navigasi utama"
+            />
+          </div>
 
           {/* Tombol kanan */}
           <div className="flex shrink-0 items-center gap-2">
@@ -865,6 +873,8 @@ export default function LandingPage() {
               </span>
             </div>
           </Naik>
+
+
         </div>
       </section>
 

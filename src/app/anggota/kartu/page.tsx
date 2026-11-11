@@ -6,6 +6,7 @@ import { useAuth, useBoleh } from "@/lib/auth";
 import { apiFetch } from "@/lib/api";
 import { Avatar } from "@/components/ui";
 import { payloadQrAnggota, statusAnggota, UKURAN_KARTU } from "@/lib/kartu";
+import { pngCode128, svgCode128 } from "@/lib/barcode-kartu";
 import type { Anggota } from "@/lib/types";
 
 const FORMAT_TANGGAL = new Intl.DateTimeFormat("id-ID", {
@@ -30,7 +31,12 @@ function warnaBrand(): [number, number, number] {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
-async function unduhPdf(kartu: Anggota, namaPerpustakaan: string, qr: string) {
+async function unduhPdf(
+  kartu: Anggota,
+  namaPerpustakaan: string,
+  qr: string,
+  barcode: string
+) {
   const brand = warnaBrand();
   // Latar lembut untuk avatar inisial — aksen dicampur putih.
   const brandMuda = brand.map((v) => Math.round(v + (255 - v) * 0.88)) as [
@@ -97,8 +103,15 @@ async function unduhPdf(kartu: Anggota, namaPerpustakaan: string, qr: string) {
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(7);
   pdf.setTextColor(90, 105, 118);
-  pdf.text(`Jenis: ${kartu.jenis}`, 30, 41);
-  pdf.text(`Bergabung: ${tanggal(kartu.bergabungPada)}`, 30, 46);
+  // Jenis dan tanggal bergabung digabung satu baris agar ruang di bawahnya
+  // cukup untuk barcode 1D yang terbaca barcode gun.
+  pdf.text(
+    `${kartu.jenis} · Bergabung ${tanggal(kartu.bergabungPada)}`,
+    30,
+    39.5
+  );
+  // Lebar 33 mm menjaga lebar modul ±0,25 mm pada kartu ukuran asli.
+  pdf.addImage(barcode, "PNG", 30, 41.2, 33, 5.75, undefined, "FAST");
 
   pdf.addImage(qr, "PNG", 67, 15, 14, 14, undefined, "FAST");
   pdf.setTextColor(...brand);
@@ -123,6 +136,7 @@ export default function KartuAnggotaPage() {
   const [namaPerpustakaan, setNamaPerpustakaan] = useState("PustakaKu");
   const [dataSiap, setDataSiap] = useState(false);
   const [qr, setQr] = useState<string | null>(null);
+  const [barcode, setBarcode] = useState<string | null>(null);
   const [memuat, setMemuat] = useState(true);
   const [galat, setGalat] = useState<string | null>(null);
   const [pdfProses, setPdfProses] = useState(false);
@@ -158,6 +172,14 @@ export default function KartuAnggotaPage() {
           } catch {
             if (aktif) setGalat("QR kartu gagal dibuat. Muat ulang halaman untuk mencoba lagi.");
           }
+
+          // Barcode 1D menyertai QR; kalau gagal, kartu tetap berguna dengan QR.
+          try {
+            const svg = await svgCode128(payloadQrAnggota(milikSaya.nomorAnggota));
+            if (aktif) setBarcode(svg);
+          } catch {
+            // Diabaikan: QR tetap tampil.
+          }
         }
       })
       .catch((error: unknown) => {
@@ -182,7 +204,8 @@ export default function KartuAnggotaPage() {
     if (!anggota || !qr || !anggota.aktif) return;
     setPdfProses(true);
     try {
-      await unduhPdf(anggota, namaPerpustakaan, qr);
+      const barcodePng = await pngCode128(payloadQrAnggota(anggota.nomorAnggota));
+      await unduhPdf(anggota, namaPerpustakaan, qr, barcodePng);
     } catch {
       setGalat("PDF kartu gagal dibuat. Coba unduh kembali atau gunakan fitur cetak.");
     } finally {
@@ -250,7 +273,12 @@ export default function KartuAnggotaPage() {
               <span className="membership-qr-caption">Tunjukkan kepada petugas</span>
             </div>
           </div>
-          <div className="membership-card-foot">QR berisi nomor anggota saja. Check-in tetap divalidasi oleh server.</div>
+          <div className="membership-card-foot">
+            <span className="membership-foot-note">QR &amp; barcode berisi nomor anggota saja. Check-in tetap divalidasi oleh server.</span>
+            {barcode && (
+              <span className="membership-barcode" role="img" aria-label={`Barcode nomor anggota ${anggota.nomorAnggota}`} dangerouslySetInnerHTML={{ __html: barcode }} />
+            )}
+          </div>
         </article>
       </section>
       <p className="text-center text-xs text-[var(--muted)] print:hidden">Saat mencetak, pilih skala 100% / ukuran aktual dan nonaktifkan header serta footer browser. QR hanya mengenali nomor anggota; kios saat ini meminta nomor secara manual, QR-scan belum diintegrasikan.</p>

@@ -992,6 +992,27 @@ html {
   padding-top: 1.2mm;
   color: #64748b;
   font-size: clamp(5px, 1.1vw, 7px);
+  /* Catatan di kiri, barcode Code 128 di kanan agar keduanya muat di kaki
+     kartu ID-1 tanpa menambah tinggi kartu. */
+  display: flex;
+  align-items: center;
+  gap: 2mm;
+}
+.membership-foot-note {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.membership-barcode {
+  /* 40% kartu (± 30 mm saat dicetak) — lebar modul Code 128 menjadi ± 0,23 mm,
+     cukup untuk barcode gun tanpa menghabiskan ruang catatan. */
+  flex: 0 0 40%;
+  max-width: 40%;
+  line-height: 0;
+}
+.membership-barcode svg {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 @page {
@@ -1002,6 +1023,13 @@ html {
    Sebelumnya selektor `body *` menyembunyikan seluruh isi halaman mana pun
    yang dicetak — termasuk lembar label QR di bawah ini. */
 @media print {
+  /* Barcode kartu memakai warna hitam pekat agar kontras tetap tinggi
+     ketika dicetak, apa pun tema warna aplikasinya. */
+  .membership-barcode svg {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
   body:has(.membership-card) {
     width: 85.6mm !important;
     height: 53.98mm !important;
