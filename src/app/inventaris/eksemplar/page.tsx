@@ -7,6 +7,7 @@ import { useBoleh } from "@/lib/auth";
 import { useToast } from "@/components/toast";
 import { ConfirmDialog, EmptyState, Modal, StatCard } from "@/components/ui";
 import { KepalaHalaman } from "@/components/kepala-halaman";
+import { CetakLabel } from "@/components/cetak-label";
 import {
   BadgeKondisi,
   BadgeStatus,
@@ -111,6 +112,10 @@ export default function HalamanDataEksemplar() {
   const [simpan, setSimpan] = useState(false);
   const [galatForm, setGalatForm] = useState("");
   const [hapus, setHapus] = useState<BarisEksemplar | null>(null);
+
+  // Form cetak label tampil sebagai dialog di halaman ini, supaya penyaringan
+  // rak/bentuk kode dan pencetakan tidak perlu membuka tab baru.
+  const [labelTerbuka, setLabelTerbuka] = useState(false);
 
   const { data: mentah, memuat, galat } = useMuatApi<ResponInventaris>(
     "/api/eksemplar",
@@ -299,17 +304,7 @@ export default function HalamanDataEksemplar() {
               <button
                 type="button"
                 className="btn btn-ghost"
-                onClick={() => {
-                  const lebar = Math.min(window.screen.availWidth, 1100);
-                  const tinggi = Math.min(window.screen.availHeight, 900);
-                  const kiri = Math.round((window.screen.availWidth - lebar) / 2);
-                  const atas = Math.round((window.screen.availHeight - tinggi) / 2);
-                  window.open(
-                    "/inventaris/label",
-                    "cetak-label-pustakaku",
-                    `width=${lebar},height=${tinggi},left=${kiri},top=${atas},resizable=yes,scrollbars=yes`,
-                  );
-                }}
+                onClick={() => setLabelTerbuka(true)}
               >
                 Cetak Label
               </button>
@@ -706,6 +701,8 @@ export default function HalamanDataEksemplar() {
           </div>
         </div>
       </Modal>
+
+      <CetakLabel terbuka={labelTerbuka} onTutup={() => setLabelTerbuka(false)} />
 
       <ConfirmDialog
         open={hapus !== null}
