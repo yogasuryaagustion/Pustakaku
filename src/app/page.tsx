@@ -352,6 +352,11 @@ export default function LandingPage() {
               defaultActiveIndex={0}
               theme="light"
               size="md"
+              /* Wadah di atasnya sudah hidden lg:flex, jadi PillNav tidak perlu
+                 menyusut sendiri. Tanpa collapse="never" komponen mengukur
+                 lebar induk saat masih display:none lalu mengunci diri dalam
+                 mode hamburger — hasilnya tombol menu ganda di header desktop. */
+              collapse="never"
               surface="glass"
               layout="joined"
               itemStyle="plain"
@@ -516,8 +521,10 @@ export default function LandingPage() {
                   href={n.href}
                   aria-current={aktif ? "location" : undefined}
                   onClick={(e) => {
-                    if (id) keSection(e, id);
+                    // Tutup panel lebih dulu supaya gulir ke section tidak
+                    // dibatalkan oleh animasi penutupan.
                     setMenuTerbuka(false);
+                    if (id) keSection(e, id);
                   }}
                   className={`flex min-h-11 items-center rounded-xl px-3.5 py-3 text-sm font-medium transition-colors ${
                     aktif
@@ -600,7 +607,12 @@ export default function LandingPage() {
               <span>Perpustakaan Digital Modern</span>
             </div>
 
-            <h1 className="mt-7 max-w-3xl text-4xl font-extrabold leading-[1.08] tracking-[-0.045em] text-slate-950 sm:text-5xl lg:text-[66px]">
+            {/* Efek judul: teks berdimensi (depth text) — isi huruf putih dengan
+                bayangan bertumpuk sebagai sisi tebalnya. Frasa "Tanpa Batas"
+                tetap diisi gradien merek lewat landing-gradient-text. Tanpa
+                piringan gelap, huruf putih ini nyaris menyatu dengan latar
+                putih section beranda — hanya sisi hijaunya yang terlihat. */}
+            <h1 className="teks-kedalaman mt-7 max-w-3xl text-balance text-4xl font-extrabold leading-[1.08] tracking-[-0.045em] sm:text-5xl lg:text-[66px]">
               Akses Pengetahuan{" "}
               <span className="landing-gradient-text judul-editorial italic">
                 Tanpa Batas
@@ -608,7 +620,9 @@ export default function LandingPage() {
               di Era Digital.
             </h1>
 
-            <p className="mt-6 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
+            {/* text-pretty: mencegah kata terakhir paragraf menggantung sendirian
+                di baris baru pada layar lebar. */}
+            <p className="mt-6 max-w-2xl text-pretty text-base leading-8 text-slate-600 sm:text-lg">
               Jelajahi koleksi buku {sistem.nama}, temukan bacaan yang sesuai
               minatmu, dan kelola peminjaman dengan lebih mudah dari mana saja.
             </p>

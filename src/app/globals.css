@@ -1182,6 +1182,48 @@ html {
   -webkit-text-fill-color: transparent;
 }
 
+/* Teks berdimensi (depth text): huruf diisi warna gelap, lalu delapan lapis
+   bayangan bertumpuk ke kanan-bawah membentuk sisi tebal seperti huruf
+   ekstrusi, ditutup satu bayangan lembut yang jatuh lurus ke bawah sebagai
+   alas. Semua offset memakai em supaya kedalamannya ikut skala ukuran judul —
+   total sisi ≈ 8,4 px pada 66 px dan 4,6 px pada 36 px. Warna sisi dicampur
+   dari warna merek agar tetap senada saat tema diubah admin. */
+.teks-kedalaman {
+  /* Versi huruf putih: isi huruf putih, sisi kedalaman bertangga dari hijau
+     merek ke putih. Catatan penting: putih hanya terbaca di atas latar gelap /
+     berwarna; di atas latar putih section beranda judul ini nyaris hilang,
+     hanya tersisa sisi hijau dan alasnya. */
+  --sisi-atas: color-mix(in srgb, var(--brand-solid) 70%, #ffffff);
+  --sisi-tengah: color-mix(in srgb, var(--brand-solid) 35%, #ffffff);
+  --sisi-bawah: color-mix(in srgb, var(--brand-solid) 15%, #ffffff);
+  color: #ffffff;
+  text-shadow:
+    0.016em 0.016em 0 var(--sisi-atas),
+    0.032em 0.032em 0 var(--sisi-atas),
+    0.048em 0.048em 0 var(--sisi-atas),
+    0.064em 0.064em 0 var(--sisi-tengah),
+    0.08em 0.08em 0 var(--sisi-tengah),
+    0.096em 0.096em 0 var(--sisi-tengah),
+    0.112em 0.112em 0 var(--sisi-bawah),
+    0.128em 0.128em 0 var(--sisi-bawah),
+    0 0.17em 0.2em rgba(255, 255, 255, 0.45);
+}
+
+/* Frasa yang diisi gradien tetap mendapat kedalaman karena text-shadow
+   diwarisi. Gradiennya diatur ulang di sini: dari hijau muda merek, mengalir
+   ke hijau merek, lalu berakhir di hijau pekat (--brand-solid) supaya ujung
+   kanan frasa tidak pudar dan senada dengan sisi tebal judul. */
+.teks-kedalaman .landing-gradient-text {
+  background-image: linear-gradient(
+    96deg,
+    var(--brand-light) 0%,
+    var(--brand) 45%,
+    var(--brand-solid) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+
 .landing-hero-art {
   position: relative;
   z-index: 1;
