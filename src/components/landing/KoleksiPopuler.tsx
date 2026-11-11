@@ -60,14 +60,14 @@ function CoverBuku({ buku }: { buku: Buku }) {
     <div
       className={`relative flex aspect-[3/3.3] w-full flex-col justify-end overflow-hidden rounded-lg bg-gradient-to-br ${warna[indeksWarna]} p-3 shadow-inner`}
     >
-      {/* Sampul bisa berasal dari URL luar, jadi unoptimized dipakai: host-nya
-          tidak diketahui sehingga tidak bisa didaftarkan di remotePatterns. */}
+      {/* Host sampul (Open Library dan Internet Archive) terdaftar di
+          remotePatterns next.config.ts, jadi next/image boleh mengoptimasi
+          ukuran dan formatnya lewat optimizer bawaan. */}
       {buku.gambar && !gambarGagal ? (
         <Image
           src={buku.gambar}
           alt={`Sampul ${buku.judul}`}
           fill
-          unoptimized
           sizes="(max-width: 640px) 46vw, 22vw"
           className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
           onError={() => setGambarGagal(true)}

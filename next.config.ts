@@ -12,6 +12,16 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  images: {
+    // Sampul buku berasal dari Open Library dan arsip Internet Archive. Host
+    // itu harus terdaftar agar next/image boleh mengoptimasi (resize + format
+    // modern) sampulnya; tanpa ini optimizer menolak URL luar tersebut.
+    remotePatterns: [
+      { protocol: "https", hostname: "covers.openlibrary.org" },
+      { protocol: "https", hostname: "archive.org" },
+      { protocol: "https", hostname: "**.archive.org" },
+    ],
+  },
 };
 
 export default nextConfig;
