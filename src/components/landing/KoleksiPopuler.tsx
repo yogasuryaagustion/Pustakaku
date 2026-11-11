@@ -6,7 +6,17 @@ import { useLibrary, useHelper } from "@/lib/library-context";
 import { useAuth, useBoleh } from "@/lib/auth";
 import type { Buku } from "@/lib/types";
 
-const BATAS_BUKU = 10;
+const BATAS_BUKU = 8;
+
+// Penanda di sudut sampul hanya untuk baris pertama (4 kartu). Karena tiap
+// kartu butuh label berbeda, label sengaja berhenti di empat: kartu baris
+// kedua tanpa penanda lebih rapi daripada penanda yang berulang.
+const LABEL_KARTU = [
+  "TRENDING",
+  "KOLEKSI PILIHAN",
+  "FAVORIT PEMBACA",
+  "REKOMENDASI",
+];
 
 const KATEGORI_UTAMA = [
   "Semua",
@@ -266,21 +276,16 @@ export default function KoleksiPopuler() {
         )}
 
         {/* Daftar buku */}
+        {/* Empat kartu per baris sejak lg: delapan judul terbagi rata menjadi
+            4 + 4 (dan 2 + 2 + 2 + 2 di layar kecil), tanpa baris yang pincang. */}
         {bukuTampil.length > 0 ? (
-          <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          <div className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
             {bukuTampil.map((item, index) => {
               const stok = stokTersedia(item.id);
               const tersedia = stok > 0;
               const sedangDiproses = sedangPinjam === item.id;
 
-              const label =
-                index === 0
-                  ? "TRENDING"
-                  : index === 1
-                    ? "KOLEKSI PILIHAN"
-                    : index === 2
-                      ? "FAVORIT PEMBACA"
-                      : "REKOMENDASI";
+              const label = LABEL_KARTU[index];
 
               return (
                 <article
@@ -294,9 +299,11 @@ export default function KoleksiPopuler() {
                   >
                     <CoverBuku buku={item} />
 
-                    <span className="absolute left-2 top-2 rounded-full bg-slate-950/65 px-2 py-1 text-[8px] font-bold uppercase tracking-wide text-white backdrop-blur sm:text-[9px]">
-                      {label}
-                    </span>
+                    {label && (
+                      <span className="absolute left-2 top-2 rounded-full bg-slate-950/65 px-2 py-1 text-[8px] font-bold uppercase tracking-wide text-white backdrop-blur sm:text-[9px]">
+                        {label}
+                      </span>
+                    )}
                   </Link>
 
                   {/* Informasi buku */}
@@ -317,9 +324,12 @@ export default function KoleksiPopuler() {
                       </span>
                     </div>
 
+                    {/* Tinggi judul dikunci dua baris: tanpa itu kartu berjudul
+                        satu baris menarik baris stok dan tombolnya naik ±20 px,
+                        sehingga tombol antar kartu tidak sejajar. */}
                     <Link
                       href={`/katalog/${item.id}`}
-                      className="mt-1.5 line-clamp-2 text-xs font-bold leading-4 text-slate-900 transition hover:text-teal-700 sm:text-sm sm:leading-5"
+                      className="mt-1.5 line-clamp-2 min-h-8 text-xs font-bold leading-4 text-slate-900 transition hover:text-teal-700 sm:min-h-10 sm:text-sm sm:leading-5"
                     >
                       {item.judul}
                     </Link>
@@ -344,8 +354,9 @@ export default function KoleksiPopuler() {
                       </span>
                     </div>
 
-                    {/* Tombol aksi */}
-                    <div className="mt-2 flex gap-1.5">
+                    {/* Tombol aksi — mt-auto menahan baris ini di dasar kartu
+                        agar semua tombol sejajar meski isi teks berbeda. */}
+                    <div className="mt-auto flex gap-1.5 pt-2">
                       <button
                         type="button"
                         disabled={!tersedia || sedangDiproses}
