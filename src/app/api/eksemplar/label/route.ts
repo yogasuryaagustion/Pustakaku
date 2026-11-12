@@ -9,7 +9,13 @@
 
 import QRCode from "qrcode";
 import bwipjs from "bwip-js/node";
-import { dariSupabase, jalankan, json, konteksRoute } from "@/lib/supabase/konteks";
+import {
+  dariSupabase,
+  jalankan,
+  json,
+  kolomBelumAda,
+  konteksRoute,
+} from "@/lib/supabase/konteks";
 
 export async function GET() {
   return jalankan(async () => {
@@ -25,20 +31,44 @@ export async function GET() {
       .order("nomor_inventaris", { ascending: true });
     if (error) throw dariSupabase(error);
 
-    const { data: buku, error: galatBuku } = await k.supabase
+    // Label hanya dicetak untuk judul yang masih tampil di katalog. Buku yang
+    // diarsipkan (dihapus_pada terisi) tidak ikut, karena salinannya memang
+    // tidak boleh dipinjam lagi.
+    interface InfoJudul {
+      id: string;
+      judul: string;
+      rak: string;
+      dihapus_pada?: string | null;
+    }
+
+    const hasilBuku = await k.supabase
       .from("buku")
-      .select("id,judul,rak");
-    if (galatBuku) throw dariSupabase(galatBuku);
+      .select("id,judul,rak,dihapus_pada");
+
+    let daftarBuku: InfoJudul[] = (hasilBuku.data ?? []) as InfoJudul[];
+    if (hasilBuku.error && kolomBelumAda(hasilBuku.error)) {
+      // Migrasi arsip buku belum dijalankan: cetak label untuk semua judul.
+      const tanpaArsip = await k.supabase.from("buku").select("id,judul,rak");
+      if (tanpaArsip.error) throw dariSupabase(tanpaArsip.error);
+      daftarBuku = (tanpaArsip.data ?? []) as InfoJudul[];
+    } else if (hasilBuku.error) {
+      throw dariSupabase(hasilBuku.error);
+    }
 
     const peta = new Map(
-      (buku ?? []).map((b) => [
-        b.id as string,
-        { judul: (b.judul as string) ?? "", rak: (b.rak as string) ?? "" },
-      ]),
+      daftarBuku
+        .filter((b) => !b.dihapus_pada)
+        .map((b) => [
+          b.id,
+          { judul: b.judul ?? "", rak: b.rak ?? "" },
+        ]),
     );
 
     const label = await Promise.all(
-      (data ?? []).map(async (e) => {
+      (data ?? [])
+        // Eksemplar milik judul berarsip tidak punya entri di peta.
+        .filter((e) => peta.has(e.buku_id as string))
+        .map(async (e) => {
         const nomor = e.nomor_inventaris as string;
         const info = peta.get(e.buku_id as string);
         return {

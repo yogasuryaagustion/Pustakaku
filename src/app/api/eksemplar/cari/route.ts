@@ -49,6 +49,16 @@ export async function GET(request: Request) {
     if (errBuku) throw dariSupabase(errBuku);
     if (!buku) throw new GalatApi("Judul untuk salinan ini tidak ditemukan.", 404);
 
+    // Buku berarsip disembunyikan dari katalog, tetapi salinan fisiknya masih
+    // terdaftar di inventaris. Hentikan di sini supaya formulir peminjaman tidak
+    // menawarkan judul yang sudah ditarik.
+    if (buku.dihapus_pada) {
+      throw new GalatApi(
+        `Buku "${buku.judul}" sudah diarsipkan dan tidak bisa dipinjam.`,
+        409
+      );
+    }
+
     return json({
       eksemplar: {
         id: eksemplar.id as string,
