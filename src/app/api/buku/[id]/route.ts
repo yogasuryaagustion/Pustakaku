@@ -80,15 +80,46 @@ export async function DELETE(_request: Request, { params }: Params) {
     if (errSebelum) throw dariSupabase(errSebelum);
     if (!sebelum) throw new GalatApi("Buku tidak ditemukan.", 404);
 
+    const buku = sebelum as BarisBuku;
+
+    // Buku tanpa riwayat dibuang permanen. Buku yang pernah dipinjam ditolak FK
+    // `peminjaman.buku_id on delete restrict`; untuk itu barisnya hanya ditandai
+    // dihapus_pada — katalog bersih, riwayat peminjaman/denda tetap utuh.
     const { error } = await k.supabase.from("buku").delete().eq("id", id);
-    if (error) throw dariSupabase(error);
+    if (!error) {
+      await catatJejakServer(k, {
+        jenis: "buku",
+        aksi: "Buku dihapus",
+        objek: buku.judul,
+        detail: buku.kategori,
+      });
+      return json({ ok: true, diarsipkan: false });
+    }
+    if (error.code !== "23503") throw dariSupabase(error);
+
+    const { error: errArsip } = await k.supabase
+      .from("buku")
+      .update({ dihapus_pada: new Date().toISOString() })
+      .eq("id", id);
+
+    if (errArsip) {
+      // Kolom belum ada berarti migrasi 202611120001 belum dijalankan; beri tahu
+      // langkah perbaikannya alih-alih pesan FK yang membingungkan.
+      if (kolomBelumAda(errArsip)) {
+        throw new GalatApi(
+          "Buku ini punya riwayat peminjaman sehingga tidak bisa dihapus permanen. Jalankan migrasi supabase/migrations/202611120001_arsip_buku.sql agar buku bisa diarsipkan.",
+          409
+        );
+      }
+      throw dariSupabase(errArsip);
+    }
 
     await catatJejakServer(k, {
       jenis: "buku",
-      aksi: "Buku dihapus",
-      objek: (sebelum as BarisBuku).judul,
-      detail: (sebelum as BarisBuku).kategori,
+      aksi: "Buku diarsipkan",
+      objek: buku.judul,
+      detail: `riwayat peminjaman dipertahankan · ${buku.kategori}`,
     });
-    return json({ ok: true });
+    return json({ ok: true, diarsipkan: true });
   });
 }

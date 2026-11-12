@@ -314,7 +314,8 @@ interface LibraryState {
 
   ubahBuku: (id: string, patch: Partial<Buku>) => Promise<Hasil>;
 
-  hapusBuku: (id: string) => Promise<Hasil>;
+  /** `diarsipkan` true bila buku beriwayat hanya disembunyikan dari katalog. */
+  hapusBuku: (id: string) => Promise<Hasil & { diarsipkan?: boolean }>;
 
   tambahAnggota: (
     a: Omit<Anggota, "id" | "nomorAnggota" | "bergabungPada">,
@@ -439,15 +440,21 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
   );
 
   const hapusBuku = useCallback(
-    (id: string) =>
-      jalankan(
+    async (id: string): Promise<Hasil & { diarsipkan?: boolean }> => {
+      const hasil = await jalankan(
         () =>
-          apiFetch(`/api/buku/${id}`, {
+          apiFetch<{ ok: boolean; diarsipkan?: boolean }>(`/api/buku/${id}`, {
             method: "DELETE",
           }),
         "Buku dihapus.",
         ["buku"],
-      ),
+      );
+      return {
+        ok: hasil.ok,
+        pesan: hasil.pesan,
+        diarsipkan: hasil.data?.diarsipkan,
+      };
+    },
     [],
   );
 

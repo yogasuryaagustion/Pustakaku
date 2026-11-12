@@ -32,6 +32,8 @@ export interface BarisBuku {
   harga: number;
   gambar: string | null;
   ditambahkan_pada: string;
+  /** Kolom migrasi 202611120001 — buku beriwayat diarsipkan, bukan dihapus. */
+  dihapus_pada?: string | null;
 }
 
 export interface BarisEksemplar {
