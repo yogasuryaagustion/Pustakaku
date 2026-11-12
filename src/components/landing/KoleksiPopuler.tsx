@@ -1,12 +1,24 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useLibrary, useHelper } from "@/lib/library-context";
 import { useAuth, useBoleh } from "@/lib/auth";
 import type { Buku } from "@/lib/types";
 
-const BATAS_BUKU = 10;
+const BATAS_BUKU = 8;
+
+// Penanda di sudut sampul hanya untuk baris pertama (4 kartu). Karena tiap
+// kartu butuh label berbeda, label sengaja berhenti di empat: kartu baris
+// kedua tanpa penanda lebih rapi daripada penanda yang berulang.
+const LABEL_KARTU = [
+  "TRENDING",
+  "KOLEKSI PILIHAN",
+  "FAVORIT PEMBACA",
+  "REKOMENDASI",
+];
 
 const KATEGORI_UTAMA = [
   "Semua",
@@ -48,10 +60,15 @@ function CoverBuku({ buku }: { buku: Buku }) {
     <div
       className={`relative flex aspect-[3/3.3] w-full flex-col justify-end overflow-hidden rounded-lg bg-gradient-to-br ${warna[indeksWarna]} p-3 shadow-inner`}
     >
+      {/* Host sampul (Open Library dan Internet Archive) terdaftar di
+          remotePatterns next.config.ts, jadi next/image boleh mengoptimasi
+          ukuran dan formatnya lewat optimizer bawaan. */}
       {buku.gambar && !gambarGagal ? (
-        <img
+        <Image
           src={buku.gambar}
           alt={`Sampul ${buku.judul}`}
+          fill
+          sizes="(max-width: 640px) 46vw, 22vw"
           className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
           onError={() => setGambarGagal(true)}
         />
@@ -119,6 +136,7 @@ export default function KoleksiPopuler() {
 
   const { sedangMasuk, siap: authSiap } = useAuth();
   const bolehPinjam = useBoleh("katalog.pinjam");
+  const router = useRouter();
 
   const [kategoriAktif, setKategoriAktif] = useState("Semua");
   const [sedangPinjam, setSedangPinjam] = useState<string | null>(null);
@@ -168,7 +186,7 @@ export default function KoleksiPopuler() {
     }
 
     if (!sedangMasuk) {
-      window.location.href = `/login?redirect=${encodeURIComponent("/")}`;
+      router.push(`/login?redirect=${encodeURIComponent("/")}`);
       return;
     }
 
@@ -210,7 +228,7 @@ export default function KoleksiPopuler() {
   }
 
   return (
-    <section id="koleksi" className="bg-[#f7faf9] py-14 sm:py-16">
+    <section id="koleksi" className="py-14 sm:py-16">
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-5">
         {/* Header */}
         <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
@@ -220,8 +238,13 @@ export default function KoleksiPopuler() {
               Katalog Terlengkap
             </span>
 
-            <h2 className="judul-editorial mt-3 text-2xl tracking-tight text-slate-900 sm:text-3xl">
-              Koleksi Buku Terpopuler
+            {/* Efek depth text yang sama dengan judul section lain di landing:
+                isi putih, sisi bertangga, frasa penutup bergradien merek. */}
+            <h2 className="teks-kedalaman judul-editorial mt-3 text-balance text-2xl tracking-tight sm:text-3xl">
+              Koleksi{" "}
+              <span className="landing-gradient-text italic">
+                Buku Terpopuler
+              </span>
             </h2>
 
             <p className="mt-2 text-xs leading-6 text-slate-500 sm:text-sm">
@@ -266,21 +289,16 @@ export default function KoleksiPopuler() {
         )}
 
         {/* Daftar buku */}
+        {/* Empat kartu per baris sejak lg: delapan judul terbagi rata menjadi
+            4 + 4 (dan 2 + 2 + 2 + 2 di layar kecil), tanpa baris yang pincang. */}
         {bukuTampil.length > 0 ? (
-          <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          <div className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
             {bukuTampil.map((item, index) => {
               const stok = stokTersedia(item.id);
               const tersedia = stok > 0;
               const sedangDiproses = sedangPinjam === item.id;
 
-              const label =
-                index === 0
-                  ? "TRENDING"
-                  : index === 1
-                    ? "KOLEKSI PILIHAN"
-                    : index === 2
-                      ? "FAVORIT PEMBACA"
-                      : "REKOMENDASI";
+              const label = LABEL_KARTU[index];
 
               return (
                 <article
@@ -294,9 +312,11 @@ export default function KoleksiPopuler() {
                   >
                     <CoverBuku buku={item} />
 
-                    <span className="absolute left-2 top-2 rounded-full bg-slate-950/65 px-2 py-1 text-[8px] font-bold uppercase tracking-wide text-white backdrop-blur sm:text-[9px]">
-                      {label}
-                    </span>
+                    {label && (
+                      <span className="absolute left-2 top-2 rounded-full bg-slate-950/65 px-2 py-1 text-[8px] font-bold uppercase tracking-wide text-white backdrop-blur sm:text-[9px]">
+                        {label}
+                      </span>
+                    )}
                   </Link>
 
                   {/* Informasi buku */}
@@ -317,9 +337,12 @@ export default function KoleksiPopuler() {
                       </span>
                     </div>
 
+                    {/* Tinggi judul dikunci dua baris: tanpa itu kartu berjudul
+                        satu baris menarik baris stok dan tombolnya naik ±20 px,
+                        sehingga tombol antar kartu tidak sejajar. */}
                     <Link
                       href={`/katalog/${item.id}`}
-                      className="mt-1.5 line-clamp-2 text-xs font-bold leading-4 text-slate-900 transition hover:text-teal-700 sm:text-sm sm:leading-5"
+                      className="mt-1.5 line-clamp-2 min-h-8 text-xs font-bold leading-4 text-slate-900 transition hover:text-teal-700 sm:min-h-10 sm:text-sm sm:leading-5"
                     >
                       {item.judul}
                     </Link>
@@ -344,8 +367,9 @@ export default function KoleksiPopuler() {
                       </span>
                     </div>
 
-                    {/* Tombol aksi */}
-                    <div className="mt-2 flex gap-1.5">
+                    {/* Tombol aksi — mt-auto menahan baris ini di dasar kartu
+                        agar semua tombol sejajar meski isi teks berbeda. */}
+                    <div className="mt-auto flex gap-1.5 pt-2">
                       <button
                         type="button"
                         disabled={!tersedia || sedangDiproses}

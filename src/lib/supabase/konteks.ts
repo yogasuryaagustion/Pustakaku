@@ -199,6 +199,15 @@ export async function jalankan(fn: () => Promise<Response>): Promise<Response> {
 }
 
 /** Ubah galat PostgREST/GoTrue menjadi GalatApi berbahasa Indonesia. */
+/**
+ * True bila galat Supabase berarti kolom yang ditulis belum ada di database —
+ * terjadi saat kode lebih baru daripada migrasi yang dijalankan. Pemanggil
+ * memakai ini untuk menyimpan sisa data agar halaman tetap berfungsi.
+ */
+export function kolomBelumAda(err: { code?: string } | null | undefined): boolean {
+  return err?.code === "42703" || err?.code === "PGRST204";
+}
+
 export function dariSupabase(err: { code?: string; message?: string; details?: string }): GalatApi {
   const kode = err.code ?? "";
   const pesan = err.message ?? "";

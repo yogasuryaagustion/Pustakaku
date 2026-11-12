@@ -27,7 +27,8 @@ export const PESAN_KONDISI_KEMBALI: Record<KondisiKembali, string> = {
   layak: "buku kembali ke rak dan bisa dipinjam lagi",
   rusak_ringan: "salinan ditandai rusak ringan dan tidak ditawarkan lagi",
   rusak_beda: "salinan ditandai rusak berbeda dan tidak ditawarkan lagi",
-  hilang: "salinan ditandai hilang; stok menyusut saat Perbaiki Selisih dijalankan",
+  hilang:
+    "salinan ditandai hilang; denda penggantian ditagihkan dan stok menyusut saat Perbaiki Selisih dijalankan",
 };
 
 const SEMUA_KUNCI: KunciData[] = ["buku", "anggota", "peminjaman"];
@@ -244,11 +245,6 @@ function segarkanData(kunci: KunciData[]) {
   void Promise.all(kunci.map((key) => muatSatuData(key, true)));
 }
 
-/** Khusus katalog publik di landing page. */
-async function muatKatalogPublik(): Promise<void> {
-  await muatSatuData("buku");
-}
-
 async function jalankan<T>(
   fn: () => Promise<T>,
   pesanSukses: string,
@@ -309,13 +305,17 @@ interface LibraryState {
   galat: string | null;
 
   muatUlang: (kunci?: KunciData[]) => void;
+  // Segarkan data tanpa mengosongkan cache: `siap` tetap true sehingga halaman
+  // tidak berkedip ke layar memuat (dan modal yang terbuka tidak ikut tertutup).
+  segarkanData: (kunci: KunciData[]) => void;
   muatKatalogPublik: () => Promise<void>;
 
   tambahBuku: (b: Omit<Buku, "id" | "ditambahkanPada">) => Promise<Hasil>;
 
   ubahBuku: (id: string, patch: Partial<Buku>) => Promise<Hasil>;
 
-  hapusBuku: (id: string) => Promise<Hasil>;
+  /** `diarsipkan` true bila buku beriwayat hanya disembunyikan dari katalog. */
+  hapusBuku: (id: string) => Promise<Hasil & { diarsipkan?: boolean }>;
 
   tambahAnggota: (
     a: Omit<Anggota, "id" | "nomorAnggota" | "bergabungPada">,
@@ -331,6 +331,8 @@ interface LibraryState {
     tanggalPinjam?: string,
     /** Lama pinjam khusus transaksi ini; kosong = standar dari Pengaturan. */
     lamaHari?: number,
+    /** Salinan fisik hasil pindai barcode; kosong = dipilih sistem. */
+    eksemplarId?: string,
   ) => Promise<Hasil>;
 
   kembalikanBuku: (
@@ -438,15 +440,21 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
   );
 
   const hapusBuku = useCallback(
-    (id: string) =>
-      jalankan(
+    async (id: string): Promise<Hasil & { diarsipkan?: boolean }> => {
+      const hasil = await jalankan(
         () =>
-          apiFetch(`/api/buku/${id}`, {
+          apiFetch<{ ok: boolean; diarsipkan?: boolean }>(`/api/buku/${id}`, {
             method: "DELETE",
           }),
         "Buku dihapus.",
         ["buku"],
-      ),
+      );
+      return {
+        ok: hasil.ok,
+        pesan: hasil.pesan,
+        diarsipkan: hasil.data?.diarsipkan,
+      };
+    },
     [],
   );
 
@@ -510,6 +518,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       anggotaId: string,
       tanggalPinjam?: string,
       lamaHari?: number,
+      eksemplarId?: string,
     ) =>
       jalankan(
         () =>
@@ -520,6 +529,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
               anggotaId,
               tanggalPinjam,
               lamaHari,
+              eksemplarId,
             },
           }),
         "Peminjaman dicatat.",
@@ -665,6 +675,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       galat: s.galat,
 
       muatUlang,
+      segarkanData,
       muatKatalogPublik,
 
       tambahBuku,

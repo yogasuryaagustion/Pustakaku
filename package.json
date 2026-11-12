@@ -12,8 +12,11 @@
   "dependencies": {
     "@animate-ui/react": "^2.4.2",
     "@base-ui/react": "^1.9.0",
+    "@hugeicons/core-free-icons": "^4.4.0",
+    "@hugeicons/react": "^1.1.10",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.118.0",
+    "bwip-js": "^4.11.4",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.0",
     "jspdf": "^4.2.1",

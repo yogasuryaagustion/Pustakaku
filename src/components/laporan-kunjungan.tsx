@@ -178,7 +178,6 @@ export function LaporanKunjungan() {
         : perBulan.map((b) => ({ label: b.bulan, jumlah: b.jumlah })),
     [modeGrafik, perHari, perBulan]
   );
-  const maks = Math.max(1, ...seri.map((s) => s.jumlah));
 
   function terapkanSelang(baru: { dari: string; sampai: string }) {
     setSelang(baru);

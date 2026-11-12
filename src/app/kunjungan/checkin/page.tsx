@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import {
   BookOpen,
@@ -19,7 +20,6 @@ import {
   Printer,
   Users,
   QrCode,
-  LockKeyhole,
 } from "lucide-react";
 
 type HasilCheckIn = {
@@ -63,6 +63,10 @@ function waktuWIB(iso?: string): string {
 }
 
 export default function CheckInKunjunganPage() {
+  // Navigasi lewat router agar kios tetap berada di aplikasi Next (bukan reload
+  // penuh), sesuai aturan no-location-assign-relative-destination.
+  const router = useRouter();
+
   // Nilai awal harus konsisten antara server dan browser.
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
@@ -73,6 +77,9 @@ export default function CheckInKunjunganPage() {
   const [galat, setGalat] = useState("");
   const [hasil, setHasil] = useState<HasilCheckIn | null>(null);
   const [countdown, setCountdown] = useState(8);
+  const [mode, setMode] = useState<"manual" | "scan">("manual");
+  const [kodeScan, setKodeScan] = useState("");
+  const [kameraBuka, setKameraBuka] = useState(false);
 
   const sudahTercatat = hasil?.kunjungan?.status === "sudah-tercatat";
 
@@ -169,12 +176,12 @@ export default function CheckInKunjunganPage() {
     }
   }
 
-  async function lakukanCheckIn(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const nomor = nomorAnggota.trim().toUpperCase();
+  async function prosesCheckIn(nomorInput?: string) {
+    const nomor = (nomorInput ?? nomorAnggota).trim().toUpperCase();
 
     if (!nomor || sedangProses) return;
+
+    setNomorAnggota(nomor);
 
     setSedangProses(true);
     setGalat("");
@@ -202,6 +209,11 @@ export default function CheckInKunjunganPage() {
     } finally {
       setSedangProses(false);
     }
+  }
+
+  async function lakukanCheckIn(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await prosesCheckIn();
   }
 
   function resetKiosk() {
@@ -232,16 +244,16 @@ export default function CheckInKunjunganPage() {
     : "--:--:--";
 
   return (
-    <div className="relative flex min-h-screen flex-col overflow-x-hidden bg-gradient-to-br from-[#f2faf7] via-[#eaf4f1] to-[#e1eee9] font-sans text-slate-800">
+    <div className="relative flex min-h-screen flex-col overflow-x-hidden bg-[var(--background)] font-sans text-slate-800">
       {/* HEADER */}
       <header className="relative z-10 mx-auto w-full max-w-6xl px-4 pb-3 pt-5 sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-white/70 bg-white/80 px-5 py-3.5 shadow-sm backdrop-blur-md">
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={() => window.location.assign("/")}
+              onClick={() => router.push("/")}
               title="Kembali ke Beranda"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#005f56] text-white shadow-md transition hover:scale-105"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--brand-solid)] text-white shadow-md transition hover:scale-105"
             >
               <BookOpen className="h-5 w-5" />
             </button>
@@ -273,7 +285,7 @@ export default function CheckInKunjunganPage() {
 
             <span className="text-slate-300">|</span>
 
-            <Clock className="h-3.5 w-3.5 text-[#005f56]" />
+            <Clock className="h-3.5 w-3.5 text-[var(--brand-solid)]" />
 
             <span className="text-sm font-bold text-slate-900">
               {jamSekarang}
@@ -313,7 +325,7 @@ export default function CheckInKunjunganPage() {
 
             <button
               type="button"
-              onClick={() => window.location.assign("/")}
+              onClick={() => router.push("/")}
               className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-200"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
@@ -329,11 +341,11 @@ export default function CheckInKunjunganPage() {
           <div className="animate-in space-y-6 fade-in zoom-in-95 duration-300">
             {/* BRANDING */}
             <div className="space-y-2 text-center">
-              <div className="mb-1 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-[#005f56] text-white shadow-xl shadow-[#005f56]/20 ring-4 ring-[#005f56]/10">
+              <div className="mb-1 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--brand-solid)] text-white shadow-xl shadow-[var(--brand-solid)]/20 ring-4 ring-[var(--brand-solid)]/10">
                 <BookOpen className="h-7 w-7" />
               </div>
 
-              <p className="text-xs font-black uppercase tracking-[0.25em] text-[#005f56]">
+              <p className="text-xs font-black uppercase tracking-[0.25em] text-[var(--brand-solid)]">
                 PUSTAKAKU
               </p>
 
@@ -349,16 +361,31 @@ export default function CheckInKunjunganPage() {
 
             {/* MODE */}
             <div className="mx-auto flex max-w-xl items-center gap-1 rounded-2xl border border-slate-200 bg-white/90 p-1.5 shadow-sm">
-              <div className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#005f56] py-2.5 text-xs font-extrabold text-white shadow-sm">
+              <button
+                type="button"
+                onClick={() => setMode("manual")}
+                className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-extrabold shadow-sm transition ${
+                  mode === "manual"
+                    ? "bg-[var(--brand-solid)] text-white"
+                    : "text-slate-500 hover:bg-slate-100"
+                }`}
+              >
                 <CreditCard className="h-4 w-4" />
                 <span>Nomor Anggota</span>
-              </div>
+              </button>
 
-              <div className="flex flex-1 cursor-not-allowed items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold text-slate-400">
+              <button
+                type="button"
+                onClick={() => setMode("scan")}
+                className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-extrabold shadow-sm transition ${
+                  mode === "scan"
+                    ? "bg-[var(--brand-solid)] text-white"
+                    : "text-slate-500 hover:bg-slate-100"
+                }`}
+              >
                 <QrCode className="h-4 w-4" />
-                <span>QR / Barcode</span>
-                <LockKeyhole className="h-3 w-3" />
-              </div>
+                <span>Scan Barcode</span>
+              </button>
             </div>
 
             {/* ERROR */}
@@ -372,9 +399,10 @@ export default function CheckInKunjunganPage() {
               </div>
             )}
 
-            {/* FORM */}
+            {/* FORM / SCAN */}
+            {mode === "manual" ? (
             <div className="relative mx-auto w-full max-w-xl overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-6 shadow-xl sm:p-8">
-              <div className="absolute left-0 right-0 top-0 h-1.5 bg-gradient-to-r from-[#003833] via-[#005f56] to-[#10b981]" />
+              <div className="absolute left-0 right-0 top-0 h-1.5 bg-gradient-to-r from-[var(--brand-solid-hover)] via-[var(--brand-solid)] to-[var(--brand)]" />
 
               <form onSubmit={lakukanCheckIn} className="space-y-5">
                 <div>
@@ -401,7 +429,7 @@ export default function CheckInKunjunganPage() {
                     }}
                     disabled={sedangProses}
                     placeholder="Contoh: AGT-0001"
-                    className="w-full rounded-2xl border-2 border-slate-200 px-4 py-3.5 text-center font-mono text-lg font-black tracking-wider text-slate-900 outline-none transition placeholder:font-sans placeholder:text-base placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-300 focus:border-[#005f56] focus:ring-4 focus:ring-[#005f56]/10 disabled:bg-slate-100 sm:text-left"
+                    className="w-full rounded-2xl border-2 border-slate-200 px-4 py-3.5 text-center font-mono text-lg font-black tracking-wider text-slate-900 outline-none transition placeholder:font-sans placeholder:text-base placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-300 focus:border-[var(--brand)] focus:ring-4 focus:ring-[var(--brand-solid)]/10 disabled:bg-slate-100 sm:text-left"
                   />
 
                   <p className="mt-2 text-[11px] text-slate-500">
@@ -413,7 +441,7 @@ export default function CheckInKunjunganPage() {
                 <button
                   type="submit"
                   disabled={sedangProses || !nomorAnggota.trim()}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#005f56] px-6 py-3.5 text-sm font-extrabold tracking-wide text-white shadow-lg shadow-[#005f56]/20 transition hover:bg-[#004d46] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 sm:text-base"
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--brand-solid)] px-6 py-3.5 text-sm font-extrabold tracking-wide text-white shadow-lg shadow-[var(--brand-solid)]/20 transition hover:bg-[var(--brand-solid-hover)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 sm:text-base"
                 >
                   {sedangProses ? (
                     <>
@@ -429,6 +457,67 @@ export default function CheckInKunjunganPage() {
                 </button>
               </form>
             </div>
+            ) : (
+            <div className="relative mx-auto w-full max-w-xl overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-6 shadow-xl sm:p-8">
+              <div className="absolute left-0 right-0 top-0 h-1.5 bg-gradient-to-r from-[var(--brand-solid-hover)] via-[var(--brand-solid)] to-[var(--brand)]" />
+
+              <div className="space-y-5">
+                <div>
+                  <label className="mb-2 block text-xs font-extrabold uppercase tracking-wide text-slate-800">
+                    Scan Barcode Kartu Anggota
+                  </label>
+                  <input
+                    type="text"
+                    autoFocus
+                    autoComplete="off"
+                    value={kodeScan}
+                    onChange={(e) => setKodeScan(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const kode = e.currentTarget.value.trim();
+                        setKodeScan("");
+                        void prosesCheckIn(kode);
+                      }
+                    }}
+                    placeholder="Arahkan scanner USB ke barcode kartu..."
+                    disabled={sedangProses}
+                    className="w-full rounded-2xl border-2 border-slate-200 px-4 py-3.5 text-center font-mono text-lg font-black tracking-wider text-slate-900 outline-none transition placeholder:font-sans placeholder:text-base placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-300 focus:border-[var(--brand)] focus:ring-4 focus:ring-[var(--brand-solid)]/10 disabled:bg-slate-100 sm:text-left"
+                  />
+                  <p className="mt-2 text-[11px] text-slate-500">
+                    Arahkan scanner USB ke barcode pada kartu anggota, atau gunakan
+                    kamera browser.
+                  </p>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    className="btn btn-ghost text-xs"
+                    onClick={() => setKameraBuka((v) => !v)}
+                  >
+                    {kameraBuka ? "Tutup Kamera" : "Gunakan Kamera"}
+                  </button>
+                </div>
+
+                {kameraBuka && (
+                  <PemindaiKameraCheckin
+                    onDeteksi={(kode) => {
+                      setKodeScan("");
+                      void prosesCheckIn(kode);
+                    }}
+                  />
+                )}
+
+                {sedangProses && (
+                  <div className="flex items-center justify-center gap-2 text-sm text-slate-600">
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-[var(--brand-solid)]" />
+                    Memproses check-in...
+                  </div>
+                )}
+              </div>
+            </div>
+            )}
 
             <div className="space-y-1 pt-2 text-center text-xs font-medium text-slate-500">
               <p>
@@ -471,7 +560,7 @@ export default function CheckInKunjunganPage() {
             <div className="relative space-y-5 overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl sm:p-7">
               <div className="flex items-center justify-between border-b border-dashed border-slate-200 pb-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#005f56] text-white">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--brand-solid)] text-white">
                     <BookOpen className="h-4 w-4" />
                   </div>
 
@@ -564,7 +653,7 @@ export default function CheckInKunjunganPage() {
                 <button
                   type="button"
                   onClick={resetKiosk}
-                  className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#005f56] py-2.5 text-xs font-bold text-white transition hover:bg-[#004d46]"
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[var(--brand-solid)] py-2.5 text-xs font-bold text-white transition hover:bg-[var(--brand-solid-hover)]"
                 >
                   <RotateCcw className="h-4 w-4" />
                   Selesai
@@ -583,7 +672,7 @@ export default function CheckInKunjunganPage() {
       <footer className="relative z-10 mx-auto w-full max-w-6xl px-4 py-4 sm:px-6">
         <div className="flex flex-col items-center justify-between gap-3 rounded-2xl border border-white/80 bg-white/70 p-3 text-xs shadow-sm backdrop-blur-md md:flex-row sm:px-5">
           <div className="flex items-center gap-2 text-[11px] text-slate-600">
-            <Users className="h-3.5 w-3.5 text-[#005f56]" />
+            <Users className="h-3.5 w-3.5 text-[var(--brand-solid)]" />
             <span>
               Sistem Presensi Pengunjung
               <strong className="ml-1 font-mono text-slate-900">
@@ -623,6 +712,119 @@ export default function CheckInKunjunganPage() {
           }
         }
       `}</style>
+    </div>
+  );
+}
+
+// === Kamera browser (BarcodeDetector) untuk check-in ===
+function PemindaiKameraCheckin({ onDeteksi }: { onDeteksi: (kode: string) => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [galat, setGalat] = useState<string | null>(null);
+  const [didukung, setDidukung] = useState(true);
+  const terakhirRef = useRef<{ kode: string; waktu: number } | null>(null);
+
+  useEffect(() => {
+    let batal = false;
+    let berjalan = true;
+    let stream: MediaStream | null = null;
+
+    async function mulai() {
+      if (!("BarcodeDetector" in window)) {
+        setDidukung(false);
+        setGalat(
+          "Browser ini tidak mendukung pemindai kamera. Gunakan scanner USB atau input manual.",
+        );
+        return;
+      }
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment" },
+        });
+        if (batal) {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
+        }
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play();
+        }
+        const BarcodeDetectorCtor = (
+          window as unknown as {
+            BarcodeDetector: new (o: { formats: string[] }) => {
+              detect: (source: HTMLVideoElement) => Promise<
+                Array<{ rawValue: string }>
+              >;
+            };
+          }
+        ).BarcodeDetector;
+        const detector = new BarcodeDetectorCtor({
+          formats: ["code_128", "qr_code", "ean_13", "code_39", "upc_a"],
+        });
+        const loop = async () => {
+          if (!berjalan || batal) return;
+          try {
+            if (videoRef.current && videoRef.current.readyState >= 2) {
+              const barcodes = await detector.detect(videoRef.current);
+              if (barcodes && barcodes.length > 0) {
+                const kode = String(barcodes[0].rawValue ?? "").trim();
+                if (kode) {
+                  const now = Date.now();
+                  const terakhir = terakhirRef.current;
+                  if (
+                    !terakhir ||
+                    terakhir.kode !== kode ||
+                    now - terakhir.waktu > 2000
+                  ) {
+                    terakhirRef.current = { kode, waktu: now };
+                    onDeteksi(kode);
+                  }
+                }
+              }
+            }
+          } catch {
+            // Abaikan error deteksi per-frame.
+          }
+          if (berjalan) requestAnimationFrame(loop);
+        };
+        requestAnimationFrame(loop);
+      } catch (e) {
+        setGalat(
+          "Tidak bisa mengakses kamera: " +
+            (e instanceof Error ? e.message : String(e)),
+        );
+      }
+    }
+
+    void mulai();
+
+    return () => {
+      batal = true;
+      berjalan = false;
+      stream?.getTracks().forEach((t) => t.stop());
+    };
+  }, [onDeteksi]);
+
+  if (!didukung) {
+    return (
+      <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+        {galat}
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-2 space-y-2">
+      <div className="overflow-hidden rounded-lg border border-slate-200 bg-black">
+        <video ref={videoRef} className="h-48 w-full object-cover" playsInline muted />
+      </div>
+      {galat && (
+        <p className="rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700">
+          {galat}
+        </p>
+      )}
+      <p className="text-xs text-[var(--text-secondary)]">
+        Arahkan kamera ke barcode/QR pada kartu anggota.
+      </p>
     </div>
   );
 }

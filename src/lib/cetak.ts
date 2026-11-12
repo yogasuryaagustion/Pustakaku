@@ -106,7 +106,10 @@ table.ringkas td:first-child {
 }
 `;
 
-export function cetakHTML(bodyHtml: string, judul: string) {
+// `gayaTambahan` dimuat setelah gaya dasar: dokumen dengan tata letak sendiri
+// (mis. lembar label A4) bisa menimpa ukuran @page dan gaya dasar tanpa
+// menggandakan seluruh aturan cetak.
+export function cetakHTML(bodyHtml: string, judul: string, gayaTambahan = "") {
   if (typeof window === "undefined") return;
 
   const iframe = document.createElement("iframe");
@@ -155,6 +158,7 @@ export function cetakHTML(bodyHtml: string, judul: string) {
           <meta name="viewport" content="width=device-width, initial-scale=1"/>
           <title>${eskapHTML(judul)}</title>
           <style>${GAYA_CETAK}</style>
+          ${gayaTambahan ? `<style>${gayaTambahan}</style>` : ""}
         </head>
         <body>${bodyHtml}</body>
       </html>`

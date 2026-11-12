@@ -5,6 +5,7 @@ import {
   dariSupabase,
   jalankan,
   json,
+  kolomBelumAda,
   konteksPublik,
   konteksRoute,
 } from "@/lib/supabase/konteks";
@@ -19,18 +20,40 @@ export async function GET() {
     // GET ini tidak membaca k.pengguna, jadi konteksPublik (tanpa validasi sesi)
     // sudah cukup dan menghemat dua roundtrip per muat halaman.
     const k = await konteksPublik();
-    // Daftar buku & agregat ketersediaan diambil PARALEL — roundtrip Supabase
-    // yang dulu berurutan kini tumpang tindih.
-    const [{ data, error }, hasilRpc, hasilTersedia] = await Promise.all([
+
+    // Katalog hanya memuat buku yang belum diarsipkan. Buku beriwayat
+    // peminjaman tidak bisa dibuang permanen (FK buku_id on delete restrict),
+    // jadi penghapusannya berupa tanda dihapus_pada — riwayat tetap utuh.
+    const muatBuku = () =>
       k.supabase
         .from("buku")
         .select("*")
+        .is("dihapus_pada", null)
         .order("created_at", { ascending: false })
-        .order("ditambahkan_pada", { ascending: true }),
+        .order("ditambahkan_pada", { ascending: true });
+
+    // Daftar buku & agregat ketersediaan diambil PARALEL — roundtrip Supabase
+    // yang dulu berurutan kini tumpang tindih.
+    const [hasilBuku, hasilRpc, hasilTersedia] = await Promise.all([
+      muatBuku(),
       k.supabase.rpc("jumlah_dipinjam"),
       k.supabase.rpc("jumlah_tersedia"),
     ]);
-    if (error) throw dariSupabase(error);
+
+    let dataBuku = hasilBuku.data;
+    if (hasilBuku.error && kolomBelumAda(hasilBuku.error)) {
+      // Migrasi arsip buku belum dijalankan: tampilkan katalog apa adanya agar
+      // halaman tetap terbuka (tanpa penyaringan arsip).
+      const ulang = await k.supabase
+        .from("buku")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .order("ditambahkan_pada", { ascending: true });
+      if (ulang.error) throw dariSupabase(ulang.error);
+      dataBuku = ulang.data;
+    } else if (hasilBuku.error) {
+      throw dariSupabase(hasilBuku.error);
+    }
 
     // Jumlah peminjaman aktif per buku (agregat, tanpa identitas peminjam)
     // agar ketersediaan stok benar untuk semua peran — bukan hanya admin.
@@ -58,7 +81,7 @@ export async function GET() {
     }
 
     return json({
-      buku: ((data ?? []) as BarisBuku[]).map(keBuku),
+      buku: ((dataBuku ?? []) as BarisBuku[]).map(keBuku),
       dipinjam,
       tersedia,
     });
@@ -70,11 +93,26 @@ export async function POST(request: Request) {
     const k = await konteksRoute({ wajibMasuk: true, wajibIzin: "katalog.kelola" });
     const isi = sahkanBukuBody(await bacaBody(request), { wajibSemua: true });
 
-    const { data, error } = await k.supabase
+    const baris = dariBuku(isi);
+
+    let { data, error } = await k.supabase
       .from("buku")
-      .insert(dariBuku(isi))
+      .insert(baris)
       .select("*")
       .single();
+
+    // Database yang belum menjalankan migrasi denda buku hilang belum punya
+    // kolom harga; simpan buku tanpa harga agar input tetap berhasil.
+    if (kolomBelumAda(error) && "harga" in baris) {
+      const tanpaHarga = { ...baris };
+      delete tanpaHarga.harga;
+      ({ data, error } = await k.supabase
+        .from("buku")
+        .insert(tanpaHarga)
+        .select("*")
+        .single());
+    }
+
     if (error) throw dariSupabase(error);
 
     const buku = keBuku(data as BarisBuku);

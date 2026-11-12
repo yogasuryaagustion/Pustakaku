@@ -29,8 +29,11 @@ export interface BarisBuku {
   rak: string;
   stok: number;
   deskripsi: string;
+  harga: number;
   gambar: string | null;
   ditambahkan_pada: string;
+  /** Kolom migrasi 202611120001 — buku beriwayat diarsipkan, bukan dihapus. */
+  dihapus_pada?: string | null;
 }
 
 export interface BarisEksemplar {
@@ -167,6 +170,7 @@ export function keBuku(r: BarisBuku): Buku {
     rak: r.rak,
     stok: r.stok,
     deskripsi: r.deskripsi,
+    harga: Number(r.harga) || 0,
     gambar: r.gambar,
     ditambahkanPada: r.ditambahkan_pada,
   };
@@ -183,6 +187,7 @@ export function dariBuku(b: Partial<Buku>): Record<string, unknown> {
   if (b.rak !== undefined) p.rak = b.rak;
   if (b.stok !== undefined) p.stok = b.stok;
   if (b.deskripsi !== undefined) p.deskripsi = b.deskripsi;
+  if (b.harga !== undefined) p.harga = b.harga;
   if (b.gambar !== undefined) p.gambar = b.gambar;
   if (b.ditambahkanPada !== undefined) p.ditambahkan_pada = b.ditambahkanPada;
   return p;

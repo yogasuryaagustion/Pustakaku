@@ -13,6 +13,7 @@ import {
   type SistemPengaturan,
 } from "@/lib/sistem";
 import { formatInventarisSah, nomorInventarisContoh } from "@/lib/sistem-nilai";
+import { PILIHAN_FORMAT_LABEL } from "@/lib/label-format";
 
 function FieldAngka({
   label,
@@ -183,7 +184,8 @@ export default function PengaturanTemaPage() {
         detail:
           `Lama pinjam ${sistem.lamaPinjam} hari; ` +
           `maksimal ${sistem.maksPinjaman} buku; ` +
-          `denda ${rupiah(sistem.dendaPerHari)}/hari`,
+          `denda ${rupiah(sistem.dendaPerHari)}/hari; ` +
+          `penggantian buku hilang ${rupiah(sistem.dendaHilang)}`,
       });
 
       setKotor(false);
@@ -264,12 +266,66 @@ export default function PengaturanTemaPage() {
                 satuan="rupiah"
                 onUbah={(nilai) => ubahSistem({ dendaPerHari: nilai })}
               />
+
+              <FieldAngka
+                label="Denda Buku Hilang (penggantian)"
+                nilai={sistem.dendaHilang}
+                min={0}
+                max={10_000_000}
+                satuan="rupiah"
+                onUbah={(nilai) => ubahSistem({ dendaHilang: nilai })}
+              />
             </div>
 
             <FieldFormatInventaris
               nilai={sistem.formatInventaris}
               onUbah={(nilai) => ubahSistem({ formatInventaris: nilai })}
             />
+
+            {/* Bentuk label dipakai sebagai pilihan awal di halaman cetak
+                label, sehingga petugas tidak memilih ulang tiap mencetak. */}
+            <div className="space-y-2">
+              <span className="block text-sm font-semibold text-slate-800">
+                Bentuk Label Eksemplar Bawaan
+              </span>
+
+              <div
+                className="grid gap-3 sm:grid-cols-2"
+                role="radiogroup"
+                aria-label="Bentuk label eksemplar bawaan"
+              >
+                {PILIHAN_FORMAT_LABEL.map((pilihan) => {
+                  const dipilih = sistem.formatLabel === pilihan.nilai;
+
+                  return (
+                    <button
+                      key={pilihan.nilai}
+                      type="button"
+                      role="radio"
+                      aria-checked={dipilih}
+                      onClick={() => ubahSistem({ formatLabel: pilihan.nilai })}
+                      className={`rounded-xl border px-4 py-3 text-left transition ${
+                        dipilih
+                          ? "border-teal-700 bg-teal-50/70 ring-2 ring-teal-700/20"
+                          : "border-slate-200 bg-white hover:border-slate-300"
+                      }`}
+                    >
+                      <span className="block text-sm font-semibold text-slate-800">
+                        {pilihan.judul}
+                      </span>
+                      <span className="mt-0.5 block text-xs text-slate-500">
+                        {pilihan.ket}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <p className="text-xs text-slate-400">
+                Halaman cetak label tetap bisa mengganti pilihan ini untuk satu
+                kali cetak tanpa mengubah pengaturan.
+              </p>
+            </div>
 
             {/* Ringkasan aturan */}
             <div className="rounded-xl border border-teal-100 bg-teal-50/70 p-4 sm:p-5">
@@ -303,7 +359,10 @@ export default function PengaturanTemaPage() {
                     <strong>{sistem.maksPinjaman} buku per anggota</strong>{" "}
                     dan denda{" "}
                     <strong>{rupiah(sistem.dendaPerHari)} per hari</strong>{" "}
-                    jika terlambat.
+                    jika terlambat. Buku yang dinyatakan hilang saat pengembalian
+                    dikenai penggantian{" "}
+                    <strong>{rupiah(sistem.dendaHilang)}</strong> ditambah denda
+                    keterlambatan bila ada.
                   </p>
                 </div>
               </div>

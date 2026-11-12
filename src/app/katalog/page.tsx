@@ -8,11 +8,11 @@ import { useLibrary, useHelper } from "@/lib/library-context";
 import { useAuth, useBoleh } from "@/lib/auth";
 import { useSistem } from "@/lib/sistem";
 import { KATEGORI_LIST, type Buku, type Kategori } from "@/lib/types";
+import { apiFetch } from "@/lib/api";
 
 import {
   Modal,
   ConfirmDialog,
-  Badge,
   EmptyState,
   SampulBuku,
   tanggalPanjang,
@@ -31,6 +31,7 @@ const KOSONG_FORM = {
   rak: "",
   stok: "1",
   deskripsi: "",
+  harga: "",
   gambar: "",
 };
 
@@ -56,6 +57,17 @@ type ResponsPencarianBuku = {
   buku: HasilPencarianBuku[];
 };
 
+/** Baris daftar arsip — buku yang dihapus tapi masih punya riwayat pinjaman. */
+type BukuArsip = {
+  id: string;
+  judul: string;
+  penulis: string;
+  kategori: string;
+  rak: string;
+  stok: number;
+  dihapusPada: string | null;
+};
+
 const IKON = {
   cari: "m21 21-4.35-4.35 M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0z",
   buku: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z",
@@ -66,6 +78,7 @@ const IKON = {
   hapus: "M3 6h18 M8 6V4h8v2 M19 6l-1 14H6L5 6 M10 11v5 M14 11v5",
   bukuTerbuka:
     "M12 7v14 M3 18V5a2 2 0 0 1 2-2h3a4 4 0 0 1 4 4 4 4 0 0 1 4-4h3a2 2 0 0 1 2 2v13 M3 18h5a4 4 0 0 1 4 3 4 4 0 0 1 4-3h5",
+  arsip: "M3 7h18v3H3z M5 10v10h14V10 M9 14h6",
 };
 
 function Ikon({ d, size = 18 }: { d: string; size?: number }) {
@@ -91,7 +104,7 @@ function angka(nilai: number) {
 }
 
 function KatalogKonten() {
-  const { buku, siap, tambahBuku, ubahBuku, hapusBuku, pinjamBuku } =
+  const { buku, siap, tambahBuku, ubahBuku, hapusBuku, pinjamBuku, muatUlang } =
     useLibrary();
 
   const { stokTersedia } = useHelper();
@@ -137,6 +150,13 @@ function KatalogKonten() {
   const [hapusTarget, setHapusTarget] = useState<Buku | null>(null);
   const [pinjamTarget, setPinjamTarget] = useState<Buku | null>(null);
 
+  // Arsip: buku yang dihapus namun riwayatnya dipertahankan. Daftarnya dibaca
+  // saat modal dibuka agar katalog tidak menambah satu request di setiap muat.
+  const [bukaArsip, setBukaArsip] = useState(false);
+  const [arsip, setArsip] = useState<BukuArsip[]>([]);
+  const [memuatArsip, setMemuatArsip] = useState(false);
+  const [memulihkan, setMemulihkan] = useState<string | null>(null);
+
   const [tanggalPinjam, setTanggalPinjam] = useState(() =>
     new Date().toISOString().slice(0, 10),
   );
@@ -170,22 +190,6 @@ function KatalogKonten() {
       return cocokKata && cocokKategori && cocokStok;
     });
   }, [buku, q, filterKategori, filterStok, stokTersedia]);
-
-  const totalEksemplar = useMemo(
-    () =>
-      buku.reduce(
-        (total, item) => total + Math.max(0, Number(item.stok) || 0),
-        0,
-      ),
-    [buku],
-  );
-
-  const jumlahTersedia = useMemo(
-    () => buku.filter((item) => stokTersedia(item.id) > 0).length,
-    [buku, stokTersedia],
-  );
-
-  const jumlahHabis = buku.length - jumlahTersedia;
 
   const jatuhTempo = useMemo(() => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(tanggalPinjam)) {
@@ -286,6 +290,37 @@ function KatalogKonten() {
     );
   }
 
+  async function muatArsip() {
+    setMemuatArsip(true);
+    try {
+      const hasil = await apiFetch<{ buku: BukuArsip[] }>("/api/buku/arsip");
+      setArsip(hasil.buku ?? []);
+    } catch (error) {
+      toast.gagal(
+        error instanceof Error ? error.message : "Gagal memuat buku diarsipkan.",
+      );
+    } finally {
+      setMemuatArsip(false);
+    }
+  }
+
+  async function pulihkanBuku(item: BukuArsip) {
+    setMemulihkan(item.id);
+    try {
+      await apiFetch(`/api/buku/${item.id}/pulihkan`, { method: "POST" });
+      toast.sukses(`Buku "${item.judul}" dikembalikan ke katalog.`);
+      setArsip((sebelumnya) => sebelumnya.filter((b) => b.id !== item.id));
+      // Katalog memuat ulang agar buku hasil pemulihan langsung tampil.
+      muatUlang(["buku"]);
+    } catch (error) {
+      toast.gagal(
+        error instanceof Error ? error.message : "Buku gagal dipulihkan.",
+      );
+    } finally {
+      setMemulihkan(null);
+    }
+  }
+
   function bukaEdit(item: Buku) {
     setEditId(item.id);
 
@@ -303,6 +338,7 @@ function KatalogKonten() {
       rak: item.rak,
       stok: String(item.stok),
       deskripsi: item.deskripsi,
+      harga: item.harga ? String(item.harga) : "",
       gambar: item.gambar ?? "",
     });
 
@@ -322,6 +358,7 @@ function KatalogKonten() {
       rak: form.rak.trim(),
       stok: Math.max(0, Number(form.stok) || 0),
       deskripsi: form.deskripsi.trim(),
+      harga: Math.max(0, Number(form.harga) || 0),
       gambar: form.gambar.trim() || null,
     };
 
@@ -392,14 +429,27 @@ function KatalogKonten() {
         aksi={
           bolehKelolaBuku &&
           sedangMasuk && (
-            <button
-              type="button"
-              onClick={bukaTambah}
-              className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--brand-solid)] px-5 py-3 text-sm font-semibold text-white shadow-md shadow-teal-900/10 transition hover:-translate-y-0.5 hover:bg-[var(--brand-solid-hover)] focus:outline-none focus:ring-4 focus:ring-[var(--brand-soft)]"
-            >
-              <Ikon d={IKON.tambah} size={18} />
-              Tambah Judul Baru
-            </button>
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setBukaArsip(true);
+                  void muatArsip();
+                }}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-teal-300 hover:text-[var(--brand-ink)] focus:outline-none focus:ring-4 focus:ring-[var(--brand-soft)]"
+              >
+                <Ikon d={IKON.arsip} size={18} />
+                Buku Diarsipkan
+              </button>
+              <button
+                type="button"
+                onClick={bukaTambah}
+                className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--brand-solid)] px-5 py-3 text-sm font-semibold text-white shadow-md shadow-teal-900/10 transition hover:-translate-y-0.5 hover:bg-[var(--brand-solid-hover)] focus:outline-none focus:ring-4 focus:ring-[var(--brand-soft)]"
+              >
+                <Ikon d={IKON.tambah} size={18} />
+                Tambah Judul Baru
+              </button>
+            </div>
           )
         }
       />
@@ -899,21 +949,30 @@ function KatalogKonten() {
       >
         <form
           onSubmit={simpan}
-          className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+          className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
         >
           {!editId && (
-            <section className="sm:col-span-2 rounded-2xl border border-teal-100 bg-teal-50/60 p-4">
-              <div className="mb-3">
-                <h3 className="text-sm font-bold text-teal-950">
-                  Cari Data Buku Otomatis
-                </h3>
-                <p className="mt-1 text-xs leading-5 text-teal-800/80">
-                  Cari berdasarkan judul atau ISBN. Data yang ditemukan dapat
-                  digunakan untuk mengisi formulir, termasuk URL sampul.
-                </p>
-              </div>
+            <details className="group rounded-xl border border-teal-100 bg-teal-50/60 p-3 sm:col-span-2 lg:col-span-3">
+              <summary className="flex cursor-pointer list-none items-start justify-between gap-3 [&::-webkit-details-marker]:hidden">
+                <div>
+                  <h3 className="text-sm font-bold text-teal-950">
+                    Cari Data Buku Otomatis
+                  </h3>
+                  <p className="mt-1 text-xs leading-5 text-teal-800/80">
+                    Cari berdasarkan judul atau ISBN. Data yang ditemukan dapat
+                    digunakan untuk mengisi formulir, termasuk URL sampul.
+                  </p>
+                </div>
 
-              <div className="flex flex-col gap-2 sm:flex-row">
+                <span className="shrink-0 rounded-lg border border-teal-200 bg-white px-3 py-1.5 text-xs font-semibold text-teal-900 group-open:hidden">
+                  Buka
+                </span>
+                <span className="hidden shrink-0 rounded-lg border border-teal-200 bg-white px-3 py-1.5 text-xs font-semibold text-teal-900 group-open:inline">
+                  Tutup
+                </span>
+              </summary>
+
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                 <input
                   className="input min-w-0 flex-1 bg-white"
                   value={kataKunciBuku}
@@ -941,7 +1000,7 @@ function KatalogKonten() {
               )}
 
               {hasilPencarianBuku.length > 0 && (
-                <div className="mt-3 max-h-72 space-y-2 overflow-y-auto">
+                <div className="mt-3 max-h-56 space-y-2 overflow-y-auto">
                   {hasilPencarianBuku.map((item, index) => (
                     <article
                       key={`${item.googleBooksId || item.isbn || item.judul}-${index}`}
@@ -997,10 +1056,10 @@ function KatalogKonten() {
                   ))}
                 </div>
               )}
-            </section>
+            </details>
           )}
 
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-2 lg:col-span-3">
             <label className="label">Judul Buku *</label>
             <input
               className="input"
@@ -1093,18 +1152,35 @@ function KatalogKonten() {
             />
           </div>
 
-          <div className="sm:col-span-2">
+          <div>
+            <label className="label">Harga Buku (Rp)</label>
+            <input
+              className="input"
+              type="number"
+              min="0"
+              step="1000"
+              value={form.harga}
+              onChange={(e) => setForm({ ...form, harga: e.target.value })}
+              placeholder="Kosongkan bila belum diketahui"
+            />
+            <p className="mt-1 text-xs text-slate-400">
+              Dipakai sebagai denda penggantian bila salinan dinyatakan hilang
+              saat pengembalian.
+            </p>
+          </div>
+
+          <div className="sm:col-span-2 lg:col-span-2">
             <label className="label">Deskripsi Buku</label>
             <textarea
               className="input"
-              rows={3}
+              rows={2}
               value={form.deskripsi}
               onChange={(e) => setForm({ ...form, deskripsi: e.target.value })}
               placeholder="Deskripsi singkat tentang buku"
             />
           </div>
 
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-2 lg:col-span-3">
             <label className="label">URL Gambar Sampul</label>
 
             <div className="flex items-start gap-3">
@@ -1114,7 +1190,7 @@ function KatalogKonten() {
                   penulis: form.penulis,
                   gambar: form.gambar,
                 }}
-                className="h-24 w-[68px] shrink-0"
+                className="h-20 w-[56px] shrink-0"
                 tampilkanJudul={false}
               />
 
@@ -1135,7 +1211,7 @@ function KatalogKonten() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 border-t border-[var(--border)] pt-4 sm:col-span-2">
+          <div className="flex justify-end gap-2 border-t border-[var(--border)] pt-3 sm:col-span-2 lg:col-span-3">
             <button
               type="button"
               className="btn btn-ghost"
@@ -1219,6 +1295,66 @@ function KatalogKonten() {
         </div>
       </Modal>
 
+      {/* ARSIP BUKU — buku yang dihapus namun riwayatnya dipertahankan. */}
+      <Modal
+        open={bukaArsip}
+        onClose={() => setBukaArsip(false)}
+        title="Buku Diarsipkan"
+        width="max-w-2xl"
+      >
+        <p className="text-sm text-slate-600">
+          Buku di sini sudah tidak tampil di katalog tetapi riwayat
+          peminjamannya masih tersimpan, sehingga barisnya tidak dibuang
+          permanen. Pulihkan bila buku ingin dipinjamkan lagi.
+        </p>
+
+        {memuatArsip ? (
+          <p className="mt-4 text-sm text-[var(--muted)]">Memuat arsip...</p>
+        ) : arsip.length === 0 ? (
+          <div className="mt-4">
+            <EmptyState
+              kartu={false}
+              pesan="Tidak ada buku diarsipkan"
+              sub="Buku yang dihapus tanpa riwayat peminjaman langsung hilang permanen dan tidak tampil di sini."
+            />
+          </div>
+        ) : (
+          <ul className="mt-4 divide-y divide-[var(--border)]">
+            {arsip.map((item) => (
+              <li
+                key={item.id}
+                className="flex flex-wrap items-center justify-between gap-3 py-3"
+              >
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-semibold">
+                    {item.judul}
+                  </div>
+                  <div className="mt-0.5 text-xs text-[var(--muted)]">
+                    {[
+                      item.penulis || "Penulis tidak diketahui",
+                      item.kategori,
+                      item.rak ? `Rak ${item.rak}` : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                    {" · Diarsipkan "}
+                    {tanggalPanjang(item.dihapusPada ?? "")}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => pulihkanBuku(item)}
+                  disabled={memulihkan === item.id}
+                  className="btn btn-primary disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {memulihkan === item.id ? "Memulihkan..." : "Pulihkan"}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Modal>
+
       {/* KONFIRMASI HAPUS */}
       <ConfirmDialog
         open={!!hapusTarget}
@@ -1230,7 +1366,13 @@ function KatalogKonten() {
           const hasilHapus = await hapusBuku(target.id);
 
           if (hasilHapus.ok) {
-            toast.sukses(`Buku "${target.judul}" dihapus dari katalog.`);
+            // Buku beriwayat tidak bisa dibuang permanen; server hanya
+            // mengarsipkannya, jadi pesan ke petugas dibedakan.
+            toast.sukses(
+              hasilHapus.diarsipkan
+                ? `Buku "${target.judul}" diarsipkan — riwayat peminjamannya tetap tersimpan.`
+                : `Buku "${target.judul}" dihapus dari katalog.`,
+            );
           } else {
             toast.gagal(hasilHapus.pesan);
           }
@@ -1238,7 +1380,7 @@ function KatalogKonten() {
           setHapusTarget(null);
         }}
         title="Hapus Buku"
-        message={`Buku "${hapusTarget?.judul}" akan dihapus permanen dari katalog. Apakah Anda yakin ingin melanjutkan?`}
+        message={`Buku "${hapusTarget?.judul}" akan dihapus dari katalog. Bila buku ini sudah punya riwayat peminjaman, buku hanya diarsipkan agar riwayatnya tidak hilang. Apakah Anda yakin ingin melanjutkan?`}
       />
     </div>
   );

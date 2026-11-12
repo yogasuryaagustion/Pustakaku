@@ -16,7 +16,6 @@ import { useSistem } from "@/lib/sistem";
 import {
   pesanNominalDenda,
   sisaDenda,
-  totalDendaTertunggak,
 } from "@/lib/denda";
 import { KepalaHalaman } from "@/components/kepala-halaman";
 import {
@@ -28,6 +27,7 @@ import {
   type BadgeTone,
 } from "@/components/ui";
 import { useToast } from "@/components/toast";
+import { PeminjamanBarcode } from "@/components/peminjaman-barcode";
 
 type Tab = "Semua" | "Aktif" | "Selesai";
 
@@ -36,7 +36,11 @@ function statusBadge(
 ): { label: string; tone: BadgeTone } {
   const telat = hariTerlambat(p.tanggalKembali);
 
-  if (p.status === "Dikembalikan") {
+  // Denda lunas → pinjaman dianggap selesai walau status lama "Terlambat".
+  if (
+    p.status === "Dikembalikan" ||
+    (p.status === "Terlambat" && sisaDenda(p.denda, p.dendaDibayar) === 0)
+  ) {
     return { label: "Selesai", tone: "green" };
   }
 
@@ -77,24 +81,21 @@ const PILIHAN_KONDISI: Array<{
   {
     nilai: "hilang",
     judul: "Hilang",
-    ket: "Status hilang — buku tidak kembali; stok menyusut saat Perbaiki Selisih dijalankan.",
+    ket: "Status hilang — buku tidak kembali; anggota dikenai denda penggantian dan stok menyusut saat Perbaiki Selisih dijalankan.",
   },
 ];
 
 export default function SirkulasiPage() {
   const {
-    buku,
-    anggota,
     peminjaman,
     siap,
-    pinjamBuku,
     kembalikanBuku,
     perpanjangPinjam,
     lunasiDenda,
     bayarDenda,
   } = useLibrary();
 
-  const { cariBuku, cariAnggota, stokTersedia, ajuanMenunggu } = useHelper();
+  const { cariBuku, cariAnggota, ajuanMenunggu } = useHelper();
   const sistem = useSistem();
   const toast = useToast();
   const bolehKelola = useBoleh("sirkulasi.kelola");
@@ -102,13 +103,6 @@ export default function SirkulasiPage() {
   const [tab, setTab] = useState<Tab>("Semua");
   const [q, setQ] = useState("");
   const [openPinjam, setOpenPinjam] = useState(false);
-  const [formPinjam, setFormPinjam] = useState({
-    bukuId: "",
-    anggotaId: "",
-  });
-  // Lama pinjam untuk transaksi ini saja. Dimulai dari standar Pengaturan,
-  // tetapi petugas boleh memendekkan/memanjangkan tanpa mengubah pengaturan.
-  const [lamaPinjam, setLamaPinjam] = useState(sistem.lamaPinjam);
   const [konfirmasiKembali, setKonfirmasiKembali] =
     useState<Peminjaman | null>(null);
   const [kondisiKembali, setKondisiKembali] =
@@ -151,16 +145,6 @@ export default function SirkulasiPage() {
     };
   }, [konfirmasiKembali]);
 
-  /** Jatuh tempo bila dipinjam hari ini dengan lama pinjam terpilih. */
-  const jatuhTempo = useMemo(() => {
-    const tanggal = new Date();
-    tanggal.setDate(tanggal.getDate() + (lamaPinjam || 0));
-    return tanggal.toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  }, [lamaPinjam]);
 
   const dendaAktif = useMemo(
     () => peminjaman.find((p) => p.id === dendaId) ?? null,
@@ -170,37 +154,18 @@ export default function SirkulasiPage() {
     ? sisaDenda(dendaAktif.denda, dendaAktif.dendaDibayar)
     : 0;
 
-  // Tunggakan anggota terpilih — ditampilkan sebelum menyimpan, karena
-  // database juga menolak peminjaman selama denda belum dilunasi.
-  const tertunggakAnggota = useMemo(
-    () => totalDendaTertunggak(peminjaman, formPinjam.anggotaId),
-    [peminjaman, formPinjam.anggotaId],
-  );
-
-  const bukuTersedia = useMemo(
-    () => buku.filter((b) => stokTersedia(b.id) > 0),
-    [buku, stokTersedia]
-  );
-
-  const anggotaAktif = useMemo(
-    () => anggota.filter((a) => a.aktif),
-    [anggota]
-  );
-
   const daftar = useMemo(() => {
     let list = peminjaman.slice();
 
     if (tab === "Aktif") {
-      list = list.filter(
-        (p) =>
-          p.status === "Dipinjam" ||
-          p.status === "Terlambat"
-      );
+      list = list.filter((p) => p.status === "Dipinjam");
     }
 
     if (tab === "Selesai") {
       list = list.filter(
-        (p) => p.status === "Dikembalikan"
+        (p) =>
+          p.status === "Dikembalikan" ||
+          p.status === "Terlambat"
       );
     }
 
@@ -265,38 +230,6 @@ export default function SirkulasiPage() {
     }
   }
 
-  async function submitPinjam(e: React.FormEvent) {
-    e.preventDefault();
-
-    if (!Number.isInteger(lamaPinjam) || lamaPinjam < 1 || lamaPinjam > 90) {
-      toast.gagal("Lama pinjam harus antara 1 dan 90 hari.");
-      return;
-    }
-
-    if (tertunggakAnggota > 0) {
-      toast.gagal(
-        `Anggota ini masih memiliki denda tertunggak ${rupiah(tertunggakAnggota)}. Lunasi denda terlebih dahulu.`,
-      );
-      return;
-    }
-
-    const res = await pinjamBuku(
-      formPinjam.bukuId,
-      formPinjam.anggotaId,
-      undefined,
-      lamaPinjam
-    );
-
-    if (res.ok) {
-      toast.sukses(res.pesan);
-      setOpenPinjam(false);
-      setFormPinjam({ bukuId: "", anggotaId: "" });
-      setTab("Aktif");
-    } else {
-      toast.gagal(res.pesan);
-    }
-  }
-
   if (!siap) {
     return (
       <div className="p-6 text-sm text-[var(--muted)]">
@@ -306,11 +239,7 @@ export default function SirkulasiPage() {
   }
 
   const totalDendaBelum = peminjaman
-    .filter(
-      (p) =>
-        p.status === "Dipinjam" ||
-        p.status === "Terlambat"
-    )
+    .filter((p) => p.status === "Dipinjam")
     .reduce(
       (total, p) =>
         total +
@@ -320,13 +249,12 @@ export default function SirkulasiPage() {
     );
 
   const jumlahAktif = peminjaman.filter(
-    (p) =>
-      p.status === "Dipinjam" ||
-      p.status === "Terlambat"
+    (p) => p.status === "Dipinjam"
   ).length;
 
   const jumlahSelesai = peminjaman.filter(
-    (p) => p.status === "Dikembalikan"
+    (p) =>
+      p.status === "Dikembalikan" || p.status === "Terlambat"
   ).length;
 
   return (
@@ -345,7 +273,6 @@ export default function SirkulasiPage() {
             <button
               className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--brand-solid)] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--brand-solid-hover)] focus:outline-none focus:ring-4 focus:ring-[var(--brand-soft)]"
               onClick={() => {
-                setLamaPinjam(sistem.lamaPinjam);
                 setOpenPinjam(true);
               }}
             >
@@ -572,9 +499,7 @@ export default function SirkulasiPage() {
                     const a = cariAnggota(p.anggotaId);
                     const telat = hariTerlambat(p.tanggalKembali);
                     const sb = statusBadge(p);
-                    const masihAktif =
-                      p.status === "Dipinjam" ||
-                      p.status === "Terlambat";
+                    const masihAktif = p.status === "Dipinjam";
 
                     return (
                       <tr
@@ -746,8 +671,7 @@ export default function SirkulasiPage() {
                 const a = cariAnggota(p.anggotaId);
                 const telat = hariTerlambat(p.tanggalKembali);
                 const sb = statusBadge(p);
-                const masihAktif =
-                  p.status === "Dipinjam" || p.status === "Terlambat";
+                const masihAktif = p.status === "Dipinjam";
 
                 return (
                   <li key={p.id} className="p-4">
@@ -894,137 +818,13 @@ export default function SirkulasiPage() {
         )}
       </section>
 
-      {/* Modal pinjam buku */}
-      <Modal
-        open={openPinjam}
-        onClose={() => setOpenPinjam(false)}
-        title="Pinjam Buku"
-      >
-        <form onSubmit={submitPinjam} className="space-y-4">
-          <div>
-            <label className="label">Buku yang tersedia</label>
-            <select
-              className="input"
-              required
-              value={formPinjam.bukuId}
-              onChange={(e) =>
-                setFormPinjam({
-                  ...formPinjam,
-                  bukuId: e.target.value,
-                })
-              }
-            >
-              <option value="">— Pilih buku —</option>
-              {bukuTersedia.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.judul} (sisa {stokTersedia(b.id)})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="label">Anggota</label>
-            <select
-              className="input"
-              required
-              value={formPinjam.anggotaId}
-              onChange={(e) =>
-                setFormPinjam({
-                  ...formPinjam,
-                  anggotaId: e.target.value,
-                })
-              }
-            >
-              <option value="">— Pilih anggota —</option>
-              {anggotaAktif.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.nomorAnggota} — {a.nama}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="label" htmlFor="lama-pinjam">
-              Lama pinjam (hari)
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                id="lama-pinjam"
-                type="number"
-                className="input"
-                min={1}
-                max={90}
-                step={1}
-                required
-                value={lamaPinjam}
-                onChange={(e) => {
-                  const nilai = Number(e.target.value);
-                  setLamaPinjam(Number.isFinite(nilai) ? nilai : 0);
-                }}
-              />
-              <div className="flex shrink-0 gap-1">
-                {[7, 14, 30].map((hari) => (
-                  <button
-                    key={hari}
-                    type="button"
-                    className="btn btn-ghost px-2.5 py-1.5 text-xs"
-                    onClick={() => setLamaPinjam(hari)}
-                  >
-                    {hari} hr
-                  </button>
-                ))}
-              </div>
-            </div>
-            <p className="mt-1 text-xs text-[var(--text-secondary)]">
-              Standar dari pengaturan: {sistem.lamaPinjam} hari. Nilai di sini
-              hanya berlaku untuk peminjaman ini.
-            </p>
-          </div>
-
-          {tertunggakAnggota > 0 && (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
-              <p className="font-semibold">
-                Anggota ini masih memiliki denda tertunggak{" "}
-                {rupiah(tertunggakAnggota)}.
-              </p>
-              <p className="mt-1 text-xs">
-                Lunasi denda lewat tombol <strong>Lunasi</strong> pada baris
-                pinjaman bersangkutan. Peminjaman baru ditolak sampai dendanya
-                lunas.
-              </p>
-            </div>
-          )}
-
-          <div className="rounded-xl border border-teal-100 bg-teal-50 p-3 text-sm text-teal-900">
-            <p>
-              Jatuh tempo: <strong>{jatuhTempo}</strong>
-            </p>
-            <p className="mt-1">
-              Denda keterlambatan:{" "}
-              <strong>{rupiah(sistem.dendaPerHari)}/hari</strong>
-            </p>
-          </div>
-
-          <div className="flex justify-end gap-2 pt-2">
-            <button
-              type="button"
-              className="btn btn-ghost"
-              onClick={() => setOpenPinjam(false)}
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={tertunggakAnggota > 0}
-            >
-              Catat Peminjaman
-            </button>
-          </div>
-        </form>
-      </Modal>
+      {/* Transaksi peminjaman multi-buku via barcode */}
+      {openPinjam && (
+        <PeminjamanBarcode
+          open={openPinjam}
+          onClose={() => setOpenPinjam(false)}
+        />
+      )}
 
       {/* Konfirmasi pengembalian */}
       <Modal
@@ -1112,6 +912,48 @@ export default function SirkulasiPage() {
                   ikut dicatat.
                 </p>
               )}
+
+              {kondisiKembali === "hilang" &&
+                (() => {
+                  // Denda penggantian mengikuti harga buku; bila harga belum
+                  // diisi, dipakai nominal cadangan dari Pengaturan.
+                  const hargaBuku =
+                    cariBuku(konfirmasiKembali.bukuId)?.harga ?? 0;
+                  const penggantian =
+                    hargaBuku > 0 ? hargaBuku : sistem.dendaHilang;
+                  const telat = hariTerlambat(
+                    konfirmasiKembali.tanggalKembali,
+                  );
+
+                  return (
+                    <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-amber-900">
+                      <p className="text-sm font-semibold">
+                        Buku dinyatakan hilang
+                      </p>
+                      <p className="mt-1 text-xs leading-5">
+                        Denda penggantian{" "}
+                        <strong>{rupiah(penggantian)}</strong>{" "}
+                        {hargaBuku > 0
+                          ? "sesuai harga buku"
+                          : "(nominal cadangan — harga buku belum diisi)"}{" "}
+                        ditagihkan ke anggota dan tampil di panel pinjamannya
+                        {telat > 0 && (
+                          <>
+                            , di luar denda keterlambatan{" "}
+                            <strong>
+                              {rupiah(telat * sistem.dendaPerHari)}
+                            </strong>
+                          </>
+                        )}
+                        .
+                      </p>
+                      <p className="mt-1 text-xs font-semibold">
+                        Total tagihan:{" "}
+                        {rupiah(penggantian + telat * sistem.dendaPerHari)}
+                      </p>
+                    </div>
+                  );
+                })()}
 
               <div className="mt-3 space-y-2">
                 {PILIHAN_KONDISI.map((pilihan) => (

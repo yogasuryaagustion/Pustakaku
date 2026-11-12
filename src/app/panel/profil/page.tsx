@@ -456,13 +456,6 @@ function KontenProfil({
     setModeEdit(false);
   }
 
-  const statistik = [
-    { label: "Sedang Dipinjam", nilai: "—", keterangan: "Data pinjaman" },
-    { label: "Riwayat Selesai", nilai: "—", keterangan: "Buku selesai" },
-    { label: "Tanggungan Denda", nilai: "—", keterangan: "Belum tersedia" },
-    { label: "Kedisiplinan Waktu", nilai: "—", keterangan: "Belum tersedia" },
-  ];
-
   return (
     <div className="mx-auto w-full max-w-[1500px] space-y-6 pb-8">
       {/* HEADER PROFIL */}

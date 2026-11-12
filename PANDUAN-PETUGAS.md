@@ -30,9 +30,20 @@ Belum ada tombol "lupa sandi". Kalau lupa, Super Admin meresetnya dari
    jumlah salinan (buku fisik) yang dimiliki.
 3. **Inventaris Buku → Salinan Buku** → pastikan setiap salinan punya nomor
    inventaris. Nomor dibuat otomatis mengikuti format yang diatur di
-   Pengaturan.
-4. **Inventaris Buku → Cetak Label QR Buku** → cetak dan tempel label pada
-   setiap buku fisik. Label inilah yang dipindai saat melayani peminjaman.
+   Pengaturan. Saat menambah salinan, isi **Jumlah salinan** bila bukunya
+   datang lebih dari satu: semua salinan disimpan sekaligus dan nomornya
+   berurutan (mis. `INV-2026-0055`, `INV-2026-0056`, …). Nomor manual hanya
+   dipakai untuk satu salinan.
+4. **Inventaris Buku → Cetak Label Buku** → pilih bentuk kode **QR** atau
+   **Barcode 1D (Code 128)** sesuai alat pemindai Anda, cetak, lalu tempel
+   label pada setiap buku fisik. Label inilah yang dipindai saat melayani
+   peminjaman (langkah **Buku** di modal **Transaksi Peminjaman**; lihat
+   bagian 3).
+
+   Bentuk yang paling sering dipakai bisa dijadikan bawaan di **Pengaturan →
+   Bentuk Label Eksemplar Bawaan**. Setelah itu halaman cetak label langsung
+   memakai bentuk tersebut, dan tombol di halaman cetak hanya perlu dipakai
+   bila sekali cetak ingin bentuk lain (pengaturan tidak ikut berubah).
 5. **Data Anggota** → masukkan anggota, atau biarkan mereka mendaftar sendiri
    di halaman **Daftar**. Setiap anggota mendapat nomor seperti `AGT-0001`.
 
@@ -46,15 +57,59 @@ Buka **Kunjungan & Presensi**, lalu halaman **Check-in**. Pindai kartu anggota
 atau ketik nomor anggotanya (`AGT-0001`), tekan Enter. Nama anggota muncul
 sebagai konfirmasi. Gunakan tombol yang sama untuk mencatat kunjungan berikutnya.
 
-### Melayani peminjaman
+### Melayani peminjaman dengan barcode
+
+Modal **Transaksi Peminjaman** berjalan berurutan: **Anggota → Buku →
+Ringkasan → Bukti**. Satu transaksi boleh berisi beberapa buku sekaligus.
+
+**Persiapan:** scanner USB (bekerja seperti keyboard: mengetik kode lalu
+Enter), atau tombol **Gunakan Kamera** di tiap langkah bila tidak ada scanner
+(butuh browser Chrome/Edge terbaru dan izin kamera). Kode juga bisa diketik
+manual, mis. `AGT-0009` atau `INV-2026-0055`.
+
+**Langkah 1 — Anggota (pindai kartu anggota)**
 1. Buka **Peminjaman & Pengembalian** → tombol **Pinjam Buku**.
-2. Pilih buku (hanya yang salinannya tersedia) dan pilih anggota (hanya yang
-   aktif).
-3. Periksa **Lama pinjam (hari)**. Nilainya dimulai dari standar Pengaturan,
-   tetapi bisa diubah untuk peminjaman ini saja (tombol cepat 7/14/30 atau
-   ketik 1–90). Tanggal **Jatuh tempo** di bawahnya ikut menyesuaikan.
-4. Simpan. Sistem membuat kode pinjam dan menghitung tanggal jatuh tempo dari
-   lama pinjam yang dipilih. Pengaturan tidak berubah karena transaksi ini.
+2. Pindai barcode pada kartu anggota. Kolom **Scan kartu anggota** langsung
+   menampilkan “Terpilih: nama · AGT-0009” bila kartu dikenali.
+3. Kartu ditolak bila tidak terdaftar, anggotanya **nonaktif**, atau masih punya
+   **denda tertunggak** — pesannya tampil merah dan langkah tidak bisa lanjut.
+   Pilihan **Atau pilih anggota manual** tersedia bila kartu hilang.
+4. Kartu yang benar menampilkan nama, nomor anggota, dan jumlah buku yang sedang
+   dipinjam. Tekan **Lanjut ke Buku**.
+
+**Langkah 2 — Buku (pindai label buku)**
+1. Pindai label nomor inventaris pada buku fisik. Buku masuk ke **Daftar
+   peminjaman sementara** dan pesan “Ditambahkan: judul · INV-2026-0055” muncul.
+2. Ulangi untuk buku berikutnya. Tidak perlu menutup modal: salinan yang sama
+   ditolak bila terpindai dua kali, dan salinan berstatus tidak tersedia atau
+   hilang ditolak dengan alasannya.
+3. Bila salah pindai, tekan **Hapus** pada baris daftar. Tombol **Ringkasan**
+   aktif setelah ada minimal satu buku.
+
+**Langkah 3 — Ringkasan**
+1. Periksa nama anggota, jumlah buku aktif, dan batas pinjaman.
+2. Periksa **Lama pinjam (hari)**. Nilainya dimulai dari standar Pengaturan,
+   tetapi bisa diubah untuk transaksi ini saja (tombol cepat 7/14/30 atau ketik
+   1–90). Tanggal **Jatuh tempo** dan denda per hari ikut ditampilkan.
+3. Bila jumlah buku melebihi batas pinjaman, muncul peringatan merah dan tombol
+   **Konfirmasi Peminjaman** dinonaktifkan. Kurangi buku dulu lewat **Kembali**.
+4. Tekan **Konfirmasi Peminjaman**.
+
+**Langkah 4 — Bukti**
+1. Setiap buku yang berhasil mendapat kode pinjam sendiri (mis. `PIN-0042`),
+   judul, nomor inventaris, dan tanggal kembali. Simpan/tunjukkan bukti ini.
+2. Bila sebagian gagal (mis. salinan keburu dipinjam petugas lain), buku lain
+   tetap tercatat dan daftar galat ditampilkan di kotak merah “Sebagian
+   transaksi gagal”. Ulangi hanya buku yang gagal.
+3. Tekan **Selesai**.
+
+Barcode kartu anggota juga dipakai di **Kunjungan & Presensi → Check-in** untuk
+mencatat kedatangan; kartu yang sama tidak perlu diketik ulang.
+
+Tanpa memindai label, peminjaman masih bisa dicatat dengan memilih judul saja;
+sistem lalu mengambil salinan **tersedia** pertama. Cara itu berisiko: buku fisik
+yang diserahkan bisa berbeda dari salinan yang tercatat, jadi utamakan scan
+label.
 
 Anggota juga bisa memilih lama pinjam sendiri saat meminjam dari **Pinjaman
 Saya** di panel anggota (form **Pinjam Buku**): input 1–90 hari plus tombol
@@ -147,8 +202,9 @@ sudah tercetak di label tidak akan cocok lagi dengan sistem.
   yang sudah lulus/keluar.
 - Anggota nonaktif tidak bisa meminjam. Aplikasi menampilkan pesan penjelasan,
   bukan pesan kesalahan teknis.
-- Tombol **Kartu** membuka kartu anggota digital (dengan QR) yang bisa
-  ditunjukkan dari ponsel atau dicetak.
+- Tombol **Kartu** membuka kartu anggota digital yang bisa ditunjukkan dari
+  ponsel atau dicetak. Kartu memuat nomor anggota dalam dua bentuk: QR (pemindai
+  2D/kamera) dan barcode Code 128 (barcode gun).
 
 ## 6. Hitung fisik (stock opname)
 
@@ -190,7 +246,7 @@ terpisah atau tandai secara manual.
 - **Hak Akses Pengguna** (Super Admin): menentukan apa yang boleh dilakukan
   Admin dan Anggota, termasuk membuka/menutup pendaftaran mandiri.
 - **Pengaturan** (Super Admin): durasi pinjam, batas judul, denda, format nomor
-  inventaris.
+  inventaris, dan bentuk label bawaan (QR atau Barcode 1D Code 128).
 - **Kelola Akun** (Super Admin): membuat akun petugas, mengganti peran,
   mereset sandi, menghapus akun.
 

@@ -9,6 +9,7 @@ import { useLibrary } from "@/lib/library-context";
 import type { Buku } from "@/lib/types";
 import { useSistem, type SistemPengaturan } from "@/lib/sistem";
 import KoleksiPopuler from "@/components/landing/KoleksiPopuler";
+import PillNav from "@/components/PillNav";
 
 // Halaman publik — tampil tanpa sidebar (lihat PUBLIK di AppShell).
 // Konten "real": diambil langsung dari data seed (buku, anggota, peminjaman).
@@ -66,36 +67,9 @@ const SOSIAL: { label: string; d: string; href: string | null }[] = [
 
 const rupiahRb = (n: number) => "Rp" + new Intl.NumberFormat("id-ID").format(n);
 
-// Kartu buku deret "Koleksi Populer" — dipakai di marquee horizontal
-// (deret diduplikasi di markup agar putaran loop mulus, lihat .marquee-*).
+// Buku untuk komposisi sampul hero: jumlah peminjaman aktif ikut disimpan agar
+// urutan sampul mengikuti buku yang paling sering dipinjam.
 type BukuPilihan = Buku & { pinjam: number };
-function KartuKoleksi({ b }: { b: BukuPilihan }) {
-  return (
-    // Margin kanan seragam di SEMUA kartu (termasuk terakhir salinan):
-    // lebar track = 2 × N × (190+16) sehingga translateX(-50%) = tepat
-    // satu salinan penuh → putaran loop mulus, tanpa jeda maupun lompat.
-    <div
-      className="card card-raised w-[190px] shrink-0 overflow-hidden"
-      style={{ marginRight: "1rem" }}
-    >
-      <SampulBuku buku={b} className="h-32 w-full" rounded="" />
-      <div className="p-3">
-        <div className="font-semibold text-sm leading-tight line-clamp-2">
-          {b.judul}
-        </div>
-        <div className="text-xs text-[var(--muted)] truncate">{b.penulis}</div>
-        <div className="mt-2 flex items-center justify-between">
-          <span className="text-[11px] font-semibold text-[var(--muted)]">
-            {b.kategori}
-          </span>
-          <span className="text-[11px] font-semibold rounded-full bg-[var(--brand-soft)] text-[var(--brand-ink)] px-2 py-0.5">
-            {b.pinjam > 0 ? `${b.pinjam}x dipinjam` : "Baru"}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 const fiturRincian = (s: SistemPengaturan) => [
   {
@@ -306,20 +280,21 @@ export default function LandingPage() {
       .slice(0, 6);
   }, [bukuKatalog, dipinjamBuku]);
 
+  // Kelas cupertino memberi lapisan gaya Apple (latar #f5f5f7, kartu blur,
+  // sudut besar, tombol pil) tanpa mengubah kelas tiap elemen di dalamnya.
   return (
-    <div className="landing-page min-h-screen bg-[var(--background)]">
+    <div className="landing-page cupertino min-h-screen bg-[var(--background)]">
       {/* Navbar publik */}
       <header
         className={`fixed top-3 inset-x-0 z-50 px-3 sm:px-5 transition-all duration-300 ${
           turun ? "translate-y-0" : "translate-y-1"
         }`}
       >
+        {/* Kaca navbar: latar/border/blur diatur .kaca-nav, status gulir ditandai
+            lewat data-turun agar CSS bisa memekatkan kaca tanpa dua kelas Tailwind. */}
         <div
-          className={`relative mx-auto max-w-6xl flex h-16 items-center justify-between gap-3 rounded-full border px-4 sm:px-6 transition-all duration-300 ${
-            turun
-              ? "border-[var(--border)] bg-white/90 shadow-[var(--sh-3)] backdrop-blur-xl"
-              : "border-white/70 bg-white/75 shadow-[var(--sh-2)] backdrop-blur-lg"
-          }`}
+          data-turun={turun ? "" : undefined}
+          className="kaca-nav relative mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 rounded-full px-4 transition-all duration-300 sm:px-6"
         >
           {/* Logo */}
           <Link href="/" className="flex shrink-0 items-center gap-2.5">
@@ -343,35 +318,47 @@ export default function LandingPage() {
             </span>
           </Link>
 
-          {/* Navigasi desktop: tetap horizontal pada layar besar */}
-          <nav className="hidden items-center gap-1 text-sm font-medium lg:flex">
-            {NAVLINK.map((n) => {
-              const id = n.href.split("#")[1] ?? null;
-              const aktif = id !== null && id === aktifSection;
-
-              return (
-                <Link
-                  key={n.label}
-                  href={n.href}
-                  aria-current={aktif ? "location" : undefined}
-                  onClick={id ? (e) => keSection(e, id) : undefined}
-                  className={`relative whitespace-nowrap rounded-full px-3 py-2 transition-all duration-300 ${
-                    aktif
-                      ? "bg-teal-50 text-[var(--brand-ink)]"
-                      : "text-slate-600 hover:bg-slate-50 hover:text-[var(--brand-ink)]"
-                  }`}
-                >
-                  {n.label}
-                  <span
-                    aria-hidden="true"
-                    className={`absolute inset-x-3 bottom-1 h-0.5 origin-center rounded-full bg-[var(--brand)] transition-transform duration-300 ${
-                      aktif ? "scale-x-100" : "scale-x-0"
-                    }`}
-                  />
-                </Link>
-              );
-            })}
-          </nav>
+          {/* Navigasi desktop: Pill Nav (react-bits) */}
+          <div className="hidden lg:flex">
+            <PillNav
+              items={NAVLINK.map((n) => ({ label: n.label, href: n.href }))}
+              activeHref={aktifSection ? `/#${aktifSection}` : undefined}
+              defaultActiveIndex={0}
+              theme="light"
+              size="md"
+              /* Wadah di atasnya sudah hidden lg:flex, jadi PillNav tidak perlu
+                 menyusut sendiri. Tanpa collapse="never" komponen mengukur
+                 lebar induk saat masih display:none lalu mengunci diri dalam
+                 mode hamburger — hasilnya tombol menu ganda di header desktop. */
+              collapse="never"
+              surface="glass"
+              layout="joined"
+              itemStyle="plain"
+              hoverEffect="fill"
+              indicator="dot"
+              highlightColor="var(--brand-solid)"
+              highlightTextColor="#ffffff"
+              textColor="var(--brand-ink)"
+              linkComponent={Link}
+              onItemClick={(item) => {
+                const id = item.href?.split("#")[1];
+                if (id) {
+                  const el = document.getElementById(id);
+                  if (el) {
+                    el.scrollIntoView({
+                      behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
+                        .matches
+                        ? "auto"
+                        : "smooth",
+                      block: "center",
+                    });
+                    window.history.replaceState(null, "", `/#${id}`);
+                  }
+                }
+              }}
+              ariaLabel="Navigasi utama"
+            />
+          </div>
 
           {/* Tombol kanan */}
           <div className="flex shrink-0 items-center gap-2">
@@ -451,7 +438,7 @@ export default function LandingPage() {
         {/* Panel menu responsif — mengikuti referensi yang dikirim */}
         <div
           id="menu-mobile-pustakaku"
-          className={`absolute left-3 right-3 top-[calc(100%+0.65rem)] mx-auto max-w-6xl origin-top overflow-hidden rounded-3xl border border-slate-200/90 bg-white/95 p-4 shadow-[0_20px_55px_rgba(15,23,42,0.16)] backdrop-blur-xl transition-all duration-200 lg:hidden ${
+          className={`kaca absolute left-3 right-3 top-[calc(100%+0.65rem)] mx-auto max-w-6xl origin-top overflow-hidden rounded-3xl border p-4 transition-all duration-200 lg:hidden ${
             menuTerbuka
               ? "visible translate-y-0 scale-100 opacity-100"
               : "invisible -translate-y-2 scale-[0.98] opacity-0 pointer-events-none"
@@ -508,8 +495,10 @@ export default function LandingPage() {
                   href={n.href}
                   aria-current={aktif ? "location" : undefined}
                   onClick={(e) => {
-                    if (id) keSection(e, id);
+                    // Tutup panel lebih dulu supaya gulir ke section tidak
+                    // dibatalkan oleh animasi penutupan.
                     setMenuTerbuka(false);
+                    if (id) keSection(e, id);
                   }}
                   className={`flex min-h-11 items-center rounded-xl px-3.5 py-3 text-sm font-medium transition-colors ${
                     aktif
@@ -592,7 +581,12 @@ export default function LandingPage() {
               <span>Perpustakaan Digital Modern</span>
             </div>
 
-            <h1 className="mt-7 max-w-3xl text-4xl font-extrabold leading-[1.08] tracking-[-0.045em] text-slate-950 sm:text-5xl lg:text-[66px]">
+            {/* Efek judul: teks berdimensi (depth text) — isi huruf putih dengan
+                bayangan bertumpuk sebagai sisi tebalnya. Frasa "Tanpa Batas"
+                tetap diisi gradien merek lewat landing-gradient-text. Tanpa
+                piringan gelap, huruf putih ini nyaris menyatu dengan latar
+                putih section beranda — hanya sisi hijaunya yang terlihat. */}
+            <h1 className="teks-kedalaman mt-7 max-w-3xl text-balance text-4xl font-extrabold leading-[1.08] tracking-[-0.045em] sm:text-5xl lg:text-[66px]">
               Akses Pengetahuan{" "}
               <span className="landing-gradient-text judul-editorial italic">
                 Tanpa Batas
@@ -600,7 +594,9 @@ export default function LandingPage() {
               di Era Digital.
             </h1>
 
-            <p className="mt-6 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
+            {/* text-pretty: mencegah kata terakhir paragraf menggantung sendirian
+                di baris baru pada layar lebar. */}
+            <p className="mt-6 max-w-2xl text-pretty text-base leading-8 text-slate-600 sm:text-lg">
               Jelajahi koleksi buku {sistem.nama}, temukan bacaan yang sesuai
               minatmu, dan kelola peminjaman dengan lebih mudah dari mana saja.
             </p>
@@ -707,7 +703,7 @@ export default function LandingPage() {
             <div aria-hidden="true" className="landing-art-halo" />
 
             {/* Label tren dekoratif */}
-            <div className="landing-trending absolute -top-3 left-0 z-20 flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white/95 px-4 py-3 shadow-[var(--sh-2)] sm:-left-3">
+            <div className="landing-trending kaca absolute -top-3 left-0 z-20 flex items-center gap-3 rounded-2xl border px-4 py-3 sm:-left-3">
               <span className="grid h-10 w-10 place-items-center rounded-xl bg-amber-50 text-amber-500">
                 <svg
                   width="22"
@@ -767,7 +763,7 @@ export default function LandingPage() {
             </div>
 
             {/* Kartu buku utama */}
-            <div className="landing-reading-card relative z-10 mx-auto w-[58%] max-w-[300px] overflow-hidden rounded-[25px] border border-white bg-white p-3 shadow-[0_25px_70px_rgba(15,23,42,0.18)] sm:p-4">
+            <div className="landing-reading-card kaca relative z-10 mx-auto w-[58%] max-w-[300px] overflow-hidden rounded-[25px] border p-3 sm:p-4">
               <div className="mb-3 flex items-center justify-between gap-2">
                 <span className="text-[10px] font-bold uppercase tracking-[0.13em] text-teal-800 sm:text-xs">
                   Pilihan untukmu
@@ -865,6 +861,8 @@ export default function LandingPage() {
               </span>
             </div>
           </Naik>
+
+
         </div>
       </section>
 
@@ -873,13 +871,16 @@ export default function LandingPage() {
         id="fitur"
         className="relative max-w-6xl mx-auto px-5 py-20 min-h-[100svh] flex flex-col justify-center"
       >
-        <div className="absolute inset-0 bg-white" aria-hidden />
         <Reveal className="relative z-10 max-w-2xl">
           <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand-ink)]">
             Fitur Unggulan
           </span>
-          <h2 className="judul-editorial mt-2 text-3xl lg:text-4xl tracking-tight">
-            Kenapa memilih {sistem.nama}?
+          {/* Judul section fitur memakai efek yang sama dengan judul hero:
+              isi huruf putih, sisi kedalaman bertangga, dan nama sistem di
+              frasa bertanda gradien merek. */}
+          <h2 className="teks-kedalaman judul-editorial mt-2 text-balance text-3xl tracking-tight lg:text-4xl">
+            Kenapa memilih{" "}
+            <span className="landing-gradient-text italic">{sistem.nama}?</span>
           </h2>
           <p className="mt-3 text-slate-600">
             Dari penataan koleksi sampai penagihan denda — {sistem.nama} menutup
@@ -889,9 +890,13 @@ export default function LandingPage() {
         <div className="relative z-10 mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {fiturRincian(sistem).map((f, i) => (
             <Reveal key={f.judul} delay={(i % 3) * 0.08}>
-              <div className="group card card-raised h-full p-6">
+              {/* Flex kolom + tinggi teks yang dikunci: tanpa itu kartu dengan
+                  penjelasan dua baris menyisakan ruang bawah lebih lega
+                  daripada kartu tiga baris, sehingga barisannya terlihat
+                  pincang meski tinggi kartunya sama. */}
+              <div className="group card card-raised flex h-full flex-col p-6">
                 <div
-                  className="h-11 w-11 rounded-xl text-white grid place-items-center shadow-sm transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3"
+                  className="h-11 w-11 shrink-0 rounded-xl text-white grid place-items-center shadow-sm transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3"
                   style={grad(i)}
                 >
                   <svg
@@ -907,8 +912,14 @@ export default function LandingPage() {
                     <path d={f.ikon} />
                   </svg>
                 </div>
-                <h3 className="mt-4 font-bold">{f.judul}</h3>
-                <p className="mt-1.5 text-sm text-slate-600">{f.teks}</p>
+                <h3 className="mt-4 text-base font-bold leading-6">
+                  {f.judul}
+                </h3>
+                {/* min-h-15 = tiga baris teks 20 px; kartu yang teksnya hanya
+                    dua baris tetap memakai tinggi yang sama. */}
+                <p className="mt-1.5 line-clamp-3 min-h-15 text-pretty text-sm text-slate-600">
+                  {f.teks}
+                </p>
               </div>
             </Reveal>
           ))}
@@ -951,8 +962,11 @@ export default function LandingPage() {
               Alur Praktis 3 Menit
             </span>
 
-            <h2 className="judul-editorial mt-4 text-3xl leading-tight tracking-tight text-slate-950 sm:text-4xl lg:text-[44px]">
-              3 Langkah Mudah Memulai Baca
+            {/* Judul section cara kerja: efek depth text yang sama dengan judul
+                hero/fitur/testimoni, dengan frasa penutup bergradien merek. */}
+            <h2 className="teks-kedalaman judul-editorial mt-4 text-balance text-3xl leading-tight tracking-tight sm:text-4xl lg:text-[44px]">
+              3 Langkah Mudah{" "}
+              <span className="landing-gradient-text italic">Memulai Baca</span>
             </h2>
 
             <p className="mx-auto mt-3 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
@@ -1071,8 +1085,11 @@ export default function LandingPage() {
               Informasi Perpustakaan
             </span>
 
-            <h2 className="judul-editorial mt-7 text-3xl leading-tight tracking-tight text-slate-950 sm:text-4xl lg:text-[44px]">
-              Jam Layanan & Aturan Peminjaman
+            {/* Efek depth text yang sama; isi huruf putih diatur kelas
+                teks-kedalaman sehingga warna gelap lama tidak dipakai lagi. */}
+            <h2 className="teks-kedalaman judul-editorial mt-7 text-balance text-3xl leading-tight tracking-tight sm:text-4xl lg:text-[44px]">
+              <span className="landing-gradient-text italic">Jam Layanan</span>{" "}
+              &amp; Aturan Peminjaman
             </h2>
 
             <p className="mt-5 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
@@ -1122,7 +1139,7 @@ export default function LandingPage() {
                   ].map((jadwal) => (
                     <div
                       key={jadwal.hari}
-                      className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white px-5 py-4"
+                      className="kaca flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-5 py-4"
                     >
                       <span className="text-sm font-semibold text-slate-700">
                         {jadwal.hari}
@@ -1141,7 +1158,7 @@ export default function LandingPage() {
                   ))}
                 </div>
 
-                <div className="mt-6 flex items-start gap-3 rounded-2xl border border-teal-800/10 bg-emerald-50/70 p-4">
+                <div className="kaca mt-6 flex items-start gap-3 rounded-2xl border p-4">
                   <svg
                     className="mt-0.5 shrink-0 text-teal-800"
                     width="19"
@@ -1269,8 +1286,11 @@ export default function LandingPage() {
             <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand-ink)]">
               Testimoni
             </span>
-            <h2 className="judul-editorial mt-2 text-3xl lg:text-4xl tracking-tight">
-              Kata mereka yang sudah memakai
+            {/* Sama seperti judul hero dan fitur: isi huruf putih dengan sisi
+                kedalaman bertangga, frasa penutup memakai gradien merek. */}
+            <h2 className="teks-kedalaman judul-editorial mt-2 text-balance text-3xl tracking-tight lg:text-4xl">
+              Kata mereka yang{" "}
+              <span className="landing-gradient-text italic">sudah memakai</span>
             </h2>
           </Reveal>
           {/* Deret ulasan; key + anim-naik membuat kartu fade-up ulang
@@ -1378,8 +1398,11 @@ export default function LandingPage() {
               Tanya Jawab
             </span>
 
-            <h2 className="judul-editorial mt-7 max-w-lg text-3xl leading-tight tracking-tight text-slate-950 sm:text-4xl lg:text-[44px]">
-              Pertanyaan yang Sering Diajukan
+            {/* Efek depth text yang sama; warna teks gelap lama dilepas karena
+                isi huruf kini diatur putih oleh kelas teks-kedalaman. */}
+            <h2 className="teks-kedalaman judul-editorial mt-7 max-w-lg text-balance text-3xl leading-tight tracking-tight sm:text-4xl lg:text-[44px]">
+              Pertanyaan yang{" "}
+              <span className="landing-gradient-text italic">Sering Diajukan</span>
             </h2>
 
             <p className="mt-5 max-w-lg text-sm leading-7 text-slate-600 sm:text-base">

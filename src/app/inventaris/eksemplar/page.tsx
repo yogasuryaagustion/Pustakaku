@@ -1,13 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import { useBoleh } from "@/lib/auth";
 import { useToast } from "@/components/toast";
 import { ConfirmDialog, EmptyState, Modal, StatCard } from "@/components/ui";
 import { KepalaHalaman } from "@/components/kepala-halaman";
+import { CetakLabel } from "@/components/cetak-label";
 import {
   BadgeKondisi,
   BadgeStatus,
@@ -65,6 +65,8 @@ interface HasilImpor {
 interface FormEksemplar {
   id?: string;
   buku_id: string;
+  /** Hanya dipakai saat menambah: berapa salinan disimpan sekaligus. */
+  jumlah: number;
   nomor_inventaris: string;
   status: string;
   kondisi_fisik: string;
@@ -74,6 +76,7 @@ interface FormEksemplar {
 
 const FORM_KOSONG: FormEksemplar = {
   buku_id: "",
+  jumlah: 1,
   nomor_inventaris: "",
   status: "tersedia",
   kondisi_fisik: "layak",
@@ -110,6 +113,10 @@ export default function HalamanDataEksemplar() {
   const [galatForm, setGalatForm] = useState("");
   const [hapus, setHapus] = useState<BarisEksemplar | null>(null);
 
+  // Form cetak label tampil sebagai dialog di halaman ini, supaya penyaringan
+  // rak/bentuk kode dan pencetakan tidak perlu membuka tab baru.
+  const [labelTerbuka, setLabelTerbuka] = useState(false);
+
   const { data: mentah, memuat, galat } = useMuatApi<ResponInventaris>(
     "/api/eksemplar",
     segar,
@@ -129,10 +136,21 @@ export default function HalamanDataEksemplar() {
     return peta;
   }, [data]);
 
-  // Pratinjau nomor berikutnya menurut pola Pengaturan.
+  // Pratinjau nomor berikutnya menurut pola Pengaturan. Untuk penambahan
+  // banyak salinan, ditampilkan nomor pertama dan terakhir agar petugas tahu
+  // rentang nomor yang akan dibuat.
+  const urutBerikutnya = (data?.eksemplar.length ?? 0) + 1;
   const contohNomor = useMemo(
-    () => nomorInventarisContoh(sistem.formatInventaris, (data?.eksemplar.length ?? 0) + 1),
-    [sistem.formatInventaris, data],
+    () => nomorInventarisContoh(sistem.formatInventaris, urutBerikutnya),
+    [sistem.formatInventaris, urutBerikutnya],
+  );
+  const contohNomorAkhir = useMemo(
+    () =>
+      nomorInventarisContoh(
+        sistem.formatInventaris,
+        urutBerikutnya + Math.max(0, form.jumlah - 1),
+      ),
+    [sistem.formatInventaris, urutBerikutnya, form.jumlah],
   );
 
   const baris = useMemo(() => {
@@ -169,6 +187,7 @@ export default function HalamanDataEksemplar() {
     setForm({
       id: e.id,
       buku_id: e.buku_id,
+      jumlah: 1,
       nomor_inventaris: e.nomor_inventaris,
       status: e.status,
       kondisi_fisik: e.kondisi_fisik,
@@ -199,8 +218,18 @@ export default function HalamanDataEksemplar() {
         await apiFetch(`/api/eksemplar/${form.id}`, { method: "PUT", body: isi });
         toast.sukses("Data eksemplar diperbarui.");
       } else {
-        await apiFetch("/api/eksemplar", { method: "POST", body: isi });
-        toast.sukses("Eksemplar baru ditambahkan.");
+        // Nomor manual hanya berlaku untuk satu salinan; server menolak
+        // kombinasi jumlah > 1 dengan nomor manual.
+        const jumlah = form.nomor_inventaris.trim() ? 1 : form.jumlah;
+        await apiFetch("/api/eksemplar", {
+          method: "POST",
+          body: { ...isi, jumlah },
+        });
+        toast.sukses(
+          jumlah > 1
+            ? `${jumlah} eksemplar ditambahkan dengan nomor berurutan.`
+            : "Eksemplar baru ditambahkan.",
+        );
       }
       setModal(false);
       setSegar((s) => s + 1);
@@ -272,9 +301,13 @@ export default function HalamanDataEksemplar() {
         aksi={
           bolehKelola ? (
             <div className="flex flex-wrap gap-2">
-              <Link href="/inventaris/label" className="btn btn-ghost">
-                Label QR
-              </Link>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => setLabelTerbuka(true)}
+              >
+                Cetak Label
+              </button>
               <button type="button" className="btn btn-ghost" onClick={bukaImpor}>
                 Impor CSV
               </button>
@@ -458,23 +491,58 @@ export default function HalamanDataEksemplar() {
             </select>
           </div>
 
+          {!form.id && (
+            <div>
+              <label className="label" htmlFor="f-jumlah">
+                Jumlah salinan
+              </label>
+              <input
+                id="f-jumlah"
+                type="number"
+                min={1}
+                max={50}
+                step={1}
+                className="input w-28 font-mono"
+                value={form.jumlah}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    jumlah: Math.max(1, Math.min(50, Number(e.target.value) || 1)),
+                  }))
+                }
+              />
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                {form.jumlah > 1
+                  ? `${form.jumlah} salinan dibuat sekaligus dengan nomor berurutan ${contohNomor} … ${contohNomorAkhir}.`
+                  : "Isi lebih dari 1 untuk menambah beberapa salinan sekaligus — nomornya dibuat berurutan."}
+              </p>
+            </div>
+          )}
+
           <div>
             <label className="label" htmlFor="f-nomor">
               Nomor inventaris
             </label>
             <input
               id="f-nomor"
-              className="input font-mono"
+              className="input font-mono disabled:bg-slate-50 disabled:text-slate-400"
               placeholder={
-                form.id ? "Ubah nomor inventaris" : `Otomatis: ${contohNomor}`
+                form.id
+                  ? "Ubah nomor inventaris"
+                  : form.jumlah > 1
+                    ? `Otomatis berurutan: ${contohNomor} … ${contohNomorAkhir}`
+                    : `Otomatis: ${contohNomor}`
               }
-              value={form.nomor_inventaris}
+              value={form.jumlah > 1 ? "" : form.nomor_inventaris}
+              disabled={!form.id && form.jumlah > 1}
               onChange={(e) => setForm((f) => ({ ...f, nomor_inventaris: e.target.value }))}
             />
             <p className="mt-1 text-xs text-[var(--muted)]">
               {form.id
                 ? "Biarkan sesuai atau ganti manual."
-                : `Kosongkan agar dibuat otomatis dari pola Pengaturan (${sistem.formatInventaris}).`}
+                : form.jumlah > 1
+                  ? "Nomor manual tidak dipakai saat menambah beberapa salinan sekaligus."
+                  : `Kosongkan agar dibuat otomatis dari pola Pengaturan (${sistem.formatInventaris}).`}
             </p>
           </div>
 
@@ -633,6 +701,8 @@ export default function HalamanDataEksemplar() {
           </div>
         </div>
       </Modal>
+
+      <CetakLabel terbuka={labelTerbuka} onTutup={() => setLabelTerbuka(false)} />
 
       <ConfirmDialog
         open={hapus !== null}

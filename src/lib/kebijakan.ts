@@ -100,10 +100,7 @@ export function useKebijakan(): Kebijakan {
  * Menyimpan kebijakan melalui PUT /api/kebijakan.
  * Identitas pelaku ditentukan server berdasarkan sesi login.
  */
-export async function simpanKebijakan(
-  kebijakan: Kebijakan,
-  _aktor?: string
-): Promise<Kebijakan> {
+export async function simpanKebijakan(kebijakan: Kebijakan): Promise<Kebijakan> {
   const hasil = await apiFetch<ResponsKebijakan>("/api/kebijakan", {
     method: "PUT",
     body: { kebijakan },
