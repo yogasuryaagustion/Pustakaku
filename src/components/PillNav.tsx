@@ -289,7 +289,12 @@ const PillNav = ({
     stretch: clamp(stretch, 0, 1)
   };
   const settingsRef = useRef(settings);
-  settingsRef.current = settings;
+  // Salinan nilai terbaru untuk handler pointer, ditulis di layout effect:
+  // menulis ref saat render melanggar aturan React (dan bisa membaca nilai
+  // yang belum ter-commit).
+  useLayoutEffect(() => {
+    settingsRef.current = settings;
+  });
 
   const palette = THEMES[theme] ?? THEMES.dark;
   const vars: Record<string, string> = { ...palette, ...(SIZES[size] ?? SIZES.md) };
@@ -617,7 +622,12 @@ const PillNav = ({
     if (!root || !measureEl) return undefined;
     const evaluate = () => {
       if (collapse === 'always' || collapse === 'never') {
-        setCollapsed(collapse === 'always');
+        const tetapRingkas = collapse === 'always';
+        setCollapsed(tetapRingkas);
+        if (!tetapRingkas) {
+          setOpen(false);
+          setPanelShown(false);
+        }
         return;
       }
       const parent = root.parentElement;
@@ -636,6 +646,13 @@ const PillNav = ({
       const next = need > available + 0.5;
       if (introRef.current && next !== collapsed) pendingRef.current = next;
       setCollapsed(next);
+      // Nav melebar lagi: panel menu tidak berlaku, jadi ditutup di sini —
+      // pengukuran berjalan dari callback ResizeObserver, bukan dari badan
+      // effect, sehingga tidak memicu render berantai.
+      if (!next) {
+        setOpen(false);
+        setPanelShown(false);
+      }
     };
     evaluate();
     const observer = new ResizeObserver(evaluate);
@@ -689,10 +706,6 @@ const PillNav = ({
     });
   }, [collapsed, joined]);
 
-  useEffect(() => {
-    if (!collapsed && open) setOpen(false);
-  }, [collapsed, open]);
-
   useLayoutEffect(() => {
     const panel = panelRef.current;
     const root = rootRef.current;
@@ -722,19 +735,23 @@ const PillNav = ({
         );
       });
     } else {
-      if (reduce) {
-        setPanelShown(false);
-        return undefined;
-      }
+      // Prefers-reduced-motion dipenuhi dengan durasi 0, bukan setState di
+      // dalam effect: panel tetap hilang seketika karena penutupan dipicu
+      // callback onfinish animasi.
       const morph = panel.animate([{ clipPath: end }, { clipPath: start }], {
-        duration: 380,
+        duration: reduce ? 0 : 380,
         easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
         fill: 'forwards'
       });
       morph.onfinish = () => setPanelShown(false);
       running.push(morph);
       rows.forEach(row => {
-        running.push(row.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: 'forwards' }));
+        running.push(
+          row.animate([{ opacity: 1 }, { opacity: 0 }], {
+            duration: reduce ? 0 : 160,
+            fill: 'forwards'
+          })
+        );
       });
     }
     return () => {
