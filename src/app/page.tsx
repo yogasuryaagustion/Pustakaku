@@ -290,12 +290,11 @@ export default function LandingPage() {
           turun ? "translate-y-0" : "translate-y-1"
         }`}
       >
+        {/* Kaca navbar: latar/border/blur diatur .kaca-nav, status gulir ditandai
+            lewat data-turun agar CSS bisa memekatkan kaca tanpa dua kelas Tailwind. */}
         <div
-          className={`relative mx-auto max-w-6xl flex h-16 items-center justify-between gap-3 rounded-full border px-4 sm:px-6 transition-all duration-300 ${
-            turun
-              ? "border-[var(--border)] bg-white/90 shadow-[var(--sh-3)] backdrop-blur-xl"
-              : "border-white/70 bg-white/75 shadow-[var(--sh-2)] backdrop-blur-lg"
-          }`}
+          data-turun={turun ? "" : undefined}
+          className="kaca-nav relative mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 rounded-full px-4 transition-all duration-300 sm:px-6"
         >
           {/* Logo */}
           <Link href="/" className="flex shrink-0 items-center gap-2.5">
@@ -439,7 +438,7 @@ export default function LandingPage() {
         {/* Panel menu responsif — mengikuti referensi yang dikirim */}
         <div
           id="menu-mobile-pustakaku"
-          className={`absolute left-3 right-3 top-[calc(100%+0.65rem)] mx-auto max-w-6xl origin-top overflow-hidden rounded-3xl border border-slate-200/90 bg-white/95 p-4 shadow-[0_20px_55px_rgba(15,23,42,0.16)] backdrop-blur-xl transition-all duration-200 lg:hidden ${
+          className={`kaca absolute left-3 right-3 top-[calc(100%+0.65rem)] mx-auto max-w-6xl origin-top overflow-hidden rounded-3xl border p-4 transition-all duration-200 lg:hidden ${
             menuTerbuka
               ? "visible translate-y-0 scale-100 opacity-100"
               : "invisible -translate-y-2 scale-[0.98] opacity-0 pointer-events-none"
@@ -704,7 +703,7 @@ export default function LandingPage() {
             <div aria-hidden="true" className="landing-art-halo" />
 
             {/* Label tren dekoratif */}
-            <div className="landing-trending absolute -top-3 left-0 z-20 flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white/95 px-4 py-3 shadow-[var(--sh-2)] sm:-left-3">
+            <div className="landing-trending kaca absolute -top-3 left-0 z-20 flex items-center gap-3 rounded-2xl border px-4 py-3 sm:-left-3">
               <span className="grid h-10 w-10 place-items-center rounded-xl bg-amber-50 text-amber-500">
                 <svg
                   width="22"
@@ -764,7 +763,7 @@ export default function LandingPage() {
             </div>
 
             {/* Kartu buku utama */}
-            <div className="landing-reading-card relative z-10 mx-auto w-[58%] max-w-[300px] overflow-hidden rounded-[25px] border border-white bg-white p-3 shadow-[0_25px_70px_rgba(15,23,42,0.18)] sm:p-4">
+            <div className="landing-reading-card kaca relative z-10 mx-auto w-[58%] max-w-[300px] overflow-hidden rounded-[25px] border p-3 sm:p-4">
               <div className="mb-3 flex items-center justify-between gap-2">
                 <span className="text-[10px] font-bold uppercase tracking-[0.13em] text-teal-800 sm:text-xs">
                   Pilihan untukmu
@@ -1140,7 +1139,7 @@ export default function LandingPage() {
                   ].map((jadwal) => (
                     <div
                       key={jadwal.hari}
-                      className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white px-5 py-4"
+                      className="kaca flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-5 py-4"
                     >
                       <span className="text-sm font-semibold text-slate-700">
                         {jadwal.hari}
@@ -1159,7 +1158,7 @@ export default function LandingPage() {
                   ))}
                 </div>
 
-                <div className="mt-6 flex items-start gap-3 rounded-2xl border border-teal-800/10 bg-emerald-50/70 p-4">
+                <div className="kaca mt-6 flex items-start gap-3 rounded-2xl border p-4">
                   <svg
                     className="mt-0.5 shrink-0 text-teal-800"
                     width="19"

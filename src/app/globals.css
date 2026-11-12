@@ -1240,9 +1240,40 @@ html {
 }
 
 /* Latar halaman: utilitas bg-[var(--background)] pada elemen yang sama menang
-   lebih dulu, jadi latar abu Cupertino perlu selektor dua kelas. */
+   lebih dulu, jadi latar abu Cupertino perlu selektor dua kelas.
+   Pendar hijau lembut ditambahkan sebagai dasar efek kaca: tanpa warna di
+   belakangnya, blur pada kartu tidak terlihat sama sekali. Layer dibuat fixed
+   agar pendar tidak ikut tergulir dan kaca tetap punya sesuatu untuk diburamkan. */
 .cupertino.landing-page {
-  background: #f5f5f7;
+  background-color: #f5f5f7;
+  background-image:
+    radial-gradient(
+      760px 520px at 8% 2%,
+      color-mix(in srgb, #21835a 18%, transparent),
+      transparent 62%
+    ),
+    radial-gradient(
+      700px 520px at 94% 10%,
+      color-mix(in srgb, #21835a 13%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 640px at 50% 44%,
+      color-mix(in srgb, #63b193 16%, transparent),
+      transparent 66%
+    ),
+    radial-gradient(
+      720px 520px at 10% 88%,
+      color-mix(in srgb, #21835a 12%, transparent),
+      transparent 62%
+    ),
+    radial-gradient(
+      780px 540px at 90% 92%,
+      color-mix(in srgb, #8ecdb2 20%, transparent),
+      transparent 64%
+    );
+  background-attachment: fixed;
+  background-repeat: no-repeat;
 }
 
 /* Samakan latar semua section dengan latar halaman: sebelumnya section berlatar
@@ -1250,7 +1281,7 @@ html {
    Hero dikecualikan karena latarnya memakai pendar merek sendiri, dan
    !important diperlukan untuk menimpa aturan section putih yang sudah ada. */
 .cupertino.landing-page section:not(.landing-hero) {
-  background: #f5f5f7 !important;
+  background: transparent !important;
 }
 
 /* Judul Cupertino lebih rapat tracking-nya dan bobot tebalnya lebih tegas. */
@@ -1265,15 +1296,71 @@ html {
 .cupertino .card,
 .cupertino .card-raised {
   border-radius: 26px;
-  border: 1px solid var(--cpt-edge);
-  background: rgba(255, 255, 255, 0.78);
-  -webkit-backdrop-filter: blur(20px) saturate(1.7);
-  backdrop-filter: blur(20px) saturate(1.7);
-  box-shadow: var(--cpt-shadow);
+  /* Kaca yang lebih bening daripada sebelumnya: gradien putih tipis di atas
+     blur kuat, ditambah garis tepi putih dan kilau di sisi atas seperti
+     panel Control Center. */
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.72),
+    rgba(255, 255, 255, 0.48)
+  );
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  backdrop-filter: blur(24px) saturate(1.8);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(16, 24, 40, 0.04),
+    0 20px 45px -22px rgba(16, 24, 40, 0.28);
   transition:
     transform 0.35s var(--cpt-ease),
     box-shadow 0.35s var(--cpt-ease),
     background-color 0.35s var(--cpt-ease);
+}
+
+/* Navbar mengambang: kaca paling bening dari semua permukaan landing karena
+   ia melayang di atas konten yang terus bergulir di belakangnya. Saat halaman
+   sudah digulir (data-turun), lapisan kaca sedikit lebih pekat dan bayangannya
+   lebih tegas supaya batas navbar tetap terbaca di atas teks hero/section. */
+.cupertino .kaca-nav {
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  background: linear-gradient(
+    165deg,
+    rgba(255, 255, 255, 0.66),
+    rgba(255, 255, 255, 0.38)
+  );
+  -webkit-backdrop-filter: blur(26px) saturate(1.85);
+  backdrop-filter: blur(26px) saturate(1.85);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 12px 34px -20px rgba(16, 24, 40, 0.35);
+}
+
+.cupertino .kaca-nav[data-turun] {
+  border-color: rgba(255, 255, 255, 0.72);
+  background: linear-gradient(
+    165deg,
+    rgba(255, 255, 255, 0.82),
+    rgba(255, 255, 255, 0.58)
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 14px 40px -18px rgba(16, 24, 40, 0.4);
+}
+
+/* Kaca untuk elemen landing yang bukan .card (panel menu, label melayang,
+   baris jadwal FAQ). Satu resep blur supaya semua permukaan terlihat sama. */
+.cupertino .kaca {
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.78),
+    rgba(255, 255, 255, 0.52)
+  );
+  -webkit-backdrop-filter: blur(20px) saturate(1.75);
+  backdrop-filter: blur(20px) saturate(1.75);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 16px 40px -24px rgba(16, 24, 40, 0.3);
 }
 
 .cupertino .card-raised:hover {
@@ -1645,3 +1732,107 @@ html {
     transform: none;
   }
 }
+
+/* === Liquid Glass untuk cangkang aplikasi ===============================
+   Berlaku untuk panel anggota, admin, dan super admin — ketiganya memakai
+   AppShell yang sama, jadi cukup satu kelas di akar cangkang (.app-kaca).
+
+   Kaca hanya terlihat bila ada warna di belakangnya, karena itu latar cangkang
+   diberi pendar merek yang halus dan tetap (fixed). Aturannya:
+     1. --surface dan --card di-scope ke cangkang supaya sidebar, header, dan
+        panel halaman sama-sama tembus pandang,
+     2. .card menjadi kaca berbingkai putih tipis,
+     3. .kaca-panel untuk permukaan cangkang yang bukan .card,
+     4. tabel, input, dan modal tetap pekat agar angka dan teks kecil tidak
+        tenggelam ke pendar latar. */
+.app-kaca {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(
+      720px 480px at 4% -8%,
+      color-mix(in srgb, var(--brand) 24%, transparent),
+      transparent 62%
+    ),
+    radial-gradient(
+      680px 460px at 98% 2%,
+      color-mix(in srgb, var(--brand-light) 28%, transparent),
+      transparent 64%
+    ),
+    radial-gradient(
+      900px 620px at 52% 108%,
+      color-mix(in srgb, var(--brand) 20%, transparent),
+      transparent 68%
+    );
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+
+  --surface: rgba(255, 255, 255, 0.38);
+  --surface-soft: rgba(255, 255, 255, 0.3);
+  /* Panel halaman banyak memakai bg-[var(--card)]; dibuat tembus pandang agar
+     pendar latar terlihat, lalu diberi blur oleh aturan di bawah. Nilainya
+     sengaja rendah supaya permukaan benar-benar transparan, bukan sekadar
+     putih yang sedikit memudar. */
+  --card: rgba(255, 255, 255, 0.42);
+}
+
+/* Permukaan yang memakai token --card lewat utility Tailwind (bukan kelas
+   .card) ikut diberi blur supaya tidak sekadar transparan tanpa efek kaca. */
+.app-kaca [class*="bg-[var(--card)]"] {
+  -webkit-backdrop-filter: blur(20px) saturate(1.7);
+  backdrop-filter: blur(20px) saturate(1.7);
+}
+
+/* Kartu kaca: gradien putih tipis di atas blur kuat, dengan kilau di sisi atas
+   dan bayangan lembut agar tetap terbaca sebagai permukaan terpisah. */
+.app-kaca .card,
+.app-kaca .card-raised {
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.6),
+    rgba(255, 255, 255, 0.28)
+  );
+  -webkit-backdrop-filter: blur(22px) saturate(1.75);
+  backdrop-filter: blur(22px) saturate(1.75);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(16, 24, 40, 0.04),
+    0 18px 44px -24px rgba(16, 24, 40, 0.28);
+}
+
+/* Permukaan cangkang (sidebar, header atas, strip menu mobile). */
+.app-kaca .kaca-panel {
+  border: 1px solid rgba(255, 255, 255, 0.64);
+  background: linear-gradient(
+    165deg,
+    rgba(255, 255, 255, 0.55),
+    rgba(255, 255, 255, 0.26)
+  );
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  backdrop-filter: blur(24px) saturate(1.8);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 14px 34px -22px rgba(16, 24, 40, 0.32);
+}
+
+/* Bilah kaca untuk header halaman publik (tamu). Bentuknya menempel penuh di
+   atas layar, jadi tidak dibulatkan seperti .kaca-panel pada cangkang aplikasi. */
+.kaca-bar {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.62),
+    rgba(255, 255, 255, 0.34)
+  );
+  -webkit-backdrop-filter: blur(20px) saturate(1.7);
+  backdrop-filter: blur(20px) saturate(1.7);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 10px 30px -24px rgba(16, 24, 40, 0.3);
+}
+
+/* Tabel dan isian tetap pekat agar angka dan teks kecil tidak tenggelam ke
+   pendar latar; hanya permukaannya yang diberi kilau kaca. */
+.app-kaca .input,
+.app-kaca table {
+  background-color: rgba(255, 255, 255, 0.78);
+}
+

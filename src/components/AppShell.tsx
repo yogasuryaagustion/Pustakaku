@@ -326,7 +326,7 @@ function Sidebar({
 
   return (
     <aside
-      className={`sticky top-4 flex h-[calc(100vh-2rem)] shrink-0 flex-col overflow-hidden rounded-[1.5rem] border border-[color-mix(in_srgb,var(--border)_70%,transparent)] bg-[var(--surface)] shadow-[var(--sh-2)] backdrop-blur-xl transition-[width] duration-300 ${
+      className={`kaca-panel sticky top-4 flex h-[calc(100vh-2rem)] shrink-0 flex-col overflow-hidden rounded-[1.5rem] transition-[width] duration-300 ${
         collapsed ? "w-[88px]" : "w-[260px]"
       }`}
     >
@@ -833,8 +833,11 @@ function Shell({ children }: { children: React.ReactNode }) {
   // navbar publik, konten read-only.
   if (!sedangMasuk && diizinkan) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <header className="border-b border-[var(--border)] bg-white/90 backdrop-blur sticky top-0 z-40">
+      // Tamu memakai kaca yang sama dengan cangkang pengguna (app-kaca) supaya
+      // pendar latar dan kartu bertransparansi konsisten; header publik memakai
+      // .kaca-bar karena bentuknya bilah penuh, bukan panel mengambang.
+      <div className="app-kaca min-h-screen flex flex-col">
+        <header className="kaca-bar sticky top-0 z-40">
           <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between gap-4">
             <Link href="/" className="flex items-center gap-2.5">
               <div className="h-9 w-9 rounded-lg bg-[var(--brand-solid)] text-white grid place-items-center">
@@ -920,7 +923,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="flex min-h-screen">
+    <div className="app-kaca flex min-h-screen">
       <div
         className={`hidden shrink-0 p-4 transition-[width] duration-300 md:block ${
           sidebarCollapsed ? "w-[120px]" : "w-[292px]"
@@ -935,7 +938,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 
       <div className="flex-1 flex flex-col min-w-0">
         <header className="sticky top-0 z-30 shrink-0 px-4 pt-4 sm:px-6">
-          <div className="flex min-h-[68px] items-center justify-between gap-4 rounded-[1rem] border border-[color-mix(in_srgb,var(--border)_70%,transparent)] bg-[var(--surface)] px-4 shadow-[var(--sh-1)] backdrop-blur-xl sm:px-6">
+          <div className="kaca-panel flex min-h-[68px] items-center justify-between gap-4 rounded-[1rem] px-4 sm:px-6">
             {/* Judul halaman */}
             <div className="flex min-w-0 items-center gap-3">
               <h1 className="truncate text-lg font-bold tracking-tight">
@@ -984,7 +987,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         </header>
         {/* Navigasi versi mobile. top-[88px] = tinggi header sticky (pt-4 +
             min-h-[72px]); dengan top-16 chip menu tertutup sebagian header. */}
-        <div className="md:hidden sticky top-[88px] z-20 bg-[var(--card)]/95 backdrop-blur-md border-b border-[var(--border)] px-3 py-2 flex gap-1.5 overflow-x-auto tanpa-scrollbar">
+        <div className="kaca-panel md:hidden sticky top-[88px] z-20 px-3 py-2 flex gap-1.5 overflow-x-auto tanpa-scrollbar">
           {nav.map((n) => (
             <Link
               key={n.href}
