@@ -8,6 +8,7 @@ import { useLibrary, useHelper } from "@/lib/library-context";
 import { useAuth, useBoleh } from "@/lib/auth";
 import { useSistem } from "@/lib/sistem";
 import { KATEGORI_LIST, type Buku, type Kategori } from "@/lib/types";
+import { apiFetch } from "@/lib/api";
 
 import {
   Modal,
@@ -57,6 +58,17 @@ type ResponsPencarianBuku = {
   buku: HasilPencarianBuku[];
 };
 
+/** Baris daftar arsip — buku yang dihapus tapi masih punya riwayat pinjaman. */
+type BukuArsip = {
+  id: string;
+  judul: string;
+  penulis: string;
+  kategori: string;
+  rak: string;
+  stok: number;
+  dihapusPada: string | null;
+};
+
 const IKON = {
   cari: "m21 21-4.35-4.35 M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0z",
   buku: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z",
@@ -67,6 +79,7 @@ const IKON = {
   hapus: "M3 6h18 M8 6V4h8v2 M19 6l-1 14H6L5 6 M10 11v5 M14 11v5",
   bukuTerbuka:
     "M12 7v14 M3 18V5a2 2 0 0 1 2-2h3a4 4 0 0 1 4 4 4 4 0 0 1 4-4h3a2 2 0 0 1 2 2v13 M3 18h5a4 4 0 0 1 4 3 4 4 0 0 1 4-3h5",
+  arsip: "M3 7h18v3H3z M5 10v10h14V10 M9 14h6",
 };
 
 function Ikon({ d, size = 18 }: { d: string; size?: number }) {
@@ -92,7 +105,7 @@ function angka(nilai: number) {
 }
 
 function KatalogKonten() {
-  const { buku, siap, tambahBuku, ubahBuku, hapusBuku, pinjamBuku } =
+  const { buku, siap, tambahBuku, ubahBuku, hapusBuku, pinjamBuku, muatUlang } =
     useLibrary();
 
   const { stokTersedia } = useHelper();
@@ -137,6 +150,13 @@ function KatalogKonten() {
 
   const [hapusTarget, setHapusTarget] = useState<Buku | null>(null);
   const [pinjamTarget, setPinjamTarget] = useState<Buku | null>(null);
+
+  // Arsip: buku yang dihapus namun riwayatnya dipertahankan. Daftarnya dibaca
+  // saat modal dibuka agar katalog tidak menambah satu request di setiap muat.
+  const [bukaArsip, setBukaArsip] = useState(false);
+  const [arsip, setArsip] = useState<BukuArsip[]>([]);
+  const [memuatArsip, setMemuatArsip] = useState(false);
+  const [memulihkan, setMemulihkan] = useState<string | null>(null);
 
   const [tanggalPinjam, setTanggalPinjam] = useState(() =>
     new Date().toISOString().slice(0, 10),
@@ -287,6 +307,37 @@ function KatalogKonten() {
     );
   }
 
+  async function muatArsip() {
+    setMemuatArsip(true);
+    try {
+      const hasil = await apiFetch<{ buku: BukuArsip[] }>("/api/buku/arsip");
+      setArsip(hasil.buku ?? []);
+    } catch (error) {
+      toast.gagal(
+        error instanceof Error ? error.message : "Gagal memuat buku diarsipkan.",
+      );
+    } finally {
+      setMemuatArsip(false);
+    }
+  }
+
+  async function pulihkanBuku(item: BukuArsip) {
+    setMemulihkan(item.id);
+    try {
+      await apiFetch(`/api/buku/${item.id}/pulihkan`, { method: "POST" });
+      toast.sukses(`Buku "${item.judul}" dikembalikan ke katalog.`);
+      setArsip((sebelumnya) => sebelumnya.filter((b) => b.id !== item.id));
+      // Katalog memuat ulang agar buku hasil pemulihan langsung tampil.
+      muatUlang(["buku"]);
+    } catch (error) {
+      toast.gagal(
+        error instanceof Error ? error.message : "Buku gagal dipulihkan.",
+      );
+    } finally {
+      setMemulihkan(null);
+    }
+  }
+
   function bukaEdit(item: Buku) {
     setEditId(item.id);
 
@@ -395,14 +446,27 @@ function KatalogKonten() {
         aksi={
           bolehKelolaBuku &&
           sedangMasuk && (
-            <button
-              type="button"
-              onClick={bukaTambah}
-              className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--brand-solid)] px-5 py-3 text-sm font-semibold text-white shadow-md shadow-teal-900/10 transition hover:-translate-y-0.5 hover:bg-[var(--brand-solid-hover)] focus:outline-none focus:ring-4 focus:ring-[var(--brand-soft)]"
-            >
-              <Ikon d={IKON.tambah} size={18} />
-              Tambah Judul Baru
-            </button>
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setBukaArsip(true);
+                  void muatArsip();
+                }}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-teal-300 hover:text-[var(--brand-ink)] focus:outline-none focus:ring-4 focus:ring-[var(--brand-soft)]"
+              >
+                <Ikon d={IKON.arsip} size={18} />
+                Buku Diarsipkan
+              </button>
+              <button
+                type="button"
+                onClick={bukaTambah}
+                className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--brand-solid)] px-5 py-3 text-sm font-semibold text-white shadow-md shadow-teal-900/10 transition hover:-translate-y-0.5 hover:bg-[var(--brand-solid-hover)] focus:outline-none focus:ring-4 focus:ring-[var(--brand-soft)]"
+              >
+                <Ikon d={IKON.tambah} size={18} />
+                Tambah Judul Baru
+              </button>
+            </div>
           )
         }
       />
@@ -1248,6 +1312,66 @@ function KatalogKonten() {
         </div>
       </Modal>
 
+      {/* ARSIP BUKU — buku yang dihapus namun riwayatnya dipertahankan. */}
+      <Modal
+        open={bukaArsip}
+        onClose={() => setBukaArsip(false)}
+        title="Buku Diarsipkan"
+        width="max-w-2xl"
+      >
+        <p className="text-sm text-slate-600">
+          Buku di sini sudah tidak tampil di katalog tetapi riwayat
+          peminjamannya masih tersimpan, sehingga barisnya tidak dibuang
+          permanen. Pulihkan bila buku ingin dipinjamkan lagi.
+        </p>
+
+        {memuatArsip ? (
+          <p className="mt-4 text-sm text-[var(--muted)]">Memuat arsip...</p>
+        ) : arsip.length === 0 ? (
+          <div className="mt-4">
+            <EmptyState
+              kartu={false}
+              pesan="Tidak ada buku diarsipkan"
+              sub="Buku yang dihapus tanpa riwayat peminjaman langsung hilang permanen dan tidak tampil di sini."
+            />
+          </div>
+        ) : (
+          <ul className="mt-4 divide-y divide-[var(--border)]">
+            {arsip.map((item) => (
+              <li
+                key={item.id}
+                className="flex flex-wrap items-center justify-between gap-3 py-3"
+              >
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-semibold">
+                    {item.judul}
+                  </div>
+                  <div className="mt-0.5 text-xs text-[var(--muted)]">
+                    {[
+                      item.penulis || "Penulis tidak diketahui",
+                      item.kategori,
+                      item.rak ? `Rak ${item.rak}` : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                    {" · Diarsipkan "}
+                    {tanggalPanjang(item.dihapusPada ?? "")}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => pulihkanBuku(item)}
+                  disabled={memulihkan === item.id}
+                  className="btn btn-primary disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {memulihkan === item.id ? "Memulihkan..." : "Pulihkan"}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Modal>
+
       {/* KONFIRMASI HAPUS */}
       <ConfirmDialog
         open={!!hapusTarget}
@@ -1259,7 +1383,13 @@ function KatalogKonten() {
           const hasilHapus = await hapusBuku(target.id);
 
           if (hasilHapus.ok) {
-            toast.sukses(`Buku "${target.judul}" dihapus dari katalog.`);
+            // Buku beriwayat tidak bisa dibuang permanen; server hanya
+            // mengarsipkannya, jadi pesan ke petugas dibedakan.
+            toast.sukses(
+              hasilHapus.diarsipkan
+                ? `Buku "${target.judul}" diarsipkan — riwayat peminjamannya tetap tersimpan.`
+                : `Buku "${target.judul}" dihapus dari katalog.`,
+            );
           } else {
             toast.gagal(hasilHapus.pesan);
           }
@@ -1267,7 +1397,7 @@ function KatalogKonten() {
           setHapusTarget(null);
         }}
         title="Hapus Buku"
-        message={`Buku "${hapusTarget?.judul}" akan dihapus permanen dari katalog. Apakah Anda yakin ingin melanjutkan?`}
+        message={`Buku "${hapusTarget?.judul}" akan dihapus dari katalog. Bila buku ini sudah punya riwayat peminjaman, buku hanya diarsipkan agar riwayatnya tidak hilang. Apakah Anda yakin ingin melanjutkan?`}
       />
     </div>
   );
