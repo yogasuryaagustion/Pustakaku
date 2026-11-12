@@ -636,9 +636,9 @@ export default function LaporanPage() {
   );
 
   return (
-    <div className="min-h-full space-y-5 bg-[#f7f9fb] p-1 sm:p-2">
+    <div className="cupertino min-h-full space-y-5 p-1 sm:p-2">
       {/* Navigasi tab laporan */}
-      <nav className="flex gap-1 overflow-x-auto border-b border-slate-200 px-1">
+      <nav className="flex gap-1 overflow-x-auto rounded-full border border-white/60 bg-white/40 p-1">
         {TAB_LAPORAN.map((item) => {
           const jumlah =
             item.id === "buku"
@@ -654,10 +654,11 @@ export default function LaporanPage() {
                 setTab(item.id);
                 setCariTabel("");
               }}
-              className={`shrink-0 border-b-2 px-4 py-3 text-xs font-bold transition ${
+              aria-current={tab === item.id ? "page" : undefined}
+              className={`shrink-0 rounded-full px-4 py-2.5 text-xs font-bold transition ${
                 tab === item.id
-                  ? "border-[var(--brand-ink)] text-[var(--brand-ink)]"
-                  : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-800"
+                  ? "bg-white/95 text-[var(--brand-ink)] shadow-sm ring-1 ring-white/70"
+                  : "text-slate-500 hover:bg-white/50 hover:text-slate-800"
               }`}
             >
               {item.label}
@@ -735,13 +736,13 @@ export default function LaporanPage() {
             ].map((item) => (
               <article
                 key={item.label}
-                className="flex items-center justify-between rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,.04)]"
+                className="cpt-panel cpt-angkat flex items-center justify-between p-4"
               >
                 <div className="min-w-0">
                   <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
                     {item.label}
                   </p>
-                  <p className="mt-1 font-mono text-2xl font-black tracking-tight text-slate-950">
+                  <p className="mt-1 font-mono text-2xl font-black tracking-tight tabular-nums text-slate-950">
                     {item.value}
                   </p>
                   <p className="mt-0.5 text-xs text-slate-500">
@@ -750,7 +751,7 @@ export default function LaporanPage() {
                 </div>
 
                 <span
-                  className={`ml-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-xl font-bold ${
+                  className={`ml-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-xl font-bold shadow-sm ring-1 ring-inset ring-white/70 ${
                     item.tone === "amber"
                       ? "bg-amber-50 text-amber-600"
                       : item.tone === "green"
@@ -767,10 +768,10 @@ export default function LaporanPage() {
           </section>
 
           {/* Analitik visual */}
-          <section className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,.04)]">
-            <div className="flex flex-col gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <section className="cpt-panel p-5">
+            <div className="flex flex-col gap-3 border-b border-white/60 pb-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50 text-lg text-[var(--brand-ink)]">
+                <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-teal-50 text-lg text-[var(--brand-ink)] shadow-sm ring-1 ring-inset ring-white/70">
                   ▥
                 </span>
                 <div>
@@ -812,7 +813,7 @@ export default function LaporanPage() {
                           </span>
                         </div>
 
-                        <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                        <div className="h-2 overflow-hidden rounded-full bg-white/60">
                           <div
                             className="h-full rounded-full bg-teal-900"
                             style={{
@@ -825,7 +826,7 @@ export default function LaporanPage() {
                   )}
                 </div>
 
-                <div className="space-y-3 rounded-xl border border-slate-100 bg-slate-50/80 p-4">
+                <div className="space-y-3 cpt-soft p-4">
                   <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
                     Ringkasan inventaris
                   </p>
@@ -865,11 +866,11 @@ export default function LaporanPage() {
                   <div className="mb-3 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
                     <div className="flex gap-4">
                       <span className="inline-flex items-center gap-1.5">
-                        <i className="h-2.5 w-2.5 rounded-sm bg-teal-900" />
+                        <i className="h-2.5 w-2.5 rounded-full tren-pinjam-titik" />
                         Peminjaman Baru
                       </span>
                       <span className="inline-flex items-center gap-1.5">
-                        <i className="h-2.5 w-2.5 rounded-sm bg-teal-600" />
+                        <i className="h-2.5 w-2.5 rounded-full tren-kembali-titik" />
                         Pengembalian Selesai
                       </span>
                     </div>
@@ -878,7 +879,7 @@ export default function LaporanPage() {
                     </span>
                   </div>
 
-                  <div className="flex h-44 items-end justify-between gap-3 rounded-xl bg-slate-50/70 px-4 pb-3 pt-5">
+                  <div className="flex h-44 items-end justify-between gap-3 rounded-2xl bg-white/45 px-4 pb-3 pt-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
                     {trenBulanan.map((item, i) => (
                       <div
                         key={`${item.label}-${i}`}
@@ -887,7 +888,7 @@ export default function LaporanPage() {
                         <div className="flex h-32 w-full items-end justify-center gap-1">
                           <div
                             title={`${item.pinjam} peminjaman`}
-                            className="w-3.5 rounded-t-sm bg-teal-900 transition-all"
+                            className="tren-pinjam w-3.5 transition-all"
                             style={{
                               height: `${Math.max(
                                 5,
@@ -897,7 +898,7 @@ export default function LaporanPage() {
                           />
                           <div
                             title={`${item.kembali} pengembalian`}
-                            className="w-3.5 rounded-t-sm bg-teal-600 transition-all"
+                            className="tren-kembali w-3.5 transition-all"
                             style={{
                               height: `${Math.max(
                                 5,
@@ -914,7 +915,7 @@ export default function LaporanPage() {
                   </div>
                 </div>
 
-                <div className="space-y-3 rounded-xl border border-slate-100 bg-slate-50/80 p-4">
+                <div className="space-y-3 cpt-soft p-4">
                   <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
                     Indikator kinerja sirkulasi
                   </p>
@@ -950,15 +951,15 @@ export default function LaporanPage() {
           </section>
 
           {/* Generator dan tabel laporan */}
-          <section className="space-y-3 rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,.04)] sm:p-5">
+          <section className="cpt-panel space-y-3 p-4 sm:p-5">
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
               <div className="flex flex-wrap items-center gap-2">
-                <div className="flex items-center rounded-xl bg-slate-100 p-1 text-xs font-semibold">
+                <div className="flex items-center rounded-full border border-[var(--cpt-edge)] bg-white/55 p-1 text-xs font-semibold shadow-sm">
                   <button
                     onClick={() =>
                       setTanggalAcuan(new Date().toISOString().slice(0, 10))
                     }
-                    className="rounded-lg bg-white px-3 py-2 text-slate-900 shadow-sm"
+                    className="rounded-full bg-white/95 px-3.5 py-2 text-slate-900 shadow-sm"
                   >
                     Bulan Ini
                   </button>
@@ -973,7 +974,7 @@ export default function LaporanPage() {
                   value={tanggalAcuan}
                   onChange={(e) => setTanggalAcuan(e.target.value)}
                   disabled={jenisLaporan === "inventaris"}
-                  className="min-h-9 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs text-slate-700 outline-none focus:border-teal-500"
+                  className="cpt-kendali min-h-9 rounded-full px-3.5 text-xs text-slate-700"
                 />
 
                 <select
@@ -982,7 +983,7 @@ export default function LaporanPage() {
                     setJenisLaporan(e.target.value as JenisLaporan)
                   }
                   disabled={tab === "buku"}
-                  className="min-h-9 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-700 outline-none focus:border-teal-500"
+                  className="cpt-kendali min-h-9 rounded-full px-3.5 text-xs font-semibold text-slate-700"
                 >
                   {tab !== "buku" && (
                     <>
@@ -1000,7 +1001,7 @@ export default function LaporanPage() {
                 <button
                   onClick={unduhExcel}
                   disabled={!bolehEkspor || !generatorSiap}
-                  className="inline-flex min-h-9 items-center gap-2 rounded-xl bg-slate-900 px-3.5 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex min-h-9 items-center gap-2 rounded-full bg-slate-900 px-4 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   ▦ Ekspor Excel
                 </button>
@@ -1008,14 +1009,14 @@ export default function LaporanPage() {
                 <button
                   onClick={cetakPdf}
                   disabled={!bolehEkspor || !generatorSiap}
-                  className="inline-flex min-h-9 items-center gap-2 rounded-xl bg-teal-900 px-3.5 text-xs font-bold text-white transition hover:bg-[var(--brand-solid-hover)] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex min-h-9 items-center gap-2 rounded-full bg-teal-900 px-4 text-xs font-bold text-white transition hover:bg-[var(--brand-solid-hover)] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   ▣ Cetak PDF
                 </button>
               </div>
             </div>
 
-            <div className="flex flex-col gap-2 border-t border-slate-100 pt-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-2 border-t border-white/60 pt-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-xs text-slate-500">
                 <strong className="font-mono text-slate-800">
                   {jenisLaporan === "inventaris"
@@ -1037,14 +1038,14 @@ export default function LaporanPage() {
                 value={cariTabel}
                 onChange={(e) => setCariTabel(e.target.value)}
                 placeholder="Cari dalam tabel..."
-                className="min-h-9 w-full rounded-lg border border-slate-200 px-3 text-xs outline-none placeholder:text-slate-400 focus:border-teal-500 sm:max-w-64"
+                className="cpt-kendali min-h-9 w-full rounded-full px-3.5 text-xs placeholder:text-slate-400 sm:max-w-64"
               />
             </div>
 
             {jenisLaporan === "inventaris" ? (
-              <div className="overflow-x-auto rounded-xl border border-slate-200">
+              <div className="overflow-x-auto rounded-2xl border border-white/70 bg-white/55">
                 <table className="w-full min-w-[760px] text-left text-xs">
-                  <thead className="bg-[#f8faf9] text-[10px] font-bold uppercase text-slate-500">
+                  <thead className="bg-white/60 text-[10px] font-bold uppercase text-slate-500">
                     <tr>
                       {[
                         "Judul Buku",
@@ -1098,9 +1099,9 @@ export default function LaporanPage() {
                 </table>
               </div>
             ) : jenisLaporan === "denda" ? (
-              <div className="overflow-x-auto rounded-xl border border-slate-200">
+              <div className="overflow-x-auto rounded-2xl border border-white/70 bg-white/55">
                 <table className="w-full min-w-[760px] text-left text-xs">
-                  <thead className="bg-[#f8faf9] text-[10px] font-bold uppercase text-slate-500">
+                  <thead className="bg-white/60 text-[10px] font-bold uppercase text-slate-500">
                     <tr>
                       {[
                         "Kode",
@@ -1147,9 +1148,9 @@ export default function LaporanPage() {
                 </table>
               </div>
             ) : (
-              <div className="overflow-x-auto rounded-xl border border-slate-200">
+              <div className="overflow-x-auto rounded-2xl border border-white/70 bg-white/55">
                 <table className="w-full min-w-[850px] text-left text-xs">
-                  <thead className="bg-[#f8faf9] text-[10px] font-bold uppercase text-slate-500">
+                  <thead className="bg-white/60 text-[10px] font-bold uppercase text-slate-500">
                     <tr>
                       {[
                         "ID Pinjam",
@@ -1244,7 +1245,7 @@ export default function LaporanPage() {
           {/* Statistik koleksi dan buku populer */}
           {(tab === "semua" || tab === "buku") && (
             <section className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-              <div className="rounded-2xl border border-slate-200 bg-white p-5">
+              <div className="cpt-panel p-5">
                 <h2 className="text-sm font-bold text-slate-900">
                   Koleksi per Kategori
                 </h2>
@@ -1266,7 +1267,7 @@ export default function LaporanPage() {
                         </span>
                       </div>
 
-                      <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                      <div className="h-2 overflow-hidden rounded-full bg-white/60">
                         <div
                           className="h-full rounded-full bg-teal-900"
                           style={{
@@ -1281,8 +1282,8 @@ export default function LaporanPage() {
                 )}
               </div>
 
-              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                <div className="border-b border-slate-100 p-5">
+              <div className="cpt-panel overflow-hidden">
+                <div className="border-b border-white/60 p-5">
                   <h2 className="text-sm font-bold text-slate-900">
                     Buku Paling Banyak Dipinjam
                   </h2>
@@ -1298,7 +1299,7 @@ export default function LaporanPage() {
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-slate-50 text-[10px] uppercase text-slate-500">
+                      <thead className="bg-white/60 text-[10px] uppercase text-slate-500">
                         <tr>
                           <th className="px-5 py-3">#</th>
                           <th className="px-5 py-3">Judul Buku</th>

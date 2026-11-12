@@ -12,7 +12,7 @@ import {
 import { usePathname } from "next/navigation";
 import type { AjuanKembali, Anggota, Buku, Peminjaman } from "./types";
 import { DENDA_PER_HARI } from "./types";
-import { apiFetch } from "./api";
+import { ApiError, apiFetch } from "./api";
 import { useToast } from "@/components/toast";
 
 export type Hasil = { ok: boolean; pesan: string };
@@ -63,6 +63,10 @@ let snapshot: Snapshot = SNAPSHOT_SERVER;
 
 const pendengar = new Set<() => void>();
 const dataTersedia = new Set<KunciData>();
+// Kunci yang tidak boleh dibaca peran aktif (server menjawab 403). Data ini
+// tetap "selesai dimuat" — kosong — supaya layar tidak berputar selamanya;
+// contoh: tamu membuka katalog, peminjaman memang tertutup untuk mereka.
+const dataDiLuarIzin = new Set<KunciData>();
 const dataSedangDimuat = new Map<KunciData, Promise<void>>();
 
 function beritahu() {
@@ -105,7 +109,9 @@ function pesanApi(e: unknown): string {
 function perbaruiStatusSiap() {
   snapshot = {
     ...snapshot,
-    siap: SEMUA_KUNCI.every((key) => dataTersedia.has(key)),
+    siap: SEMUA_KUNCI.every(
+      (key) => dataTersedia.has(key) || dataDiLuarIzin.has(key),
+    ),
   };
 }
 
@@ -178,11 +184,19 @@ async function muatSatuData(
       }
 
       dataTersedia.add(kunci);
+      dataDiLuarIzin.delete(kunci);
     } catch (e) {
-      snapshot = {
-        ...snapshot,
-        galat: pesanApi(e),
-      };
+      if (e instanceof ApiError && e.status === 403) {
+        // Ditolak RLS: peran ini memang tidak berhak membaca entitas tersebut.
+        // Tandai selesai-tanpa-data (bukan galat) agar halaman publik tetap
+        // tampil dan toast izin tidak muncul berulang saat tamu membuka katalog.
+        dataDiLuarIzin.add(kunci);
+      } else {
+        snapshot = {
+          ...snapshot,
+          galat: pesanApi(e),
+        };
+      }
     } finally {
       dataSedangDimuat.delete(kunci);
       perbaruiStatusSiap();
@@ -228,6 +242,7 @@ function muatUlang(kunci?: KunciData[]) {
 
   target.forEach((key) => {
     dataTersedia.delete(key);
+    dataDiLuarIzin.delete(key);
   });
 
   perbaruiStatusSiap();
