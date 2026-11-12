@@ -13,6 +13,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode
 } from 'react';
+import Image from 'next/image';
 
 export interface PillNavItem {
   label: string;
@@ -842,7 +843,13 @@ const PillNav = ({
         <span ref={logoRef} className={[LOGO, joined ? '' : SURFACE].filter(Boolean).join(' ')}>
           <LinkComponent href={logoHref} className={LOGO_LINK} aria-label={logoAlt} onPointerEnter={spin}>
             <span ref={markRef} className={MARK}>
-              {typeof logo === 'string' ? <img src={logo} alt="" draggable={false} /> : logo}
+              {typeof logo === 'string' ? (
+                // Logo bisa berupa URL apa pun dari pemanggil; `unoptimized`
+                // menjaga komponen tetap bebas dari remotePatterns next.config.
+                <Image src={logo} alt="" width={32} height={32} unoptimized draggable={false} />
+              ) : (
+                logo
+              )}
             </span>
           </LinkComponent>
           {!joined && <span className={RIM} />}

@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 import { ConfirmDialog, StatCard, tanggalPanjang } from "@/components/ui";
 import { useToast } from "@/components/toast";
 import {
-  bandingkanKebijakan,
   salinKebijakan,
   KEBIJAKAN_BAWAAN,
   DAFTAR_IZIN,
@@ -266,8 +265,6 @@ export default function KontrolAksesPage() {
 
   async function simpan() {
     if (!draf || proses || !kotor) return;
-
-    const perubahan = bandingkanKebijakan(tersimpan, draf);
 
     setProses(true);
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import {
   BookOpen,
@@ -62,6 +63,10 @@ function waktuWIB(iso?: string): string {
 }
 
 export default function CheckInKunjunganPage() {
+  // Navigasi lewat router agar kios tetap berada di aplikasi Next (bukan reload
+  // penuh), sesuai aturan no-location-assign-relative-destination.
+  const router = useRouter();
+
   // Nilai awal harus konsisten antara server dan browser.
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
@@ -246,7 +251,7 @@ export default function CheckInKunjunganPage() {
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={() => window.location.assign("/")}
+              onClick={() => router.push("/")}
               title="Kembali ke Beranda"
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--brand-solid)] text-white shadow-md transition hover:scale-105"
             >
@@ -320,7 +325,7 @@ export default function CheckInKunjunganPage() {
 
             <button
               type="button"
-              onClick={() => window.location.assign("/")}
+              onClick={() => router.push("/")}
               className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-200"
             >
               <ArrowLeft className="h-3.5 w-3.5" />

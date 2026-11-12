@@ -13,7 +13,6 @@ import { apiFetch } from "@/lib/api";
 import {
   Modal,
   ConfirmDialog,
-  Badge,
   EmptyState,
   SampulBuku,
   tanggalPanjang,
@@ -191,22 +190,6 @@ function KatalogKonten() {
       return cocokKata && cocokKategori && cocokStok;
     });
   }, [buku, q, filterKategori, filterStok, stokTersedia]);
-
-  const totalEksemplar = useMemo(
-    () =>
-      buku.reduce(
-        (total, item) => total + Math.max(0, Number(item.stok) || 0),
-        0,
-      ),
-    [buku],
-  );
-
-  const jumlahTersedia = useMemo(
-    () => buku.filter((item) => stokTersedia(item.id) > 0).length,
-    [buku, stokTersedia],
-  );
-
-  const jumlahHabis = buku.length - jumlahTersedia;
 
   const jatuhTempo = useMemo(() => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(tanggalPinjam)) {

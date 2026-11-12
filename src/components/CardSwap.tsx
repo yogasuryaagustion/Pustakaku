@@ -15,6 +15,7 @@ import {
   type ReactElement,
   type ReactNode
 } from 'react';
+import Image from 'next/image';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { BeachIcon, BridgeIcon, CloudIcon, SunsetIcon } from '@hugeicons/core-free-icons';
 
@@ -330,10 +331,15 @@ const ItemCard = ({ item }: { item: CardSwapItem }) => (
           className="relative min-h-0 flex-1 overflow-hidden"
           style={{ borderRadius: 'max(0px, calc(var(--swap-radius) - 6px))', background: 'var(--swap-badge)' }}
         >
-          <img
+          <Image
             src={item.image}
             alt={item.alt ?? item.title ?? ''}
+            fill
+            // URL datang dari pemanggil, jadi optimasi Next dilewati agar tidak
+            // bergantung pada daftar remotePatterns di next.config.
+            unoptimized
             draggable={false}
+            sizes="(max-width: 768px) 100vw, 460px"
             className="pointer-events-none absolute inset-0 block h-full w-full object-cover select-none [-webkit-user-drag:none]"
           />
           <span

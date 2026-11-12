@@ -53,7 +53,7 @@ function tanggalLokalISO(): string {
 }
 
 export default function LaporanPage() {
-  const { buku, anggota, peminjaman, siap } = useLibrary();
+  const { buku, peminjaman, siap } = useLibrary();
   const { cariBuku, cariAnggota, jumlahDipinjam, stokTersedia } = useHelper();
   const sistem = useSistem();
   const bolehEkspor = useBoleh("laporan.ekspor");

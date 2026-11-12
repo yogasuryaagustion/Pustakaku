@@ -6,7 +6,6 @@ import { useParams, useRouter } from "next/navigation";
 
 import { useLibrary, useHelper } from "@/lib/library-context";
 import { useAuth, useBoleh } from "@/lib/auth";
-import { useSistem } from "@/lib/sistem";
 import { SampulBuku } from "@/components/ui";
 import type { Buku } from "@/lib/types";
 
@@ -33,7 +32,6 @@ export default function DetailBukuPage() {
 
   const { sedangMasuk, siap: authSiap } = useAuth();
   const bolehPinjam = useBoleh("katalog.pinjam");
-  const sistem = useSistem();
 
   const [memuat, setMemuat] = useState(true);
   const [memproses, setMemproses] = useState(false);
