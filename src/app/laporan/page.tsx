@@ -6,6 +6,7 @@ import { useLibrary, useHelper, hariTerlambat } from "@/lib/library-context";
 import { useBoleh } from "@/lib/auth";
 import { useSistem } from "@/lib/sistem";
 import { EmptyState, rupiah, tanggalPanjang } from "@/components/ui";
+import { GrafikTren } from "@/components/grafik-tren";
 import { unduhXlsx, type LembarXlsx, type SelXlsx } from "@/lib/xlsx";
 import { cetakHTML, eskapHTML } from "@/lib/cetak";
 
@@ -630,11 +631,6 @@ export default function LaporanPage() {
     };
   });
 
-  const maxTren = Math.max(
-    1,
-    ...trenBulanan.flatMap((x) => [x.pinjam, x.kembali])
-  );
-
   return (
     <div className="cupertino min-h-full space-y-5 p-1 sm:p-2">
       {/* Navigasi tab laporan */}
@@ -687,6 +683,7 @@ export default function LaporanPage() {
                     : "Seluruh transaksi tercatat",
                 icon: "▤",
                 tone: "teal",
+                utama: true,
               },
               {
                 label:
@@ -701,6 +698,7 @@ export default function LaporanPage() {
                     : "Sedang di tangan anggota",
                 icon: "◷",
                 tone: "amber",
+                utama: false,
               },
               {
                 label:
@@ -715,6 +713,7 @@ export default function LaporanPage() {
                     : "Transaksi selesai",
                 icon: "✓",
                 tone: "green",
+                utama: false,
               },
               {
                 label:
@@ -732,17 +731,26 @@ export default function LaporanPage() {
                     : "Melewati batas kembali",
                 icon: "△",
                 tone: "rose",
+                utama: false,
               },
             ].map((item) => (
               <article
                 key={item.label}
-                className="cpt-panel cpt-angkat flex items-center justify-between p-4"
+                className={`cpt-angkat flex items-center justify-between p-4 ${
+                  item.utama ? "cpt-panel cpt-kpi-utama" : "cpt-panel"
+                }`}
               >
                 <div className="min-w-0">
                   <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
                     {item.label}
                   </p>
-                  <p className="mt-1 font-mono text-2xl font-black tracking-tight tabular-nums text-slate-950">
+                  <p
+                    className={`mt-1 font-mono font-black tracking-tight tabular-nums ${
+                      item.utama
+                        ? "text-3xl text-[var(--brand-ink)]"
+                        : "text-2xl text-slate-950"
+                    }`}
+                  >
                     {item.value}
                   </p>
                   <p className="mt-0.5 text-xs text-slate-500">
@@ -768,7 +776,7 @@ export default function LaporanPage() {
           </section>
 
           {/* Analitik visual */}
-          <section className="cpt-panel p-5">
+          <section className="cpt-panel cpt-panel-utama p-5">
             <div className="flex flex-col gap-3 border-b border-white/60 pb-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
                 <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-teal-50 text-lg text-[var(--brand-ink)] shadow-sm ring-1 ring-inset ring-white/70">
@@ -879,39 +887,8 @@ export default function LaporanPage() {
                     </span>
                   </div>
 
-                  <div className="flex h-44 items-end justify-between gap-3 rounded-2xl bg-white/45 px-4 pb-3 pt-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
-                    {trenBulanan.map((item, i) => (
-                      <div
-                        key={`${item.label}-${i}`}
-                        className="flex h-full flex-1 flex-col items-center justify-end gap-2"
-                      >
-                        <div className="flex h-32 w-full items-end justify-center gap-1">
-                          <div
-                            title={`${item.pinjam} peminjaman`}
-                            className="tren-pinjam w-3.5 transition-all"
-                            style={{
-                              height: `${Math.max(
-                                5,
-                                (item.pinjam / maxTren) * 100
-                              )}%`,
-                            }}
-                          />
-                          <div
-                            title={`${item.kembali} pengembalian`}
-                            className="tren-kembali w-3.5 transition-all"
-                            style={{
-                              height: `${Math.max(
-                                5,
-                                (item.kembali / maxTren) * 100
-                              )}%`,
-                            }}
-                          />
-                        </div>
-                        <span className="text-[10px] font-semibold text-slate-500">
-                          {item.label}
-                        </span>
-                      </div>
-                    ))}
+                  <div className="rounded-2xl bg-white/45 px-4 pb-4 pt-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
+                    <GrafikTren data={trenBulanan} />
                   </div>
                 </div>
 
@@ -1245,7 +1222,7 @@ export default function LaporanPage() {
           {/* Statistik koleksi dan buku populer */}
           {(tab === "semua" || tab === "buku") && (
             <section className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-              <div className="cpt-panel p-5">
+              <div className="cpt-panel-tipis p-5">
                 <h2 className="text-sm font-bold text-slate-900">
                   Koleksi per Kategori
                 </h2>
@@ -1282,7 +1259,7 @@ export default function LaporanPage() {
                 )}
               </div>
 
-              <div className="cpt-panel overflow-hidden">
+              <div className="cpt-panel-tipis overflow-hidden">
                 <div className="border-b border-white/60 p-5">
                   <h2 className="text-sm font-bold text-slate-900">
                     Buku Paling Banyak Dipinjam

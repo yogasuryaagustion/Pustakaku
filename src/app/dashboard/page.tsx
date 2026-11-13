@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useLibrary, useHelper, hariTerlambat } from "@/lib/library-context";
 import { useSistem } from "@/lib/sistem";
 import { StatCard, Badge, EmptyState, rupiah, tanggalPanjang, BadgeTone } from "@/components/ui";
+import { GrafikTren } from "@/components/grafik-tren";
 import { useJejak, type JenisJejak } from "@/lib/audit";
-import { useReducedMotion } from "motion/react";
 import { NaikBertahap } from "@/components/gerak";
 
 function statusBadge(status: string, telat: number): { label: string; tone: BadgeTone } {
@@ -56,8 +56,6 @@ export default function DashboardAdminPage() {
   const sistem = useSistem();
   // useSyncExternalStore: aman dipanggil sebelum early return (server selalu []).
   const jejak = useJejak();
-  // Hormati preferensi sistem: bila gerak dimatikan, grafik langsung penuh.
-  const kurangiGerak = useReducedMotion();
 
   if (!siap) {
     return <div className="p-6 text-[var(--muted)]">Memuat data…</div>;
@@ -102,7 +100,6 @@ export default function DashboardAdminPage() {
       kini: i === 0,
     });
   }
-  const maksTren = Math.max(1, ...tren.map((t) => t.jumlah));
 
   // Distribusi judul per kategori (donat).
   const perKategori = Object.entries(
@@ -193,52 +190,7 @@ export default function DashboardAdminPage() {
             {tren.every((t) => t.jumlah === 0) ? (
               <p className="text-sm text-[var(--muted)]">Belum ada peminjaman pada periode ini.</p>
             ) : (
-              <svg
-                viewBox="0 0 340 150"
-                className="w-full h-auto"
-                role="img"
-                aria-label="Grafik batang tren peminjaman enam bulan terakhir"
-              >
-                <line x1="8" y1="112" x2="332" y2="112" stroke="var(--border)" strokeWidth="1" />
-                {tren.map((t, i) => {
-                  const x = 22 + i * 52;
-                  const h = t.jumlah === 0 ? 0 : Math.max(6, (t.jumlah / maksTren) * 96);
-                  return (
-                    <g key={i}>
-                      {t.jumlah > 0 && (
-                        <rect
-                          x={x}
-                          y={112 - h}
-                          width="34"
-                          height={h}
-                          rx="5"
-                          fill="var(--brand-solid)"
-                          opacity={t.kini ? 1 : 0.45}
-                          className={kurangiGerak ? undefined : "batang-tumbuh"}
-                          style={
-                            kurangiGerak
-                              ? undefined
-                              : { animationDelay: `${i * 60}ms` }
-                          }
-                        />
-                      )}
-                      <text
-                        x={x + 17}
-                        y={t.jumlah > 0 ? 112 - h - 6 : 104}
-                        textAnchor="middle"
-                        fontSize="11"
-                        fontWeight="700"
-                        fill="var(--foreground)"
-                      >
-                        {t.jumlah > 0 ? t.jumlah : "0"}
-                      </text>
-                      <text x={x + 17} y="132" textAnchor="middle" fontSize="10" fill="var(--muted)">
-                        {t.label}
-                      </text>
-                    </g>
-                  );
-                })}
-              </svg>
+              <GrafikTren data={tren.map((t) => ({ label: t.label, pinjam: t.jumlah }))} />
             )}
           </div>
         </div>

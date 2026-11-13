@@ -557,27 +557,6 @@ html {
   animation-delay: 0.24s;
 }
 
-/* Batang grafik tumbuh dari garis dasarnya. Skala dipakai — bukan atribut
-   height — supaya posisi batang tidak bergeser saat animasi berjalan. */
-@keyframes batang-tumbuh {
-  from {
-    transform: scaleY(0);
-  }
-  to {
-    transform: scaleY(1);
-  }
-}
-.batang-tumbuh {
-  transform-box: fill-box;
-  transform-origin: bottom;
-  animation: batang-tumbuh 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-@media (prefers-reduced-motion: reduce) {
-  .batang-tumbuh {
-    animation: none;
-  }
-}
-
 /* Ubin ikon mengapung (hero): gerak naik-turun halus tanpa loop keras. */
 @keyframes apung {
   from {
@@ -1391,6 +1370,51 @@ html {
   background: rgba(255, 255, 255, 0.46);
 }
 
+/* Hierarki panel: panel analitik adalah fokus halaman, jadi kacanya lebih pekat
+   dan lebih tebal dari panel lain, dengan bayangan lebih dalam agar terangkat.
+   Panel statistik pendukung sebaliknya dibuat lebih tipis (cpt-panel-tipis)
+   supaya mata berhenti di analitik dulu, bukan di semua panel sekaligus. */
+.cupertino .cpt-panel-utama {
+  border-color: rgba(255, 255, 255, 0.85);
+  border-radius: 26px;
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.88),
+    rgba(255, 255, 255, 0.62)
+  );
+  -webkit-backdrop-filter: blur(26px) saturate(1.85);
+  backdrop-filter: blur(26px) saturate(1.85);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 2px 6px rgba(16, 24, 40, 0.05),
+    0 26px 48px -24px rgba(16, 24, 40, 0.3);
+}
+
+.cupertino .cpt-panel-tipis {
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.38);
+  -webkit-backdrop-filter: blur(14px) saturate(1.5);
+  backdrop-filter: blur(14px) saturate(1.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* Satu tile KPI menjadi titik fokus: latar hijau sangat muda dan angka berwarna
+   merek, sementara tiga tile lain tetap tenang. Tidak ada data yang berubah,
+   hanya bobot visualnya. */
+.cupertino .cpt-kpi-utama {
+  border-color: color-mix(in srgb, var(--brand) 22%, #ffffff);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--brand) 12%, #ffffff),
+    color-mix(in srgb, var(--brand) 4%, #ffffff)
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(16, 24, 40, 0.04),
+    0 18px 38px -20px color-mix(in srgb, var(--brand) 45%, transparent);
+}
+
 /* Fokus keyboard di halaman Cupertino memakai cincin lembut, bukan garis 2px
    tajam dari aturan :focus-visible global (aturan tanpa layer selalu menang
    atas utility Tailwind, jadi perlu ditimpa eksplisit di sini). */
@@ -1458,40 +1482,91 @@ html {
     0 22px 40px -20px rgba(16, 24, 40, 0.28);
 }
 
-/* Batang tren: gradien lembut dari hijau tua ke hijau muda dan ujung membulat,
-   supaya batang tidak lagi berupa blok warna rata. Legenda memakai warna
-   ujung atas masing-masing batang agar titik dan batangnya senada. */
-.cupertino .tren-pinjam,
-.cupertino .tren-kembali {
-  border-radius: 7px 7px 2px 2px;
+/* Grafik area tren (SVG). Semua warna tetap diturunkan dari token merek, jadi
+   mengubah --brand/--brand-solid ikut menggeser kedua seri. Garis seri memakai
+   pathLength=1 + animasi dashoffset sehingga tampak "ditarik" saat halaman
+   dibuka; pengguna dengan gerak minimal langsung melihat garis utuh. */
+/* Kelas tren dipakai di halaman Laporan (Cupertino) dan dashboard, jadi
+   sengaja tidak di-scope ke .cupertino. */
+.tren-sumbu-garis {
+  stroke: color-mix(in srgb, var(--brand) 16%, transparent);
+  stroke-width: 1;
 }
 
-/* Semua warna diturunkan dari token merek, bukan hex: mengubah --brand atau
-   --brand-solid di satu tempat ikut menggeser kedua seri grafik. Ujung terang
-   dibuat dengan mencampur token ke --brand-soft (putih yang sudah diberi
-   sentuhan merek), jadi tidak ada warna lepas yang perlu dicari padanannya. */
-.cupertino .tren-pinjam {
-  background-image: linear-gradient(
-    to top,
-    var(--brand-solid),
-    color-mix(in srgb, var(--brand) 70%, var(--brand-soft))
-  );
+.tren-sumbu-teks {
+  fill: #94a3b8;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9px;
 }
 
-.cupertino .tren-kembali {
-  background-image: linear-gradient(
-    to top,
-    color-mix(in srgb, var(--brand) 52%, var(--brand-soft)),
-    color-mix(in srgb, var(--brand) 32%, var(--brand-soft))
-  );
+.tren-bulan-teks {
+  fill: #64748b;
+  font-size: 10px;
+  font-weight: 600;
 }
 
-.cupertino .tren-pinjam-titik {
-  background-color: color-mix(in srgb, var(--brand) 72%, var(--brand-soft));
+@keyframes tren-gambar {
+  from {
+    stroke-dashoffset: 1;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
-.cupertino .tren-kembali-titik {
-  background-color: color-mix(in srgb, var(--brand) 40%, var(--brand-soft));
+.tren-areas {
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  animation: tren-gambar 1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.tren-pinjam-garis {
+  stroke: var(--brand-solid);
+}
+
+.tren-kembali-garis {
+  stroke: color-mix(in srgb, var(--brand) 55%, #ffffff);
+}
+
+/* Garis penanda bulan aktif saat kursor/fokus berada di grafik. */
+.tren-silang {
+  stroke: color-mix(in srgb, var(--brand) 34%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+/* Titik data: putih berbingkai warna serinya, membesar saat bulan aktif. */
+.tren-titik {
+  fill: #ffffff;
+  stroke-width: 2;
+  transition: r 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.tren-titik-pinjam {
+  stroke: var(--brand-solid);
+}
+
+.tren-titik-kembali {
+  stroke: color-mix(in srgb, var(--brand) 55%, #ffffff);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tren-areas {
+    animation: none;
+    stroke-dasharray: none;
+  }
+}
+
+/* Titik legenda memakai warna garis serinya agar keterangan dan grafik senada. */
+.tren-pinjam-titik {
+  background-color: var(--brand-solid);
+}
+
+.tren-kembali-titik {
+  background-color: color-mix(in srgb, var(--brand) 55%, #ffffff);
 }
 
 /* Cangkang aplikasi sudah punya pendar sendiri; latar abu Cupertino tidak
